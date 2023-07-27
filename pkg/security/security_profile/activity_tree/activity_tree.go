@@ -555,8 +555,8 @@ func (at *ActivityTree) findBranch(parent ProcessNodeParent, branch []*model.Pro
 				return nil, len(branch) - i, true
 			}
 
-			// make sure we properly update the isExecChild status
-			matchingNode.Process.IsExecChild = matchingNode.Process.IsExecChild || branchCursor.IsExecChild
+			// make sure we properly update the IsExecExec status
+			matchingNode.Process.IsExecExec = matchingNode.Process.IsExecExec || branchCursor.IsExecExec
 
 			// here is the current state of the tree:
 			//   parent -> treeNodeToRebase -> [...] -> matchingNode
@@ -568,7 +568,7 @@ func (at *ActivityTree) findBranch(parent ProcessNodeParent, branch []*model.Pro
 
 		}
 		// are we looking for an exec child ?
-		if siblings := parent.GetSiblings(); branchCursor.IsExecChild && siblings != nil {
+		if siblings := parent.GetSiblings(); branchCursor.IsExecExec && siblings != nil {
 
 			// if yes, then look for branchCursor in the siblings of the parent of children
 			matchingNode, treeNodeToRebaseIndex = at.findProcessCacheEntryInTree(*siblings, branchCursor)
@@ -581,8 +581,8 @@ func (at *ActivityTree) findBranch(parent ProcessNodeParent, branch []*model.Pro
 					return nil, len(branch) - i, true
 				}
 
-				// make sure we properly update the isExecChild status
-				matchingNode.Process.IsExecChild = matchingNode.Process.IsExecChild || branchCursor.IsExecChild
+				// make sure we properly update the IsExecExec status
+				matchingNode.Process.IsExecExec = matchingNode.Process.IsExecExec || branchCursor.IsExecExec
 
 				// here is the current state of the tree:
 				//   parent of parent -> treeNodeToRebase -> [...] -> matchingNode
@@ -597,7 +597,7 @@ func (at *ActivityTree) findBranch(parent ProcessNodeParent, branch []*model.Pro
 		// We didn't find the current entry anywhere, has it execed into something else ? (i.e. are we missing something
 		// in the profile ?)
 		if i-1 >= 0 {
-			if branch[i-1].IsExecChild {
+			if branch[i-1].IsExecExec {
 				continue
 			}
 		}
