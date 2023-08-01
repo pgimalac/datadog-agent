@@ -237,8 +237,8 @@ type ProcessSerializer struct {
 	IsThread bool `json:"is_thread,omitempty"`
 	// Indicates whether the process is a kworker
 	IsKworker bool `json:"is_kworker,omitempty"`
-	// Indicates wether the process is an exec child of its parent
-	IsExecChild bool `json:"is_exec_child,omitempty"`
+	// Indicates wether the process is an exec following an other exec
+	IsExecExec bool `json:"is_exec_exec,omitempty"`
 	// Process source
 	Source string `json:"source,omitempty"`
 }
@@ -581,7 +581,7 @@ func newProcessSerializer(ps *model.Process, e *model.Event, resolvers *resolver
 			EnvsTruncated: EnvsTruncated,
 			IsThread:      ps.IsThread,
 			IsKworker:     ps.IsKworker,
-			IsExecChild:   ps.IsExecChild,
+			IsExecExec:    ps.IsExecExec,
 			Source:        model.ProcessSourceToString(ps.Source),
 		}
 
@@ -614,11 +614,11 @@ func newProcessSerializer(ps *model.Process, e *model.Event, resolvers *resolver
 		return psSerializer
 	}
 	return &ProcessSerializer{
-		Pid:         ps.Pid,
-		Tid:         ps.Tid,
-		IsKworker:   ps.IsKworker,
-		IsExecChild: ps.IsExecChild,
-		Source:      model.ProcessSourceToString(ps.Source),
+		Pid:        ps.Pid,
+		Tid:        ps.Tid,
+		IsKworker:  ps.IsKworker,
+		IsExecExec: ps.IsExecExec,
+		Source:     model.ProcessSourceToString(ps.Source),
 		Credentials: &ProcessCredentialsSerializer{
 			CredentialsSerializer: &CredentialsSerializer{},
 		},
