@@ -590,6 +590,7 @@ require (
 	github.com/DataDog/datadog-agent/pkg/util/testutil v0.0.0-00010101000000-000000000000
 	github.com/DataDog/datadog-agent/pkg/version v0.0.0-00010101000000-000000000000
 	github.com/DataDog/opentelemetry-mapping-go/pkg/otlp/logs v0.8.0
+	github.com/antzucaro/matchr v0.0.0-20221106193745-7bed6ef61ef9
 	github.com/aquasecurity/trivy v0.0.0-00010101000000-000000000000
 	github.com/aws/aws-sdk-go-v2/service/kms v1.22.2
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.21.6
