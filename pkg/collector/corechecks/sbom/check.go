@@ -173,6 +173,8 @@ func (c *Check) Configure(senderManager sender.SenderManager, integrationConfigD
 	}
 
 	c.rcClient.Subscribe("DEBUG", func(configs map[string]state.RawConfig, _ func(string, state.ApplyStatus)) {
+		defer c.sender.Commit()
+
 		for _, cfg := range configs {
 			var data map[string]string
 			if err := json.Unmarshal(cfg.Config, &data); err != nil {
@@ -180,40 +182,41 @@ func (c *Check) Configure(senderManager sender.SenderManager, integrationConfigD
 			}
 
 			taskType := data["type"]
+			region, found := data["region"]
+			if !found {
+				log.Errorf("No region in SBOM scan request")
+			}
 
+			tags := []string{
+				fmt.Sprintf("region:%s", region),
+				fmt.Sprintf("type:%s", taskType),
+			}
+
+			c.sender.Count("datadog.sidescanner.scans.started", 1.0, "", tags)
+			start := time.Now()
 			switch taskType {
 			case "sbom-ebs-scan":
 				target, found := data["id"]
 				if !found {
 					log.Errorf("No target in SBOM scan request")
 				}
-
-				region, found := data["region"]
-				if !found {
-					log.Errorf("No region of volume in SBOM scan request")
-				}
-
 				hostname, found := data["hostname"]
 				if !found {
 					log.Errorf("No hostname specified in SBOM scan request")
 				}
-
 				c.processor.processEBS("ebs:"+target, region, hostname)
 			case "sbom-lambda-scan":
-				region, found := data["region"]
-				if !found {
-					log.Errorf("No region of Lambda in SBOM scan request")
-				}
-
 				functionName, found := data["function_name"]
 				if !found {
 					log.Errorf("No function name specified in SBOM scan request")
 				}
-
 				c.processor.processLambda(functionName, region)
 			default:
 				log.Errorf("Unsupported scan request type '%s'", taskType)
 			}
+			c.sender.Count("datadog.sidescanner.scans.finished", 1.0, "", tags)
+			c.sender.Histogram("datadog.sidescanner.scans.duration",
+				float64(time.Since(start).Milliseconds()), "", tags)
 		}
 	})
 
