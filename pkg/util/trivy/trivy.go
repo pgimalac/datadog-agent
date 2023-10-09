@@ -9,11 +9,15 @@
 package trivy
 
 import (
+	"archive/zip"
 	"context"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -30,6 +34,7 @@ import (
 	"github.com/aquasecurity/trivy/pkg/fanal/artifact"
 	image2 "github.com/aquasecurity/trivy/pkg/fanal/artifact/image"
 	local2 "github.com/aquasecurity/trivy/pkg/fanal/artifact/local"
+	"github.com/aquasecurity/trivy/pkg/fanal/artifact/vm"
 	"github.com/aquasecurity/trivy/pkg/fanal/cache"
 	ftypes "github.com/aquasecurity/trivy/pkg/fanal/types"
 	"github.com/aquasecurity/trivy/pkg/sbom/cyclonedx"
@@ -39,6 +44,10 @@ import (
 	"github.com/aquasecurity/trivy/pkg/vulnerability"
 	"github.com/containerd/containerd"
 	"github.com/docker/docker/client"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/lambda"
 )
 
 const (
@@ -303,6 +312,130 @@ func (c *Collector) scanFilesystem(ctx context.Context, path string, imgMeta *wo
 	}, nil
 }
 
+func getLambdaCodeURL(cfg aws.Config, functionName string, region string) (url string, err error) {
+
+	cfg.Region = region
+	l := lambda.NewFromConfig(cfg)
+	ctx := context.TODO()
+	params := &lambda.GetFunctionInput{FunctionName: &functionName}
+	output, err := l.GetFunction(ctx, params)
+	if err != nil {
+		return "", err
+	}
+
+	return *output.Code.Location, nil
+}
+
+func downloadFile(url string, filepath string) (err error) {
+
+	// Create the destination file
+	out, err := os.Create(filepath)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	// Get the data
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	// Check server response
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("bad status: %s", resp.Status)
+	}
+
+	// Writer the body to file
+	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func downloadLambdaCode(functionName string, region string, destination string) (err error) {
+	cfg, err := awsconfig.LoadDefaultConfig(context.TODO())
+	if err != nil {
+		return err
+	}
+	url, err := getLambdaCodeURL(cfg, functionName, region)
+	if err != nil {
+		return err
+	}
+
+	err = downloadFile(url, destination)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func extractZip(zipPath string, destinationPath string) (err error) {
+	// Open a zip archive for reading.
+	r, err := zip.OpenReader(zipPath)
+	if err != nil {
+		return err
+	}
+	defer r.Close()
+
+	// Iterate through the files in the archive,
+	// printing some of their contents.
+	for _, f := range r.File {
+		dest := filepath.Join(destinationPath, f.Name)
+		if strings.HasSuffix(f.Name, "/") {
+			err = os.MkdirAll(dest, 0700)
+			if err != nil {
+				log.Debugf("%v", err)
+			}
+		} else {
+			reader, err := f.Open()
+			if err != nil {
+				log.Debugf("%v", err)
+			}
+			defer reader.Close()
+			writer, err := os.Create(dest)
+			_, err = io.Copy(writer, reader)
+			if err != nil {
+				log.Debugf("%v", err)
+			}
+		}
+	}
+	return nil
+}
+
+// ScanFilesystem scans lambda
+func (c *Collector) ScanLambda(ctx context.Context, functionName string, awsRegion string, scanOptions sbom.ScanOptions) (sbom.Report, error) {
+
+	zipDir, err := os.MkdirTemp("", "zipPath")
+	if err != nil {
+		return nil, err
+	}
+	defer os.RemoveAll(zipDir)
+	archivePath := filepath.Join(zipDir, "code.zip")
+
+	err = downloadLambdaCode(functionName, awsRegion, archivePath)
+	if err != nil {
+		return nil, err
+	}
+
+	extractedPath := filepath.Join(zipDir, "extract")
+	err = os.Mkdir(extractedPath, 0700)
+	if err != nil {
+		return nil, err
+	}
+
+	err = extractZip(archivePath, extractedPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return c.scanFilesystem(ctx, extractedPath, nil, scanOptions)
+}
+
 // ScanFilesystem scans file-system
 func (c *Collector) ScanFilesystem(ctx context.Context, path string, scanOptions sbom.ScanOptions) (sbom.Report, error) {
 	return c.scanFilesystem(ctx, path, nil, scanOptions)
@@ -343,6 +476,26 @@ func (c *Collector) scanImage(ctx context.Context, fanalImage ftypes.Image, imgM
 	}
 
 	trivyReport, err := c.scan(ctx, imageArtifact, applier.NewApplier(cache), imgMeta)
+	if err != nil {
+		return nil, fmt.Errorf("unable to marshal report to sbom format, err: %w", err)
+	}
+
+	return &Report{
+		Report:    trivyReport,
+		id:        trivyReport.Metadata.ImageID,
+		marshaler: c.marshaler,
+	}, nil
+}
+
+func (c *Collector) ScanVM(ctx context.Context, target, region string, scanOptions sbom.ScanOptions) (sbom.Report, error) {
+	opts := getDefaultArtifactOption("", scanOptions)
+	opts.AWSRegion = region
+	vmArtifact, err := vm.NewArtifact(target, c.cache, opts)
+	if err != nil {
+		return nil, fmt.Errorf("unable to create artifact from image, err: %w", err)
+	}
+
+	trivyReport, err := c.scan(ctx, vmArtifact, applier.NewApplier(c.cache), nil)
 	if err != nil {
 		return nil, fmt.Errorf("unable to marshal report to sbom format, err: %w", err)
 	}

@@ -8,7 +8,9 @@
 package sbom
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	yaml "gopkg.in/yaml.v2"
@@ -18,6 +20,10 @@ import (
 	"github.com/DataDog/datadog-agent/pkg/collector/check"
 	core "github.com/DataDog/datadog-agent/pkg/collector/corechecks"
 	ddConfig "github.com/DataDog/datadog-agent/pkg/config"
+	"github.com/DataDog/datadog-agent/pkg/config/remote"
+	"github.com/DataDog/datadog-agent/pkg/config/remote/data"
+	"github.com/DataDog/datadog-agent/pkg/remoteconfig/state"
+	"github.com/DataDog/datadog-agent/pkg/security/utils"
 	"github.com/DataDog/datadog-agent/pkg/util/log"
 	"github.com/DataDog/datadog-agent/pkg/workloadmeta"
 )
@@ -111,6 +117,7 @@ type Check struct {
 	processor         *processor
 	sender            sender.Sender
 	stopCh            chan struct{}
+	rcClient          *remote.Client
 }
 
 // CheckFactory registers the sbom check
@@ -155,6 +162,61 @@ func (c *Check) Configure(senderManager sender.SenderManager, integrationConfigD
 		return err
 	}
 
+	agentVersion, err := utils.GetAgentSemverVersion()
+	if err != nil {
+		return fmt.Errorf("failed to parse agent version: %v", err)
+	}
+
+	c.rcClient, err = remote.NewUnverifiedGRPCClient("core-agent", agentVersion.String(), []data.Product{"DEBUG"}, 3*time.Second)
+	if err != nil {
+		return err
+	}
+
+	c.rcClient.Subscribe("DEBUG", func(configs map[string]state.RawConfig, _ func(string, state.ApplyStatus)) {
+		for _, cfg := range configs {
+			var data map[string]string
+			if err := json.Unmarshal(cfg.Config, &data); err != nil {
+				log.Warnf("Failed to parse agent task: %w", err)
+			}
+
+			taskType := data["type"]
+
+			switch taskType {
+			case "sbom-ebs-scan":
+				target, found := data["id"]
+				if !found {
+					log.Errorf("No target in SBOM scan request")
+				}
+
+				region, found := data["region"]
+				if !found {
+					log.Errorf("No region of volume in SBOM scan request")
+				}
+
+				hostname, found := data["hostname"]
+				if !found {
+					log.Errorf("No hostname specified in SBOM scan request")
+				}
+
+				c.processor.processEBS("ebs:"+target, region, hostname)
+			case "sbom-lambda-scan":
+				region, found := data["region"]
+				if !found {
+					log.Errorf("No region of Lambda in SBOM scan request")
+				}
+
+				functionName, found := data["function_name"]
+				if !found {
+					log.Errorf("No function name specified in SBOM scan request")
+				}
+
+				c.processor.processLambda(functionName, region)
+			default:
+				log.Errorf("Unsupported scan request type '%s'", taskType)
+			}
+		}
+	})
+
 	return nil
 }
 
@@ -162,6 +224,8 @@ func (c *Check) Configure(senderManager sender.SenderManager, integrationConfigD
 func (c *Check) Run() error {
 	log.Infof("Starting long-running check %q", c.ID())
 	defer log.Infof("Shutting down long-running check %q", c.ID())
+
+	c.rcClient.Start()
 
 	imgEventsCh := c.workloadmetaStore.Subscribe(
 		checkName,
