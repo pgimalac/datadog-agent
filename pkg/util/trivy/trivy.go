@@ -488,14 +488,16 @@ func (c *Collector) scanImage(ctx context.Context, fanalImage ftypes.Image, imgM
 }
 
 func (c *Collector) ScanVM(ctx context.Context, target, region string, scanOptions sbom.ScanOptions) (sbom.Report, error) {
+	cache := newMemoryCache()
+
 	opts := getDefaultArtifactOption("", scanOptions)
 	opts.AWSRegion = region
-	vmArtifact, err := vm.NewArtifact(target, c.cache, opts)
+	vmArtifact, err := vm.NewArtifact(target, cache, opts)
 	if err != nil {
 		return nil, fmt.Errorf("unable to create artifact from image, err: %w", err)
 	}
 
-	trivyReport, err := c.scan(ctx, vmArtifact, applier.NewApplier(c.cache), nil)
+	trivyReport, err := c.scan(ctx, vmArtifact, applier.NewApplier(cache), nil)
 	if err != nil {
 		return nil, fmt.Errorf("unable to marshal report to sbom format, err: %w", err)
 	}
