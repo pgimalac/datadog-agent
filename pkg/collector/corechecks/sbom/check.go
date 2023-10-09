@@ -172,6 +172,7 @@ func (c *Check) Configure(senderManager sender.SenderManager, integrationConfigD
 		return err
 	}
 
+	done := make(chan map[string]interface{}, 100)
 	c.rcClient.Subscribe("DEBUG", func(configs map[string]state.RawConfig, _ func(string, state.ApplyStatus)) {
 		defer c.sender.Commit()
 
@@ -193,7 +194,6 @@ func (c *Check) Configure(senderManager sender.SenderManager, integrationConfigD
 			}
 
 			c.sender.Count("datadog.sidescanner.scans.started", 1.0, "", tags)
-			start := time.Now()
 			switch taskType {
 			case "sbom-ebs-scan":
 				target, found := data["id"]
@@ -204,21 +204,27 @@ func (c *Check) Configure(senderManager sender.SenderManager, integrationConfigD
 				if !found {
 					log.Errorf("No hostname specified in SBOM scan request")
 				}
-				c.processor.processEBS("ebs:"+target, region, hostname)
+				c.processor.processEBS("ebs:"+target, region, hostname, done)
 			case "sbom-lambda-scan":
 				functionName, found := data["function_name"]
 				if !found {
 					log.Errorf("No function name specified in SBOM scan request")
 				}
-				c.processor.processLambda(functionName, region)
+				c.processor.processLambda(functionName, region, done)
 			default:
 				log.Errorf("Unsupported scan request type '%s'", taskType)
 			}
-			c.sender.Count("datadog.sidescanner.scans.finished", 1.0, "", tags)
-			c.sender.Histogram("datadog.sidescanner.scans.duration",
-				float64(time.Since(start).Milliseconds()), "", tags)
 		}
 	})
+
+	go func() {
+		for cookie := range done {
+			tags := cookie["tags"].([]string)
+			c.sender.Count("datadog.sidescanner.scans.finished", 1.0, "", tags)
+			c.sender.Histogram("datadog.sidescanner.scans.duration",
+				float64(time.Since(cookie["startTime"].(time.Time)).Milliseconds()), "", tags)
+		}
+	}()
 
 	return nil
 }

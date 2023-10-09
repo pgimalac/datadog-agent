@@ -183,12 +183,13 @@ func (p *processor) processContainerImagesRefresh(allImages []*workloadmeta.Cont
 	}
 }
 
-func (p *processor) processEBS(target, region, id string) {
+func (p *processor) processEBS(target, region, id string, done chan map[string]interface{}) {
 	log.Debugf("Triggering volume SBOM")
 
 	ch := make(chan sbom.ScanResult, 1)
 	scanRequest := &vm.ScanRequest{Path: target, Region: region}
 
+	startTime := time.Now()
 	if err := p.sbomScanner.Scan(scanRequest, p.vmScanOpts, ch); err != nil {
 		log.Errorf("Failed to trigger SBOM generation for VM: %s", err)
 		return
@@ -196,6 +197,15 @@ func (p *processor) processEBS(target, region, id string) {
 
 	go func() {
 		result := <-ch
+
+		done <- map[string]interface{}{
+			"startTime": startTime,
+			"tags": []string{
+				"type:sbom-ebs-scan",
+				fmt.Sprintf("region:%s", region),
+				fmt.Sprintf("target:%s", target),
+			},
+		}
 
 		if result.Error != nil {
 			// TODO: add a retry mechanism for retryable errors
@@ -224,7 +234,7 @@ func (p *processor) processEBS(target, region, id string) {
 	}()
 }
 
-func (p *processor) processLambda(functionName string, region string) {
+func (p *processor) processLambda(functionName string, region string, done chan map[string]interface{}) {
 	log.Debugf("Triggering Lambda SBOM")
 
 	ch := make(chan sbom.ScanResult, 1)
@@ -233,6 +243,7 @@ func (p *processor) processLambda(functionName string, region string) {
 	opts := p.hostScanOpts
 	opts.Analyzers = []string{"os", "languages", "secret", "config", "license"}
 
+	startTime := time.Now()
 	if err := p.sbomScanner.Scan(scanRequest, opts, ch); err != nil {
 		log.Errorf("Failed to trigger SBOM generation for Lambda: %s", err)
 		return
@@ -240,6 +251,15 @@ func (p *processor) processLambda(functionName string, region string) {
 
 	go func() {
 		result := <-ch
+
+		done <- map[string]interface{}{
+			"startTime": startTime,
+			"tags": []string{
+				"type:sbom-lambda-scan",
+				fmt.Sprintf("region:%s", region),
+				fmt.Sprintf("function_name:%s", functionName),
+			},
+		}
 
 		if result.Error != nil {
 			// TODO: add a retry mechanism for retryable errors
