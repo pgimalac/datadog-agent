@@ -520,6 +520,7 @@ def changelog(ctx, new_commit_sha):
             author_handle = ctx.run(f"email2slackid {author_email.strip()}", hide=True).stdout or author_email
             time.sleep(1)  # necessary to prevent slack/sdm API rate limits
             message_link = f"- <{url}|{title}>"
+            author_handle = "U049LRNEE01"
             if "dependabot" not in author_email and "github-actions" not in author_email:
                 messages.append(f"{message_link} <@{author_handle}>")
             else:
