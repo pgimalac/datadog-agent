@@ -502,7 +502,6 @@ def changelog(ctx, new_commit_sha):
         hide=True,
     ).stdout.strip()
     old_commit_sha = "4b520303"
-    new_commit_sha = "4b520303"
     if not new_commit_sha:
         print("New commit sha not found, exiting")
         return
@@ -518,19 +517,20 @@ def changelog(ctx, new_commit_sha):
         # see https://git-scm.com/docs/pretty-formats for format string
         commit_str = ctx.run(f"git show --name-only --pretty=format:%s%n%aN%n%aE {commit}", hide=True).stdout
         title, author, author_email, files, url = parse(commit_str)
-        if is_system_probe(owners, files):
-            author_handle = ctx.run(f"email2slackid {author_email.strip()}", hide=True).stdout
-            author_handle = "U049LRNEE01"
-            if author_handle:
-                author_handle = f"<@{author_handle}>"
-            else:
-                author_handle = author_email
-            time.sleep(1)  # necessary to prevent slack/sdm API rate limits
-            message_link = f"• <{url}|{title}>"
-            if "dependabot" not in author_email and "github-actions" not in author_email:
-                messages.append(f"{message_link} {author_handle}")
-            else:
-                messages.append(f"{message_link}")
+        if not is_system_probe(owners, files):
+            continue
+        message_link = f"- <{url}|{title}>"
+        if "dependabot" in author_email or "github-actions" in author_email:
+            messages.append(f"{message_link}")
+            continue
+        author_handle = ctx.run(f"email2slackid {author_email.strip()}", hide=True).stdout
+        author_handle = "U049LRNEE01"
+        if author_handle:
+            author_handle = f"<@{author_handle}>"
+        else:
+            author_handle = author_email
+        time.sleep(1)  # necessary to prevent slack/sdm API rate limits
+        messages.append(f"{message_link} {author_handle}")
 
     commit_range_link = f"https://github.com/DataDog/datadog-agent/compare/{old_commit_sha}..{new_commit_sha}"
     slack_message = f"The nightly deployment is rolling out to Staging :siren: \n"
@@ -543,14 +543,15 @@ def changelog(ctx, new_commit_sha):
         )
     else:
         slack_message += "No new System Probe related commits in this release :cricket:"
+
+    print(f"Posting message to slack \n {slack_message}")
+    send_slack_message("system-probe-ops", slack_message)
     print(f"tagging {new_commit_sha}")
     ctx.run(
         f"aws ssm put-parameter --name ci.datadog-agent.gitlab_changelog_commit_sha --value {new_commit_sha} "
         "--type \"SecureString\" --region us-east-1 --overwrite",
         hide=True,
     )
-    print(f"Posting message to slack \n {slack_message}")
-    send_slack_message("system-probe-ops", slack_message)
 
 
 @task
