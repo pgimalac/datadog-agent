@@ -31,10 +31,11 @@ internal_kubernetes_deploy_experimental:
     - inv pipeline.trigger-child-pipeline --project-name "DataDog/k8s-datadog-agent-ops" --git-ref "main" --variables "OPTION_AUTOMATIC_ROLLOUT,EXPLICIT_WORKFLOWS,OPTION_PRE_SCRIPT,SKIP_PLAN_CHECK" --no-follow
 
 notify-slack:
-  stage: notify
+  stage: internal_kubernetes_deploy
   image: registry.ddbuild.io/slack-notifier:sdm
   tags: ["arch:amd64"]
-  needs: ["internal_kubernetes_deploy_experimental"]
+  needs:
+    - internal_kubernetes_deploy_experimental
   script:
     - python3 -m pip install -r tasks/libs/requirements-notifications.txt
     - inv pipeline.changelog ${CI_COMMIT_SHORT_SHA}
