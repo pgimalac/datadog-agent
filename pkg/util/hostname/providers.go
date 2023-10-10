@@ -14,7 +14,6 @@ import (
 
 	"github.com/DataDog/datadog-agent/pkg/metadata/inventories"
 	"github.com/DataDog/datadog-agent/pkg/util/cache"
-	"github.com/DataDog/datadog-agent/pkg/util/log"
 )
 
 const (
@@ -157,23 +156,23 @@ func GetWithProvider(ctx context.Context) (Data, error) {
 	var providerName string
 
 	for _, p := range providerCatalog {
-		log.Infof("trying to get hostname from '%s' provider", p.name)
+		fmt.Printf("trying to get hostname from '%s' provider\n", p.name)
 
 		detectedHostname, err := p.cb(ctx, hostname)
 		if err != nil {
 			expErr := new(expvar.String)
 			expErr.Set(err.Error())
 			hostnameErrors.Set(p.expvarName, expErr)
-			log.Infof("unable to get the hostname from '%s' provider: %s", p.name, err)
+			fmt.Printf("unable to get the hostname from '%s' provider: %s\n", p.name, err)
 			continue
 		}
 
-		log.Infof("hostname provider '%s' successfully found hostname '%s'", p.name, detectedHostname)
+		fmt.Printf("hostname provider '%s' successfully found hostname '%s'\n", p.name, detectedHostname)
 		hostname = detectedHostname
 		providerName = p.name
 
 		if p.stopIfSuccessful {
-			log.Infof("hostname provider '%s' succeeded, stoping here with hostname '%s'", p.name, detectedHostname)
+			fmt.Printf("hostname provider '%s' succeeded, stoping here with hostname '%s'\n", p.name, detectedHostname)
 			return saveHostname(cacheHostnameKey, hostname, p.name), nil
 		}
 	}
