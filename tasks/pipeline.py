@@ -501,6 +501,7 @@ def changelog(ctx, new_commit_sha):
         "\"Parameter.Value\" --out text",
         hide=True,
     ).stdout.strip()
+    old_commit_sha = "4b520303"
     if not new_commit_sha:
         print("New commit sha not found, exiting")
         return
@@ -517,24 +518,30 @@ def changelog(ctx, new_commit_sha):
         commit_str = ctx.run(f"git show --name-only --pretty=format:%s%n%aN%n%aE {commit}", hide=True).stdout
         title, author, author_email, files, url = parse(commit_str)
         if is_system_probe(owners, files):
-            author_handle = ctx.run(f"email2slackid {author_email.strip()}", hide=True).stdout or author_email
-            time.sleep(1)  # necessary to prevent slack/sdm API rate limits
-            message_link = f"- <{url}|{title}>"
+            author_handle = ctx.run(f"email2slackid {author_email.strip()}", hide=True).stdout
             author_handle = "U049LRNEE01"
+            if author_handle:
+                author_handle = f"<@{author_handle}>"
+            else:
+                author_handle = author_email
+            time.sleep(1)  # necessary to prevent slack/sdm API rate limits
+            message_link = f"• <{url}|{title}>"
             if "dependabot" not in author_email and "github-actions" not in author_email:
-                messages.append(f"{message_link} <@{author_handle}>")
+                messages.append(f"{message_link} {author_handle}")
             else:
                 messages.append(f"{message_link}")
 
     commit_range_link = f"https://github.com/DataDog/datadog-agent/compare/{old_commit_sha}..{new_commit_sha}"
-
-    slack_message = (
-        f"The nightly deployment is rolling out to Staging :siren: \n"
-        f"Changelog for commit <{commit_range_link}|range>: `{old_commit_sha}` to `{new_commit_sha}`\n"
-        + "\n".join(messages)
-        + "\n:wave: Authors, please check relevant "
-        "<https://ddstaging.datadoghq.com/dashboard/kfn-zy2-t98|dashboards> for issues"
-    )
+    slack_message = f"The nightly deployment is rolling out to Staging :siren: \n"
+    if messages:
+        slack_message.join(
+            f"Changelog for commit <{commit_range_link}|range>: `{old_commit_sha}` to `{new_commit_sha}`\n"
+            + "\n".join(messages)
+            + "\n:wave: Authors, please check relevant "
+            "<https://ddstaging.datadoghq.com/dashboard/kfn-zy2-t98|dashboards> for issues"
+        )
+    else:
+        slack_message.join("No new System Probe related commits in this release :cricket:")
     print(f"tagging {new_commit_sha}")
     ctx.run(
         f"aws ssm put-parameter --name ci.datadog-agent.gitlab_changelog_commit_sha --value {new_commit_sha} "
