@@ -502,6 +502,7 @@ def changelog(ctx, new_commit_sha):
         hide=True,
     ).stdout.strip()
     old_commit_sha = "4b520303"
+    new_commit_sha = "4b520303"
     if not new_commit_sha:
         print("New commit sha not found, exiting")
         return
@@ -535,7 +536,7 @@ def changelog(ctx, new_commit_sha):
     slack_message = f"The nightly deployment is rolling out to Staging :siren: \n"
     if messages:
         slack_message += (
-            f"Changelog for commit <{commit_range_link}|range>: `{old_commit_sha}` to `{new_commit_sha}`\n"
+            f"Changelog for commit <{commit_range_link}|range>: `{old_commit_sha}` to `{new_commit_sha}`:\n"
             + "\n".join(messages)
             + "\n:wave: Authors, please check relevant "
             "<https://ddstaging.datadoghq.com/dashboard/kfn-zy2-t98|dashboards> for issues"
