@@ -157,23 +157,23 @@ func GetWithProvider(ctx context.Context) (Data, error) {
 	var providerName string
 
 	for _, p := range providerCatalog {
-		log.Debugf("trying to get hostname from '%s' provider", p.name)
+		log.Infof("trying to get hostname from '%s' provider", p.name)
 
 		detectedHostname, err := p.cb(ctx, hostname)
 		if err != nil {
 			expErr := new(expvar.String)
 			expErr.Set(err.Error())
 			hostnameErrors.Set(p.expvarName, expErr)
-			log.Debugf("unable to get the hostname from '%s' provider: %s", p.name, err)
+			log.Infof("unable to get the hostname from '%s' provider: %s", p.name, err)
 			continue
 		}
 
-		log.Debugf("hostname provider '%s' successfully found hostname '%s'", p.name, detectedHostname)
+		log.Infof("hostname provider '%s' successfully found hostname '%s'", p.name, detectedHostname)
 		hostname = detectedHostname
 		providerName = p.name
 
 		if p.stopIfSuccessful {
-			log.Debugf("hostname provider '%s' succeeded, stoping here with hostname '%s'", p.name, detectedHostname)
+			log.Infof("hostname provider '%s' succeeded, stoping here with hostname '%s'", p.name, detectedHostname)
 			return saveHostname(cacheHostnameKey, hostname, p.name), nil
 		}
 	}
