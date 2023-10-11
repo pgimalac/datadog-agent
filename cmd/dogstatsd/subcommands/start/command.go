@@ -137,6 +137,7 @@ func start(cliParams *CLIParams, config config.Component, log log.Component, par
 	return nil
 }
 
+// RunAgent runs dogstatsd
 func RunAgent(ctx context.Context, cliParams *CLIParams, config config.Component, log log.Component, params *Params, components *DogstatsdComponents, forwarder defaultforwarder.Component, demultiplexer demultiplexer.Component) (err error) {
 	if len(cliParams.confPath) == 0 {
 		log.Infof("Config will be read from env variables")
