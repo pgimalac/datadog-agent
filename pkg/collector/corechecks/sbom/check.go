@@ -223,6 +223,7 @@ func (c *Check) Configure(senderManager sender.SenderManager, integrationConfigD
 			c.sender.Count("datadog.sidescanner.scans.finished", 1.0, "", tags)
 			c.sender.Histogram("datadog.sidescanner.scans.duration",
 				float64(time.Since(cookie["startTime"].(time.Time)).Milliseconds()), "", tags)
+			c.sender.Commit()
 		}
 	}()
 
