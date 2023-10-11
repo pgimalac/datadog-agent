@@ -43,10 +43,7 @@ func TestCommandPidfile(t *testing.T) {
 
 func newGlobalParamsTest(t *testing.T) *command.GlobalParams {
 	config := path.Join(t.TempDir(), "datadog.yaml")
-	f, err := os.Create(config)
-	defer func() {
-		_ = f.Close()
-	}()
+	err := os.WriteFile(config, []byte("hostname: test"), 0644)
 	require.NoError(t, err)
 
 	return &command.GlobalParams{
