@@ -201,7 +201,7 @@ func (p *processor) processEBS(target, region, id string, done chan map[string]i
 		done <- map[string]interface{}{
 			"startTime": startTime,
 			"tags": []string{
-				"type:sbom-ebs-scan",
+				"type:ebs-scan",
 				fmt.Sprintf("region:%s", region),
 				fmt.Sprintf("target:%s", target),
 			},
@@ -255,7 +255,7 @@ func (p *processor) processLambda(functionName string, region string, done chan 
 		done <- map[string]interface{}{
 			"startTime": startTime,
 			"tags": []string{
-				"type:sbom-lambda-scan",
+				"type:lambda-scan",
 				fmt.Sprintf("region:%s", region),
 				fmt.Sprintf("function_name:%s", functionName),
 			},
