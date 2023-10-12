@@ -14,8 +14,9 @@ TAG=$1
 
 CLUSTER=SideScanning
 REGION=us-west-2
+SANDBOX=dd-sandbox #sso-sandbox-account-admin
 
-aws-vault exec dd-sandbox -- aws --region=${REGION} ecr describe-images --repository-name=sidescanning --image-ids '[{"imageTag":"'${TAG}'"}]'
+aws-vault exec ${SANDBOX} -- aws --region=${REGION} ecr describe-images --repository-name=sidescanning --image-ids '[{"imageTag":"'${TAG}'"}]'
 
 TMP=$(mktemp)
 TMP2=$(mktemp)
@@ -24,7 +25,7 @@ TMP4=$(mktemp)
 TMP5=$(mktemp)
 TMP6=$(mktemp)
 
-aws-vault exec dd-sandbox -- aws --region ${REGION} ecs describe-task-definition --task-definition SideScanner > ${TMP}
+aws-vault exec ${SANDBOX} -- aws --region ${REGION} ecs describe-task-definition --task-definition SideScanner > ${TMP}
 
 cat ${TMP} | jq '.taskDefinition | {
   containerDefinitions:    .containerDefinitions,
@@ -45,19 +46,19 @@ NEW_IMAGE=$(echo ${IMAGE} | sed -e "s/:[^:]*$/:${TAG}/")
 
 cat ${TMP2} |jq '.containerDefinitions[0].image="'${NEW_IMAGE}'"' > ${TMP3}
 
-aws-vault exec dd-sandbox -- aws --region ${REGION} ecs register-task-definition --cli-input-json file://${TMP3} > ${TMP4}
+aws-vault exec ${SANDBOX} -- aws --region ${REGION} ecs register-task-definition --cli-input-json file://${TMP3} > ${TMP4}
 
 TASK_DEFINITION_ARN=$(cat ${TMP4} | jq -r .taskDefinition.taskDefinitionArn)
 
-aws-vault exec dd-sandbox -- aws --region ${REGION} ecs run-task --task-definition ${TASK_DEFINITION_ARN}  --network-configuration 'awsvpcConfiguration={subnets=[subnet-19e8f831,subnet-461bbf0f,subnet-58d35e3f],securityGroups=[sg-69f1aa11]}' --capacity-provider-strategy capacityProvider=FARGATE --cluster SideScanning > ${TMP5}
+aws-vault exec ${SANDBOX} -- aws --region ${REGION} ecs run-task --task-definition ${TASK_DEFINITION_ARN}  --network-configuration 'awsvpcConfiguration={subnets=[subnet-19e8f831,subnet-461bbf0f,subnet-58d35e3f],securityGroups=[sg-69f1aa11]}' --capacity-provider-strategy capacityProvider=FARGATE --cluster SideScanning > ${TMP5}
 
 TASK_ARN=$(cat ${TMP5} | jq -r .tasks[].taskArn)
 
-aws-vault exec dd-sandbox -- aws --region ${REGION} ecs list-tasks --cluster ${CLUSTER} > ${TMP6}
+aws-vault exec ${SANDBOX} -- aws --region ${REGION} ecs list-tasks --cluster ${CLUSTER} > ${TMP6}
 
 for task in $(cat ${TMP6} | jq -r '.taskArns[]' | grep -v ${TASK_ARN}); do
 
-    aws-vault exec dd-sandbox -- aws --region ${REGION} ecs stop-task --cluster ${CLUSTER} --task ${task} 
+    aws-vault exec ${SANDBOX} -- aws --region ${REGION} ecs stop-task --cluster ${CLUSTER} --task ${task}
 
 done
 

@@ -3,6 +3,7 @@ set -x
 
 IMAGE=sidescanning
 REGISTRY=601427279990.dkr.ecr.us-west-2.amazonaws.com
+SANDBOX=dd-sandbox #sso-sandbox-account-admin
 
 docker build -t ${IMAGE} .
 
@@ -14,8 +15,8 @@ docker tag ${IMAGE}:latest ${REGISTRY}/${IMAGE}:latest
 docker tag ${IMAGE}:latest ${REGISTRY}/${IMAGE}:${TAG}
 
 unset AWS_VAULT
-aws-vault login dd-sandbox
-aws-vault exec dd-sandbox -- aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin ${REGISTRY}
+aws-vault login ${SANDBOX}
+aws-vault exec ${SANDBOX} -- aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin ${REGISTRY}
 
 
 docker push ${REGISTRY}/${IMAGE}:latest
