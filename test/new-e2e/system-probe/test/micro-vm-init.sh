@@ -7,15 +7,18 @@ RETRY_COUNT=$2
 ARCH=$3
 RUNNER_CMD="$(shift 3; echo "$*")"
 
-KITCHEN_DOCKERS=/kitchen-docker
-
 # Add provisioning steps here !
 ## Set go version correctly
 eval $(gimme "$GOVERSION")
 ## Start docker
 systemctl start docker
 ## Load docker images
-[ -d $KITCHEN_DOCKERS ] && find $KITCHEN_DOCKERS -maxdepth 1 -type f -exec docker load -i {} \;
+if [ -f /docker-images.txt ]; then
+  DOCKER_USERNAME=$(</docker-username)
+  DOCKER_REGISTRY=$(</docker-registry)
+  docker login --username "${DOCKER_USERNAME}" --password-stdin "${DOCKER_REGISTRY}" < /docker-password
+  xargs -L1 -a /docker-images.txt docker pull
+fi
 
 # VM provisioning end !
 

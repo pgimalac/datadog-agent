@@ -50,7 +50,7 @@
 # The ebpf-platform team is trying to measure the time from the start of the pipeline to the completion of the kernel_matrix_testing and functional_tests stages, to measure improvement.
 # The CI visibility product currently does not provide a way to measure this in the datadog app.
 # We are trying to hack around this by having jobs which are triggered at the start of a pipeline.
-# For functional tests this is the 'kitchen_test_dummy_job_tmp' and for kernel_matrix_testing it is the 'pull_test_dockers*' jobs.
+# For functional tests this is the 'kitchen_test_dummy_job_tmp' and for kernel_matrix_testing it is the 'upload_dependencies_*' jobs.
 # This way the stage.duration metric will allow us to measure what we want.
 # This will most likely be temporary, until we decide which approach to move forward with for testing in the future.
 kitchen_test_dummy_job_tmp:
@@ -76,7 +76,6 @@ kitchen_test_system_probe_linux_x64_ec2:
     KITCHEN_EC2_INSTANCE_TYPE: "t2.xlarge"
     KITCHEN_CI_MOUNT_PATH: "/mnt/ci"
     KITCHEN_CI_ROOT_PATH: "/tmp/ci"
-    KITCHEN_DOCKERS: $DD_AGENT_TESTING_DIR/kitchen-dockers-$ARCH
   parallel:
     matrix:
       - KITCHEN_PLATFORM: "amazonlinux"
@@ -135,7 +134,6 @@ kitchen_test_system_probe_linux_arm64:
     KITCHEN_EC2_INSTANCE_TYPE: "t4g.xlarge"
     KITCHEN_CI_MOUNT_PATH: "/mnt/ci"
     KITCHEN_CI_ROOT_PATH: "/tmp/ci"
-    KITCHEN_DOCKERS: $DD_AGENT_TESTING_DIR/kitchen-dockers-$ARCH
   parallel:
     matrix:
       - KITCHEN_PLATFORM: "amazonlinux"
