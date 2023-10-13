@@ -207,28 +207,27 @@ func (p *processor) deleteSnapshot(svc *ec2.EC2, snapshotID string) error {
 
 func (p *processor) processEBS(volumeID, region, id string, done chan map[string]interface{}) {
 	log.Debugf("Triggering volume SBOM")
-	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String(region),
-	})
-	svc := ec2.New(sess)
-	snapshotID, err := p.createEBSSnapshot(svc, volumeID)
-	if err != nil {
-		log.Errorf("Could not create snapshot from volume %s: %v", volumeID, err)
-		return
-	}
-	defer p.deleteSnapshot(svc, snapshotID)
 
-	target := "ebs:" + snapshotID
 	ch := make(chan sbom.ScanResult, 1)
-	scanRequest := &vm.ScanRequest{Path: target, Region: region}
-
-	startTime := time.Now()
-	if err := p.sbomScanner.Scan(scanRequest, p.vmScanOpts, ch); err != nil {
-		log.Errorf("Failed to trigger SBOM generation for VM: %s", err)
-		return
-	}
-
 	go func() {
+		startTime := time.Now()
+		sess, err := session.NewSession(&aws.Config{
+			Region: aws.String(region),
+		})
+		svc := ec2.New(sess)
+		snapshotID, err := p.createEBSSnapshot(svc, volumeID)
+		if err != nil {
+			log.Errorf("Could not create snapshot from volume %s: %v", volumeID, err)
+			return
+		}
+		defer p.deleteSnapshot(svc, snapshotID)
+
+		target := "ebs:" + snapshotID
+		scanRequest := &vm.ScanRequest{Path: target, Region: region}
+		if err := p.sbomScanner.Scan(scanRequest, p.vmScanOpts, ch); err != nil {
+			log.Errorf("Failed to trigger SBOM generation for VM: %s", err)
+			return
+		}
 		result := <-ch
 
 		done <- map[string]interface{}{
