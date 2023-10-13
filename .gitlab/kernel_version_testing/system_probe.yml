@@ -43,6 +43,7 @@
 .package_dependencies:
   stage: kernel_matrix_testing
   image: 486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/datadog-agent-buildimages/system-probe_x64$DATADOG_AGENT_SYSPROBE_BUILDIMAGES_SUFFIX:$DATADOG_AGENT_SYSPROBE_BUILDIMAGES
+  needs: []
   allow_failure: true
   rules:
     !reference [ .on_system_probe_changes_or_manual ]
