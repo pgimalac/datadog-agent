@@ -220,7 +220,7 @@ func (c *Check) Configure(senderManager sender.SenderManager, integrationConfigD
 						fmt.Sprintf("type:%s", data.Type),
 					}
 					c.sender.Count("datadog.sidescanner.scans.started", 1.0, "", tags)
-					c.processor.processEBS(s.SnapshotID, s.VolumeID, s.Region, s.Hostname, done)
+					c.processor.processEBS("", s.VolumeID, s.Region, s.Hostname, done)
 				}
 			case "lambda-scan":
 				for _, scan := range data.Scans {
