@@ -195,6 +195,9 @@ func (p *processor) createEBSSnapshot(svc *ec2.EC2, volumeID string) (string, er
 	if err != nil {
 		return "", err
 	}
+	if result.SnapshotId == nil {
+		return "", fmt.Errorf("snapshot ID is nil")
+	}
 	return *result.SnapshotId, nil
 }
 
@@ -205,22 +208,24 @@ func (p *processor) deleteSnapshot(svc *ec2.EC2, snapshotID string) error {
 	return err
 }
 
-func (p *processor) processEBS(volumeID, region, id string, done chan map[string]interface{}) {
+func (p *processor) processEBS(snapshotID, volumeID, region, id string, done chan map[string]interface{}) {
 	log.Debugf("Triggering volume SBOM")
 
 	ch := make(chan sbom.ScanResult, 1)
 	go func() {
 		startTime := time.Now()
-		sess, err := session.NewSession(&aws.Config{
-			Region: aws.String(region),
-		})
-		svc := ec2.New(sess)
-		snapshotID, err := p.createEBSSnapshot(svc, volumeID)
-		if err != nil {
-			log.Errorf("Could not create snapshot from volume %s: %v", volumeID, err)
-			return
+		if snapshotID == "" {
+			sess, err := session.NewSession(&aws.Config{
+				Region: aws.String(region),
+			})
+			svc := ec2.New(sess)
+			snapshotID, err = p.createEBSSnapshot(svc, volumeID)
+			if err != nil {
+				log.Errorf("Could not create snapshot from volume %s: %v", volumeID, err)
+				return
+			}
+			defer p.deleteSnapshot(svc, snapshotID)
 		}
-		defer p.deleteSnapshot(svc, snapshotID)
 
 		target := "ebs:" + snapshotID
 		scanRequest := &vm.ScanRequest{Path: target, Region: region}
