@@ -195,7 +195,7 @@ end
 execute 'pull docker images' do
   command <<-EOF
     cat /tmp/docker_password | docker login --username #{node[:docker][:username].to_s} --password-stdin #{node[:docker][:registry]}
-    xargs -a /tmp/docker-images.txt docker pull
+    xargs -L1 -a /tmp/docker-images.txt docker pull
   EOF
   user "root"
   live_stream true
