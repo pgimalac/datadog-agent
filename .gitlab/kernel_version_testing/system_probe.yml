@@ -54,7 +54,6 @@
   script:
     # Build dependencies directory
     - mkdir -p $DEPENDENCIES
-    - pushd $DEPENDENCIES
     # copy micro-vm-init.sh
     - cp $CI_PROJECT_DIR/test/new-e2e/system-probe/test/micro-vm-init.sh $DEPENDENCIES
     - inv system-probe.test-docker-image-list > $DEPENDENCIES/docker-images.txt
