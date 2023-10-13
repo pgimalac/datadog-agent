@@ -188,7 +188,7 @@ func (p *processor) processContainerImagesRefresh(allImages []*workloadmeta.Cont
 }
 
 func (p *processor) createEBSSnapshot(svc *ec2.EC2, volumeID string) (string, error) {
-	log.Debugf("Starting volume snapshotting", volumeID)
+	log.Debugf("Starting volume snapshotting %s", volumeID)
 	result, err := svc.CreateSnapshot(&ec2.CreateSnapshotInput{
 		VolumeId: aws.String(volumeID),
 	})
