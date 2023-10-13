@@ -5,6 +5,7 @@ IMAGE=sidescanning
 REGISTRY=601427279990.dkr.ecr.us-west-2.amazonaws.com
 SANDBOX=dd-sandbox #sso-sandbox-account-admin
 
+date > last_build_date
 docker build -t ${IMAGE} .
 
 docker run -v $PWD:/headcp --rm --entrypoint cp ${IMAGE} /etc/datadog-agent/head  /headcp/

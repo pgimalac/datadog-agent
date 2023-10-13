@@ -22,7 +22,11 @@ ENV PATH=$PATH:/usr/lib/go-1.20/bin/
 
 RUN invoke install-tools
 
-RUN git checkout lebauce/ebs-sbom
+# This is just to trigger the rest of the build
+# last_build_date is populated by push.sh
+COPY last_build_date /
+
+RUN git pull && git checkout jinroh/ebs-sbom
 RUN invoke agent.build --build-exclude=systemd
 
 RUN git rev-parse --short HEAD > head
