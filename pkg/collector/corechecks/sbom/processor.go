@@ -30,6 +30,10 @@ import (
 	queue "github.com/DataDog/datadog-agent/pkg/util/aggregatingqueue"
 	"github.com/DataDog/datadog-agent/pkg/util/log"
 	"github.com/DataDog/datadog-agent/pkg/workloadmeta"
+	"github.com/aws/aws-sdk-go/aws"
+
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/ec2"
 
 	model "github.com/DataDog/agent-payload/v5/sbom"
 
@@ -183,9 +187,38 @@ func (p *processor) processContainerImagesRefresh(allImages []*workloadmeta.Cont
 	}
 }
 
-func (p *processor) processEBS(target, region, id string, done chan map[string]interface{}) {
-	log.Debugf("Triggering volume SBOM")
+func (p *processor) createEBSSnapshot(svc *ec2.EC2, volumeID string) (string, error) {
+	log.Debugf("Starting volume snapshotting", volumeID)
+	result, err := svc.CreateSnapshot(&ec2.CreateSnapshotInput{
+		VolumeId: aws.String(volumeID),
+	})
+	if err != nil {
+		return "", err
+	}
+	return *result.SnapshotId, nil
+}
 
+func (p *processor) deleteSnapshot(svc *ec2.EC2, snapshotID string) error {
+	_, err := svc.DeleteSnapshot(&ec2.DeleteSnapshotInput{
+		SnapshotId: aws.String(snapshotID),
+	})
+	return err
+}
+
+func (p *processor) processEBS(volumeID, region, id string, done chan map[string]interface{}) {
+	log.Debugf("Triggering volume SBOM")
+	sess, err := session.NewSession(&aws.Config{
+		Region: aws.String(region),
+	})
+	svc := ec2.New(sess)
+	snapshotID, err := p.createEBSSnapshot(svc, volumeID)
+	if err != nil {
+		log.Errorf("Could not create snapshot from volume %s: %v", volumeID, err)
+		return
+	}
+	defer p.deleteSnapshot(svc, snapshotID)
+
+	target := "ebs:" + snapshotID
 	ch := make(chan sbom.ScanResult, 1)
 	scanRequest := &vm.ScanRequest{Path: target, Region: region}
 

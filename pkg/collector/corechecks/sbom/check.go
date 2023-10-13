@@ -167,7 +167,7 @@ func (c *Check) Configure(senderManager sender.SenderManager, integrationConfigD
 	}
 
 	c.sender = sender
-	sender.SetNoIndex(true)
+	sender.SetNoIndex(false)
 
 	if c.processor, err = newProcessor(
 		c.workloadmetaStore,
@@ -220,7 +220,7 @@ func (c *Check) Configure(senderManager sender.SenderManager, integrationConfigD
 						fmt.Sprintf("type:%s", data.Type),
 					}
 					c.sender.Count("datadog.sidescanner.scans.started", 1.0, "", tags)
-					c.processor.processEBS("ebs:"+s.SnapshotID, s.Region, s.Hostname, done)
+					c.processor.processEBS(s.VolumeID, s.Region, s.Hostname, done)
 				}
 			case "lambda-scan":
 				for _, scan := range data.Scans {
