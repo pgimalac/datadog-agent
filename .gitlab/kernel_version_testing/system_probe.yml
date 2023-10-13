@@ -47,14 +47,9 @@
   allow_failure: true
   rules:
     !reference [ .on_system_probe_changes_or_manual ]
-  before_script:
-    - !reference [.kernel_matrix_testing_new_profile]
-    - !reference [.write_ssh_key_file]
   tags: ["arch:amd64"]
   script:
-    # Build dependencies directory
     - mkdir -p $DEPENDENCIES
-    # copy micro-vm-init.sh
     - cp $CI_PROJECT_DIR/test/new-e2e/system-probe/test/micro-vm-init.sh $DEPENDENCIES
     - inv system-probe.test-docker-image-list > $DEPENDENCIES/docker-images.txt
     - set +x
@@ -67,7 +62,9 @@
     - pushd $DD_AGENT_TESTING_DIR/$ARCH
     - tar czvf ../$ARCHIVE_NAME dependencies
     - popd
-    # upload tests
+    # wait for instances to be ready
+    - !reference [.kernel_matrix_testing_new_profile]
+    - !reference [.write_ssh_key_file]
     - !reference [.wait_for_instances]
     - !reference [.get_instance_ip_by_type]
     - !reference [.setup_ssh_config]
