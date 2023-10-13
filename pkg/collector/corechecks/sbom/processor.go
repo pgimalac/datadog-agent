@@ -198,6 +198,12 @@ func (p *processor) createEBSSnapshot(svc *ec2.EC2, volumeID string) (string, er
 	if result.SnapshotId == nil {
 		return "", fmt.Errorf("snapshot ID is nil")
 	}
+	err = svc.WaitUntilSnapshotCompleted(&ec2.DescribeSnapshotsInput{
+		SnapshotIds: []*string{result.SnapshotId},
+	})
+	if err != nil {
+		return "", err
+	}
 	return *result.SnapshotId, nil
 }
 
