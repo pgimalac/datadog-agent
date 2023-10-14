@@ -378,7 +378,7 @@ def test(ctx, vms, stack=None, packages="", run=None, retry=2, rebuild_deps=Fals
     run_cmd_vms(
         ctx,
         stack,
-        f"bash /micro-vm-init.sh {go_version} {retry} {platform.machine()} {' '.join(args)}",
+        f"bash /micro-vm-init.sh {go_version} {retry} {' '.join(args)}",
         target_vms,
         "",
         allow_fail=True,
