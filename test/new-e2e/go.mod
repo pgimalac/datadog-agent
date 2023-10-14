@@ -41,6 +41,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/kr/pretty v0.3.1
 	github.com/pkg/sftp v1.13.6
+	github.com/pulumi/pulumi-aws/sdk/v6 v6.5.0
 	k8s.io/api v0.27.3
 	k8s.io/apimachinery v0.27.3
 	k8s.io/client-go v0.27.3
