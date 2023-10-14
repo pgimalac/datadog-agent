@@ -21,7 +21,7 @@
 .write_ssh_key_file:
   - |
     get_ssh_secrets() {
-      if [ -o xtrace ]; then; set +x; trap 'set -x' RETURN; fi
+      if [ -o xtrace ]; then set +x; trap 'set -x' RETURN; fi
       aws ssm get-parameter --region us-east-1 --name ci.datadog-agent.ssh_key --with-decryption --query "Parameter.Value" --out text > $AWS_EC2_SSH_KEY_FILE
     }
     get_ssh_secrets
@@ -54,7 +54,7 @@
     - inv system-probe.test-docker-image-list > $DEPENDENCIES/docker-images.txt
     - |
       get_docker_secrets() {
-        if [ -o xtrace ]; then; set +x; trap 'set -x' RETURN; fi
+        if [ -o xtrace ]; then set +x; trap 'set -x' RETURN; fi
         echo -n $DOCKER_REGISTRY_URL > $DEPENDENCIES/docker-registry
         aws ssm get-parameter --region us-east-1 --name ci.datadog-agent.$DOCKER_REGISTRY_LOGIN_SSM_KEY --with-decryption --query "Parameter.Value" --out text > $DEPENDENCIES/docker-username
         aws ssm get-parameter --region us-east-1 --name ci.datadog-agent.$DOCKER_REGISTRY_PWD_SSM_KEY --with-decryption --query "Parameter.Value" --out text > $DEPENDENCIES/docker-password
@@ -233,7 +233,7 @@ upload_minimized_btfs_arm64:
   - mkdir -p ~/.aws
   - |
     get_aws_secrets() {
-      if [ -o xtrace ]; then; set +x; trap 'set -x' RETURN; fi
+      if [ -o xtrace ]; then set +x; trap 'set -x' RETURN; fi
       aws ssm get-parameter --region us-east-1 --name ci.datadog-agent.agent-qa-profile --with-decryption --query "Parameter.Value" --out text >> ~/.aws/config
     }
     get_aws_secrets

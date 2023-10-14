@@ -30,7 +30,7 @@
     - inv system-probe.test-docker-image-list > $DD_AGENT_TESTING_DIR/site-cookbooks/dd-system-probe-check/files/docker-images.txt
     - |
       get_docker_secrets() {
-        if [ -o xtrace ]; then; set +x; trap 'set -x' RETURN; fi
+        if [ -o xtrace ]; then set +x; trap 'set -x' RETURN; fi
         export DOCKER_REGISTRY_LOGIN=$(aws ssm get-parameter --region us-east-1 --name ci.datadog-agent.$DOCKER_REGISTRY_LOGIN_SSM_KEY --with-decryption --query "Parameter.Value" --out text)
         export DOCKER_REGISTRY_PASSWORD=$(aws ssm get-parameter --region us-east-1 --name ci.datadog-agent.$DOCKER_REGISTRY_PWD_SSM_KEY --with-decryption --query "Parameter.Value" --out text)
       }
