@@ -19,9 +19,12 @@
     sleep 10
 
 .write_ssh_key_file:
-  - reset_x=false; if [ -o xtrace ]; reset_x=true; set +x; fi
-  - aws ssm get-parameter --region us-east-1 --name ci.datadog-agent.ssh_key --with-decryption --query "Parameter.Value" --out text > $AWS_EC2_SSH_KEY_FILE
-  - "$reset_x" && set -x
+  - |
+    get_ssh_secrets() {
+      if [ -o xtrace ]; then; set +x; trap 'set -x' RETURN; fi
+      aws ssm get-parameter --region us-east-1 --name ci.datadog-agent.ssh_key --with-decryption --query "Parameter.Value" --out text > $AWS_EC2_SSH_KEY_FILE
+    }
+    get_ssh_secrets
   # Without the newline ssh silently fails and moves on to try other auth methods
   - echo "" >> $AWS_EC2_SSH_KEY_FILE
   - chmod 600 $AWS_EC2_SSH_KEY_FILE
@@ -49,11 +52,14 @@
     - mkdir -p $DEPENDENCIES
     - cp $CI_PROJECT_DIR/test/new-e2e/system-probe/test/micro-vm-init.sh $DEPENDENCIES
     - inv system-probe.test-docker-image-list > $DEPENDENCIES/docker-images.txt
-    - reset_x=false; if [ -o xtrace ]; reset_x=true; set +x; fi
-    - echo -n $DOCKER_REGISTRY_URL > $DEPENDENCIES/docker-registry
-    - aws ssm get-parameter --region us-east-1 --name ci.datadog-agent.$DOCKER_REGISTRY_LOGIN_SSM_KEY --with-decryption --query "Parameter.Value" --out text > $DEPENDENCIES/docker-username
-    - aws ssm get-parameter --region us-east-1 --name ci.datadog-agent.$DOCKER_REGISTRY_PWD_SSM_KEY --with-decryption --query "Parameter.Value" --out text > $DEPENDENCIES/docker-password
-    - "$reset_x" && set -x
+    - |
+      get_docker_secrets() {
+        if [ -o xtrace ]; then; set +x; trap 'set -x' RETURN; fi
+        echo -n $DOCKER_REGISTRY_URL > $DEPENDENCIES/docker-registry
+        aws ssm get-parameter --region us-east-1 --name ci.datadog-agent.$DOCKER_REGISTRY_LOGIN_SSM_KEY --with-decryption --query "Parameter.Value" --out text > $DEPENDENCIES/docker-username
+        aws ssm get-parameter --region us-east-1 --name ci.datadog-agent.$DOCKER_REGISTRY_PWD_SSM_KEY --with-decryption --query "Parameter.Value" --out text > $DEPENDENCIES/docker-password
+      }
+      get_docker_secrets
     # package all the dependencies
     - ls -la $DEPENDENCIES
     - pushd $DD_AGENT_TESTING_DIR/$ARCH
@@ -225,9 +231,12 @@ upload_minimized_btfs_arm64:
 
 .kernel_matrix_testing_new_profile:
   - mkdir -p ~/.aws
-  - reset_x=false; if [ -o xtrace ]; reset_x=true; set +x; fi
-  - aws ssm get-parameter --region us-east-1 --name ci.datadog-agent.agent-qa-profile --with-decryption --query "Parameter.Value" --out text >> ~/.aws/config
-  - "$reset_x" && set -x
+  - |
+    get_aws_secrets() {
+      if [ -o xtrace ]; then; set +x; trap 'set -x' RETURN; fi
+      aws ssm get-parameter --region us-east-1 --name ci.datadog-agent.agent-qa-profile --with-decryption --query "Parameter.Value" --out text >> ~/.aws/config
+    }
+    get_aws_secrets
   - export AWS_PROFILE=agent-qa-ci
 
 kernel_matrix_testing_setup_env:
