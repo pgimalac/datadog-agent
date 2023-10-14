@@ -20,7 +20,7 @@
 
 .wait_for_instance:
   - |
-    COUNTER=0
+    COUNTER=0; echo "Waiting for instances"
     until aws ec2 wait instance-exists --filters $FILTER_TEAM $FILTER_MANAGED $FILTER_STATE $FILTER_PIPELINE $FILTER_INSTANCE_TYPE || [[ "$COUNTER" -ge 6 ]]; do
       echo "[$((++COUNTER))] Waiting for instances"
     done
@@ -304,7 +304,7 @@ kernel_matrix_testing_setup_env:
     - INSTANCE_IP=$(cat $CI_PROJECT_DIR/stack.outputs | grep $ARCH-instance-ip | cut -d ' ' -f 2)
     - RUNNING_INSTANCE=$(aws ec2 describe-instances --filters $FILTER_TEAM $FILTER_MANAGED $FILTER_PIPELINE "Name=private-ip-address,Values=$INSTANCE_IP" --output text --query $QUERY_INSTANCE_IDS | wc -l )
     - |
-      if [ $RUNNING_INSTANCES -eq "0" ]; then
+      if [ $RUNNING_INSTANCE -eq "0" ]; then
         echo "These jobs do not permit retries. The go tests are retried a user-specified number of times automatically. In order to re-run the tests, you must trigger the pipeline again"
         'false'
       fi
