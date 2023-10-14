@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -eo xtrace
+trap 'echo $SECONDS' DEBUG
 
 GOVERSION=$1
 RETRY_COUNT=$2
