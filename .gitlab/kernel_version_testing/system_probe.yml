@@ -289,15 +289,14 @@ kernel_matrix_testing_setup_env:
     - !reference [.kernel_matrix_testing_new_profile]
     - !reference [.write_ssh_key_file]
   script:
-    - ALL_INSTANCE_IPS=$(cat $CI_PROJECT_DIR/stack.outputs | grep -e '-instance-ip' | cut -d ' ' -f 2 | tr '\n' ' ' | awk '{$1=$1};1' | tr ' ' ',')
+    - INSTANCE_IP=$(cat $CI_PROJECT_DIR/stack.outputs | grep $ARCH-instance-ip | cut -d ' ' -f 2)
     - !reference [.shared_filters_and_queries]
-    - RUNNING_INSTANCES=$(aws ec2 describe-instances --filters $FILTER_TEAM $FILTER_MANAGED $FILTER_PIPELINE "Name=private-ip-address,Values=$ALL_INSTANCE_IPS" --output text --query $QUERY_INSTANCE_IDS | wc -l )
+    - RUNNING_INSTANCE=$(aws ec2 describe-instances --filters $FILTER_TEAM $FILTER_MANAGED $FILTER_PIPELINE "Name=private-ip-address,Values=$INSTANCE_IP" --output text --query $QUERY_INSTANCE_IDS | wc -l )
     - |
       if [ $RUNNING_INSTANCES -eq "0" ]; then
         echo "These jobs do not permit retries. The go tests are retried a user-specified number of times automatically. In order to re-run the tests, you must trigger the pipeline again"
         'false'
       fi
-    - INSTANCE_IP=$(cat $CI_PROJECT_DIR/stack.outputs | grep $ARCH-instance-ip | cut -d ' ' -f 2)
     - MICRO_VM_IP=$(cat $CI_PROJECT_DIR/stack.outputs | grep $ARCH-$TAG | cut -d ' ' -f 2)
     - MICRO_VM_NAME=$(cat $CI_PROJECT_DIR/stack.outputs | grep $ARCH-$TAG | cut -d ' ' -f 1)
     - GO_VERSION=$(inv go-version)
