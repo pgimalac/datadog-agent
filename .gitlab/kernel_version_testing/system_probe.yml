@@ -3,21 +3,18 @@
   - FILTER_MANAGED="Name=tag:managed-by,Values=pulumi"
   - FILTER_STATE="Name=instance-state-name,Values=running"
   - FILTER_PIPELINE="Name=tag:pipeline-id,Values=${CI_PIPELINE_ID}"
+  - FILTER_INSTANCE_TYPE="Name=instance-type,Values=${INSTANCE_TYPE}"
   - QUERY_INSTANCE_IDS='Reservations[*].Instances[*].InstanceId'
   - QUERY_PRIVATE_IPS='Reservations[*].Instances[*].PrivateIpAddress'
 
-.wait_for_instances:
+.wait_for_instance:
   - !reference [.shared_filters_and_queries]
   - |
     COUNTER=0
-    while [[ $(aws ec2 describe-instances --filters $FILTER_TEAM $FILTER_MANAGED $FILTER_STATE $FILTER_PIPELINE  --output text --query $QUERY_INSTANCE_IDS  | wc -l ) != "2" && $COUNTER -le 40 ]]; do COUNTER=$[$COUNTER +1]; echo "[${COUNTER}] Waiting for instances"; sleep 30; done
-    # check that 2 instances are ready, or fail
-    if [ $(aws ec2 describe-instances --filters $FILTER_TEAM $FILTER_MANAGED $FILTER_STATE $FILTER_PIPELINE --output text --query $QUERY_INSTANCE_IDS | wc -l) -ne "2" ]; then
-        echo "Both instances NOT found"
-        "false"
-    fi
-    echo "Both Instances found"
-    INSTANCE_IDS=$(aws ec2 describe-instances --filters $FILTER_TEAM $FILTER_MANAGED $FILTER_STATE $FILTER_PIPELINE --output text --query $QUERY_INSTANCE_IDS | tr '\n' ' ')
+    until aws ec2 wait instance-exists --filters $FILTER_TEAM $FILTER_MANAGED $FILTER_STATE $FILTER_PIPELINE $FILTER_INSTANCE_TYPE || [[ "$COUNTER" -ge 6 ]]; do
+      echo "[$((++COUNTER))] Waiting for instances"
+    done
+    INSTANCE_IDS=$(aws ec2 describe-instances --filters $FILTER_TEAM $FILTER_MANAGED $FILTER_STATE $FILTER_PIPELINE $FILTER_INSTANCE_TYPE --output text --query $QUERY_INSTANCE_IDS | tr '\n' ' ')
     aws ec2 wait instance-status-ok --instance-ids $INSTANCE_IDS
     sleep 10
 
@@ -65,7 +62,7 @@
     # wait for instances to be ready
     - !reference [.kernel_matrix_testing_new_profile]
     - !reference [.write_ssh_key_file]
-    - !reference [.wait_for_instances]
+    - !reference [.wait_for_instance]
     - !reference [.get_instance_ip_by_type]
     - !reference [.setup_ssh_config]
     - scp $DD_AGENT_TESTING_DIR/$ARCHIVE_NAME metal_instance:/opt/kernel-version-testing/
@@ -126,7 +123,7 @@ upload_dependencies_arm64:
     - tar czvf ../$ARCHIVE_NAME tests
     - popd
     # upload tests
-    - !reference [.wait_for_instances]
+    - !reference [.wait_for_instance]
     - !reference [.get_instance_ip_by_type]
     - !reference [.setup_ssh_config]
     - scp $DD_AGENT_TESTING_DIR/$ARCHIVE_NAME metal_instance:/opt/kernel-version-testing/
@@ -199,7 +196,7 @@ upload_system_probe_tests_arm64:
     # causes permission issues.
     - !reference [.kernel_matrix_testing_new_profile]
     - !reference [.write_ssh_key_file]
-    - !reference [.wait_for_instances]
+    - !reference [.wait_for_instance]
     - !reference [.get_instance_ip_by_type]
     - !reference [.setup_ssh_config]
     - scp $DD_AGENT_TESTING_DIR/$ARCHIVE_NAME metal_instance:/opt/kernel-version-testing/
