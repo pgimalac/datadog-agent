@@ -240,7 +240,7 @@ func TestPropagationStyle(t *testing.T) {
 			name:       "datadog,tracecontext-type-headers-all",
 			propType:   "datadog,tracecontext",
 			hdrs:       headersAll,
-			expTraceID: w3c.trace.asUint,
+			expTraceID: dd.trace.asUint,
 		},
 		{
 			name:       "tracecontext,datadog-type-headers-all",
