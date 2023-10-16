@@ -144,13 +144,17 @@ def launch_stack(ctx, stack, ssh_key, x86_ami, arm_ami):
     if remote_vms_in_config(vm_config):
         prefix = "aws-vault exec sso-sandbox-account-admin --"
 
+    provision = ""
     if local_vms_in_config(vm_config):
         check_env(ctx)
         local = "--local"
+    else:
+        provision = "--provision"
+
 
     env_vars = ' '.join(env)
     ctx.run(
-        f"{env_vars} {prefix} inv -e system-probe.start-microvms --instance-type-x86={X86_INSTANCE_TYPE} --instance-type-arm={ARM_INSTANCE_TYPE} --x86-ami-id={x86_ami} --arm-ami-id={arm_ami} --ssh-key-name={ssh_key} --infra-env=aws/sandbox --vmconfig={vm_config} --stack-name={stack} {local}"
+        f"{env_vars} {prefix} inv -e system-probe.start-microvms {provision} --instance-type-x86={X86_INSTANCE_TYPE} --instance-type-arm={ARM_INSTANCE_TYPE} --x86-ami-id={x86_ami} --arm-ami-id={arm_ami} --ssh-key-name={ssh_key} --infra-env=aws/sandbox --vmconfig={vm_config} --stack-name={stack} {local}"
     )
 
     info(f"[+] Stack {stack} successfully setup")
