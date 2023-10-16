@@ -508,7 +508,8 @@ func (suite *Suite[Env]) TearDownSuite() {
 	// TODO: Implement retry on delete
 	ctx, cancel := context.WithTimeout(context.Background(), deleteTimeout)
 	defer cancel()
-	err := infra.GetStackManager().DeleteStack(ctx, suite.params.StackName)
+
+	err := infra.GetStackManagerInterface(suite.params.FakeStack).DeleteStack(ctx, suite.params.StackName)
 	if err != nil {
 		suite.T().Errorf("unable to delete stack: %s, err :%v", suite.params.StackName, err)
 		suite.T().Fail()
@@ -519,7 +520,7 @@ func createEnv[Env any](suite *Suite[Env], stackDef *StackDefinition[Env]) (*Env
 	var env *Env
 	ctx := context.Background()
 
-	_, stackOutput, err := infra.GetStackManager().GetStackNoDeleteOnFailure(
+	_, stackOutput, err := infra.GetStackManagerInterface(suite.params.FakeStack).GetStackNoDeleteOnFailure(
 		ctx,
 		suite.params.StackName,
 		stackDef.configMap,
