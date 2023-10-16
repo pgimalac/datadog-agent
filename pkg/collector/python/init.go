@@ -312,7 +312,9 @@ func resolvePythonExecPath(pythonVersion string, ignoreErrors bool) (string, err
 		}
 	}
 
-	if pythonVersion == "2" {
+	if config.Datadog.GetString("python_home") != "" {
+		PythonHome = config.Datadog.GetString("python_home")
+	} else if pythonVersion == "2" {
 		PythonHome = pythonHome2
 	} else if pythonVersion == "3" {
 		PythonHome = pythonHome3
