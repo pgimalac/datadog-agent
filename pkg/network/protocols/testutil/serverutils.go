@@ -44,8 +44,7 @@ func RunDockerServer(t testing.TB, serverName, dockerPath string, env []string, 
 
 		c := exec.Command("docker-compose", "-f", dockerPath, "down", "--remove-orphans")
 		c.Env = append(c.Env, env...)
-		// Not waiting for its finish.
-		_ = c.Start()
+		_ = c.Run()
 	})
 
 	for {
