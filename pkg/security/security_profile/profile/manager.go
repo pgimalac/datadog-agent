@@ -701,6 +701,9 @@ func (m *SecurityProfileManager) LookupEventInProfiles(event *model.Event) {
 	case StableEventType:
 		// check if the event is in its profile
 		found, err := profile.ActivityTree.Contains(event, activity_tree.ProfileDrift, m.resolvers)
+
+		seclog.Debugf("LookupEventInProfiles ? %v/%v : %+v", found, err, event.ProcessContext.FileEvent.PathnameStr)
+
 		if err != nil {
 			// ignore, evaluation failed
 			m.incrementEventFilteringStat(event.GetEventType(), NoProfile, NA)
@@ -731,6 +734,8 @@ func (m *SecurityProfileManager) tryAutolearn(profile *SecurityProfile, event *m
 		}
 		profile.eventTypeState[event.GetEventType()] = eventState
 	} else if eventState.state == UnstableEventType {
+		seclog.Debugf("tryAutolearn/UnstableEventType: %+v", event.ProcessContext.FileEvent.PathnameStr)
+
 		// If for the given event type we already are on UnstableEventType, just return
 		// (once reached, this state is immutable)
 		m.incrementEventFilteringStat(event.GetEventType(), UnstableEventType, NA)
@@ -741,11 +746,15 @@ func (m *SecurityProfileManager) tryAutolearn(profile *SecurityProfile, event *m
 	if event.ResolveEventTime().Sub(time.Unix(0, int64(event.ContainerContext.CreatedAt))) < m.config.RuntimeSecurity.AnomalyDetectionWorkloadWarmupPeriod {
 		nodeType = activity_tree.WorkloadWarmup
 		profileState = WorkloadWarmup
+
+		seclog.Debugf("tryAutolearn/WorkloadWarmup (%s vs %s): %+v", event.ResolveEventTime().Sub(time.Unix(0, int64(event.ContainerContext.CreatedAt))), m.config.RuntimeSecurity.AnomalyDetectionWorkloadWarmupPeriod, event.ProcessContext.FileEvent.PathnameStr)
 	} else {
 		// If for the given event type we already are on StableEventType (and outside of the warmup period), just return
 		if eventState.state == StableEventType {
 			return StableEventType
 		}
+
+		seclog.Debugf("tryAutolearn/StableEventType ? (%s vs %s): %+v", time.Duration(event.TimestampRaw-eventState.lastAnomalyNano), m.config.RuntimeSecurity.GetAnomalyDetectionMinimumStablePeriod(event.GetEventType()), event.ProcessContext.FileEvent.PathnameStr)
 
 		// did we reached the stable state time limit ?
 		if time.Duration(event.TimestampRaw-eventState.lastAnomalyNano) >= m.config.RuntimeSecurity.GetAnomalyDetectionMinimumStablePeriod(event.GetEventType()) {
@@ -754,14 +763,18 @@ func (m *SecurityProfileManager) tryAutolearn(profile *SecurityProfile, event *m
 			if m.activityDumpManager != nil {
 				m.activityDumpManager.StopDumpsWithSelector(profile.selector)
 			}
+			seclog.Debugf("tryAutolearn/StableEventType: %+v", event.ProcessContext.FileEvent.PathnameStr)
 			return StableEventType
 		}
 
 		// did we reached the unstable time limit ?
 		if time.Duration(event.TimestampRaw-profile.loadedNano) >= m.config.RuntimeSecurity.AnomalyDetectionUnstableProfileTimeThreshold {
 			eventState.state = UnstableEventType
+			seclog.Debugf("tryAutolearn/UnstableEventType (%s vs %s): %+v", time.Duration(event.TimestampRaw-profile.loadedNano), m.config.RuntimeSecurity.AnomalyDetectionUnstableProfileTimeThreshold, event.ProcessContext.FileEvent.PathnameStr)
 			return UnstableEventType
 		}
+
+		seclog.Debugf("tryAutolearn/AutoLearning (%s vs %s): %+v", time.Duration(event.TimestampRaw-profile.loadedNano), m.config.RuntimeSecurity.AnomalyDetectionUnstableProfileTimeThreshold, event.ProcessContext.FileEvent.PathnameStr)
 
 		nodeType = activity_tree.ProfileDrift
 		profileState = AutoLearning
@@ -769,6 +782,8 @@ func (m *SecurityProfileManager) tryAutolearn(profile *SecurityProfile, event *m
 
 	// check if the unstable size limit was reached
 	if profile.ActivityTree.Stats.ApproximateSize() >= m.config.RuntimeSecurity.AnomalyDetectionUnstableProfileSizeThreshold {
+		seclog.Debugf("tryAutolearn/Size (%d vs %d): %+v", profile.ActivityTree.Stats.ApproximateSize(), m.config.RuntimeSecurity.AnomalyDetectionUnstableProfileSizeThreshold, event.ProcessContext.FileEvent.PathnameStr)
+
 		// for each event type we want to reach either the StableEventType or UnstableEventType states, even
 		// if we already reach the AnomalyDetectionUnstableProfileSizeThreshold. That's why we have to keep
 		// rearming the lastAnomalyNano timer based on if it's something new or not.
