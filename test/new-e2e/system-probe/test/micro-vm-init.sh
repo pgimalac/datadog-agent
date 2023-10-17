@@ -7,7 +7,7 @@ RETRY_COUNT=$2
 ARCH=$3
 RUNNER_CMD="$(shift 3; echo "$*")"
 
-KITCHEN_DOCKERS=/home/kernel-version-testing/kmt-ramfs/kitchen-docker
+KITCHEN_DOCKERS=/mnt/test/kitchen-docker
 
 # Add provisioning steps here !
 ## Set go version correctly
