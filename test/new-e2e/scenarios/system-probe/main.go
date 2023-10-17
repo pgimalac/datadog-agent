@@ -44,7 +44,7 @@ func main() {
 	armInstanceTypePtr := flag.String("instance-type-arm", "", "arm64 instance type")
 	x86AmiIDPtr := flag.String("x86-ami-id", "", "x86 ami for metal instance")
 	armAmiIDPtr := flag.String("arm-ami-id", "", "arm ami for metal instance")
-	toProvisionPtr := flag.Bool("run-provision", true, "run provision step for metal instance")
+	toProvisionPtr := flag.Bool("run-provision", false, "run provision step for metal instance")
 	shutdownPtr := flag.Int("shutdown-period", 0, "shutdown after specified interval in minutes")
 	sshKeyFile := flag.String("ssh-key-path", "", "path of private ssh key for ec2 instances")
 	sshKeyName := flag.String("ssh-key-name", "", "name of ssh key pair to use for ec2 instances")
