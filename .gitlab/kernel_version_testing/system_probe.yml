@@ -160,7 +160,7 @@ upload_dependencies_arm64:
     SYSTEM_PROBE_TESTS: opt/system-probe-tests
     KITCHEN_TESTS: $DD_AGENT_TESTING_DIR/site-cookbooks/dd-system-probe-check/files/default/tests/pkg
     AWS_EC2_SSH_KEY_FILE: $CI_PROJECT_DIR/ssh_key
-	ARCHIVE_NAME: tests-$ARCH.tar.gz
+    ARCHIVE_NAME: tests-$ARCH.tar.gz
   artifacts:
     when: always
     paths:
