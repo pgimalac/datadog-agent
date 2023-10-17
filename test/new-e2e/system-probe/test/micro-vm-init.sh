@@ -7,7 +7,7 @@ RETRY_COUNT=$2
 ARCH=$3
 RUNNER_CMD="$(shift 3; echo "$*")"
 
-KITCHEN_DOCKERS=/kitchen-docker
+KITCHEN_DOCKERS=/home/kernel-version-testing/kmt-ramfs/kitchen-docker
 
 # Add provisioning steps here !
 ## Set go version correctly
@@ -15,7 +15,11 @@ eval $(gimme "$GOVERSION")
 ## Start docker
 systemctl start docker
 ## Load docker images
+START=`date +%s`
 [ -d $KITCHEN_DOCKERS ] && find $KITCHEN_DOCKERS -maxdepth 1 -type f -exec docker load -i {} \;
+END=`date +%s`
+echo "Docker load time:"
+echo `expr $END - $START`
 
 # VM provisioning end !
 
