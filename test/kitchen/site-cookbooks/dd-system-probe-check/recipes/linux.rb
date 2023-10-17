@@ -192,10 +192,12 @@ file "/tmp/docker_password" do
   sensitive true
 end
 
-execute 'pull docker images' do
-  command <<-EOF
+bash 'pull docker images' do
+  code <<-EOF
+    echo $SECONDS
     cat /tmp/docker_password | docker login --username #{node[:docker][:username].to_s} --password-stdin #{node[:docker][:registry]}
     xargs -L1 -a /tmp/docker-images.txt docker pull
+    echo $SECONDS
   EOF
   user "root"
   live_stream true
