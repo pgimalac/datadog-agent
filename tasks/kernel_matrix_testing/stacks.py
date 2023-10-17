@@ -11,8 +11,8 @@ try:
 except ImportError:
     libvirt = None
 
-X86_INSTANCE_TYPE = "m5.metal"
-ARM_INSTANCE_TYPE = "m6g.metal"
+X86_INSTANCE_TYPE = "m5d.metal"
+ARM_INSTANCE_TYPE = "m6gd.metal"
 
 
 def stack_exists(stack):
