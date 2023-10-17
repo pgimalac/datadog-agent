@@ -16,10 +16,8 @@ source "$HOME/.gimme/envs/go$GOVERSION.env"
 systemctl start docker
 ## Load docker images
 if [ -f /docker-images.txt ]; then
-  DOCKER_USERNAME=$(</docker-username)
-  DOCKER_REGISTRY=$(</docker-registry)
-  docker login --username "${DOCKER_USERNAME}" --password-stdin "${DOCKER_REGISTRY}" < /docker-password
-  xargs -L1 -a /docker-images.txt docker pull
+  GATEWAY=$(route -n | grep 'UG[ \t]' | awk '{print \$2}')
+  xargs -L1 -I{} -a /docker-images.txt docker pull "$GATEWAY:5000/{}"
 fi
 
 # VM provisioning end !
