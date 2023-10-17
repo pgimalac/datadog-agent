@@ -147,6 +147,96 @@ type LambdaScan struct {
 	FunctionName string `json:"function_name"`
 }
 
+type job struct {
+	c    *Check
+	typ  string
+	scan json.RawMessage
+	done chan map[string]interface{}
+}
+
+type result struct {
+	err error
+}
+
+type Worker struct {
+	id      int
+	jobs    chan job
+	done    chan struct{}
+}
+
+func NewWorker(id int, jobs chan job, results chan result) *Worker {
+	return &Worker{
+		id:      id,
+		jobs:    jobs,
+		done:    make(chan struct{}),
+	}
+}
+
+func (w *Worker) Run() {
+	for {
+		select {
+		case j := <-w.jobs:
+			j.c.processScan(j.typ, j.scan, j.done)
+		case <-w.done:
+			return
+		}
+	}
+}
+
+func (w *Worker) Stop() {
+	close(w.done)
+}
+
+func (c *Check) processScan(typ string, scan json.RawMessage, done chan map[string]interface{}) {
+	switch typ {
+	case "ebs-scan":
+		var s EBSScan
+		if err := json.Unmarshal(scan, &s); err != nil {
+			log.Warnf("Failed to parse ebs-scan payload: %w", err)
+		}
+		if s.SnapshotID == "" {
+			log.Errorf("No target in SBOM scan request")
+		}
+		if s.Hostname == "" {
+			log.Errorf("No hostname specified in SBOM scan request")
+		}
+		if s.Region == "" {
+			log.Errorf("No region in SBOM scan request")
+		}
+		tags := []string{
+			fmt.Sprintf("region:%s", s.Region),
+			fmt.Sprintf("type:%s", typ),
+		}
+		c.sender.Count("datadog.sidescanner.scans.started", 1.0, "", tags)
+		c.processor.processEBS("", s.VolumeID, s.Region, s.Hostname, done)
+	case "lambda-scan":
+		var s LambdaScan
+		if err := json.Unmarshal(scan, &s); err != nil {
+			log.Warnf("Failed to parse lambda-scan payload: %w", err)
+		}
+		if s.FunctionName == "" {
+			log.Errorf("No function name specified in SBOM scan request")
+		}
+		if s.Region == "" {
+			log.Errorf("No region in SBOM scan request")
+		}
+		tags := []string{
+			fmt.Sprintf("region:%s", s.Region),
+			fmt.Sprintf("type:%s", typ),
+		}
+		c.sender.Count("datadog.sidescanner.scans.started", 1.0, "", tags)
+		c.processor.processLambda(s.FunctionName, s.Region, done)
+	default:
+		log.Errorf("Unsupported scan request type '%s'", typ)
+	}
+}
+
+func (c *Check) processData(data Data, jobs chan job, done chan map[string]interface{}) {
+	for _, scan := range data.Scans {
+		jobs <- job{c: c, typ: data.Type, scan: scan, done: done}
+	}
+}
+
 // Configure parses the check configuration and initializes the sbom check
 func (c *Check) Configure(senderManager sender.SenderManager, integrationConfigDigest uint64, config, initConfig integration.Data, source string) error {
 	if !ddConfig.Datadog.GetBool("sbom.enabled") {
@@ -189,6 +279,17 @@ func (c *Check) Configure(senderManager sender.SenderManager, integrationConfigD
 		return err
 	}
 
+	const nWorkers = 10
+	var workers []*Worker
+	jobs := make(chan job)
+	results := make(chan result)
+
+	for i := 1; i <= nWorkers; i++ {
+		w := NewWorker(i, jobs, results)
+		workers = append(workers, w)
+		go w.Run()
+	}
+
 	done := make(chan map[string]interface{}, 100)
 	c.rcClient.Subscribe("DEBUG", func(configs map[string]state.RawConfig, _ func(string, state.ApplyStatus)) {
 		defer c.sender.Commit()
@@ -199,51 +300,7 @@ func (c *Check) Configure(senderManager sender.SenderManager, integrationConfigD
 				log.Warnf("Failed to parse agent task: %w", err)
 			}
 
-			switch data.Type {
-			case "ebs-scan":
-				for _, scan := range data.Scans {
-					var s EBSScan
-					if err := json.Unmarshal(scan, &s); err != nil {
-						log.Warnf("Failed to parse ebs-scan payload: %w", err)
-					}
-					if s.SnapshotID == "" {
-						log.Errorf("No target in SBOM scan request")
-					}
-					if s.Hostname == "" {
-						log.Errorf("No hostname specified in SBOM scan request")
-					}
-					if s.Region == "" {
-						log.Errorf("No region in SBOM scan request")
-					}
-					tags := []string{
-						fmt.Sprintf("region:%s", s.Region),
-						fmt.Sprintf("type:%s", data.Type),
-					}
-					c.sender.Count("datadog.sidescanner.scans.started", 1.0, "", tags)
-					c.processor.processEBS("", s.VolumeID, s.Region, s.Hostname, done)
-				}
-			case "lambda-scan":
-				for _, scan := range data.Scans {
-					var s LambdaScan
-					if err := json.Unmarshal(scan, &s); err != nil {
-						log.Warnf("Failed to parse lambda-scan payload: %w", err)
-					}
-					if s.FunctionName == "" {
-						log.Errorf("No function name specified in SBOM scan request")
-					}
-					if s.Region == "" {
-						log.Errorf("No region in SBOM scan request")
-					}
-					tags := []string{
-						fmt.Sprintf("region:%s", s.Region),
-						fmt.Sprintf("type:%s", data.Type),
-					}
-					c.sender.Count("datadog.sidescanner.scans.started", 1.0, "", tags)
-					c.processor.processLambda(s.FunctionName, s.Region, done)
-				}
-			default:
-				log.Errorf("Unsupported scan request type '%s'", data.Type)
-			}
+			c.processData(data, jobs, done)
 		}
 	})
 

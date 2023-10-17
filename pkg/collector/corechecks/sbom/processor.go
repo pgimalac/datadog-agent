@@ -236,63 +236,61 @@ func (p *processor) processEBS(snapshotID, volumeID, region, id string, done cha
 	log.Debugf("Triggering volume SBOM")
 
 	ch := make(chan sbom.ScanResult, 1)
-	go func() {
-		startTime := time.Now()
-		if snapshotID == "" {
-			sess, err := session.NewSession(&aws.Config{
-				Region: aws.String(region),
-			})
-			svc := ec2.New(sess)
-			snapshotID, err = p.createEBSSnapshot(svc, volumeID)
-			if err != nil {
-				log.Errorf("Could not create snapshot from volume %s: %v", volumeID, err)
-				return
-			}
-			defer p.deleteSnapshot(svc, snapshotID)
-		}
-
-		target := "ebs:" + snapshotID
-		scanRequest := &vm.ScanRequest{Path: target, Region: region}
-		if err := p.sbomScanner.Scan(scanRequest, p.vmScanOpts, ch); err != nil {
-			log.Errorf("Failed to trigger SBOM generation for VM: %s", err)
-			return
-		}
-		result := <-ch
-
-		done <- map[string]interface{}{
-			"startTime": startTime,
-			"tags": []string{
-				"type:ebs-scan",
-				fmt.Sprintf("region:%s", region),
-				fmt.Sprintf("target:%s", target),
-			},
-		}
-
-		if result.Error != nil {
-			// TODO: add a retry mechanism for retryable errors
-			log.Errorf("Failed to generate SBOM for VM: %s", result.Error)
-			return
-		}
-
-		log.Debugf("Successfully generated SBOM for VM: %v, %v", result.CreatedAt, result.Duration)
-
-		bom, err := result.Report.ToCycloneDX()
+	startTime := time.Now()
+	if snapshotID == "" {
+		sess, err := session.NewSession(&aws.Config{
+			Region: aws.String(region),
+		})
+		svc := ec2.New(sess)
+		snapshotID, err = p.createEBSSnapshot(svc, volumeID)
 		if err != nil {
-			log.Errorf("Failed to extract SBOM from VM: %s", err)
+			log.Errorf("Could not create snapshot from volume %s: %v", volumeID, err)
 			return
 		}
+		defer p.deleteSnapshot(svc, snapshotID)
+	}
 
-		p.queue <- &model.SBOMEntity{
-			Type:               model.SBOMSourceType_HOST_FILE_SYSTEM, //  model.SBOMSourceType_EBS
-			Id:                 id,
-			GeneratedAt:        timestamppb.New(result.CreatedAt),
-			InUse:              true,
-			GenerationDuration: convertDuration(result.Duration),
-			Sbom: &model.SBOMEntity_Cyclonedx{
-				Cyclonedx: convertBOM(bom),
-			},
-		}
-	}()
+	target := "ebs:" + snapshotID
+	scanRequest := &vm.ScanRequest{Path: target, Region: region}
+	if err := p.sbomScanner.Scan(scanRequest, p.vmScanOpts, ch); err != nil {
+		log.Errorf("Failed to trigger SBOM generation for VM: %s", err)
+		return
+	}
+	result := <-ch
+
+	done <- map[string]interface{}{
+		"startTime": startTime,
+		"tags": []string{
+			"type:ebs-scan",
+			fmt.Sprintf("region:%s", region),
+			fmt.Sprintf("target:%s", target),
+		},
+	}
+
+	if result.Error != nil {
+		// TODO: add a retry mechanism for retryable errors
+		log.Errorf("Failed to generate SBOM for VM: %s", result.Error)
+		return
+	}
+
+	log.Debugf("Successfully generated SBOM for VM: %v, %v", result.CreatedAt, result.Duration)
+
+	bom, err := result.Report.ToCycloneDX()
+	if err != nil {
+		log.Errorf("Failed to extract SBOM from VM: %s", err)
+		return
+	}
+
+	p.queue <- &model.SBOMEntity{
+		Type:               model.SBOMSourceType_HOST_FILE_SYSTEM, //  model.SBOMSourceType_EBS
+		Id:                 id,
+		GeneratedAt:        timestamppb.New(result.CreatedAt),
+		InUse:              true,
+		GenerationDuration: convertDuration(result.Duration),
+		Sbom: &model.SBOMEntity_Cyclonedx{
+			Cyclonedx: convertBOM(bom),
+		},
+	}
 }
 
 func (p *processor) processLambda(functionName string, region string, done chan map[string]interface{}) {
@@ -310,56 +308,54 @@ func (p *processor) processLambda(functionName string, region string, done chan 
 		return
 	}
 
-	go func() {
-		result := <-ch
+	result := <-ch
 
-		done <- map[string]interface{}{
-			"startTime": startTime,
-			"tags": []string{
-				"type:lambda-scan",
-				fmt.Sprintf("region:%s", region),
-				fmt.Sprintf("function_name:%s", functionName),
-			},
+	done <- map[string]interface{}{
+		"startTime": startTime,
+		"tags": []string{
+			"type:lambda-scan",
+			fmt.Sprintf("region:%s", region),
+			fmt.Sprintf("function_name:%s", functionName),
+		},
+	}
+
+	if result.Error != nil {
+		// TODO: add a retry mechanism for retryable errors
+		log.Errorf("Failed to generate SBOM for Lambda: %s", result.Error)
+		return
+	}
+
+	log.Debugf("Successfully generated SBOM for Lambda: %v, %v", result.CreatedAt, result.Duration)
+
+	bom, err := result.Report.ToCycloneDX()
+	if err != nil {
+		log.Errorf("Failed to extract SBOM from report: %s", err)
+		return
+	}
+
+	s, err := json.Marshal(bom)
+	if err != nil {
+		fmt.Printf("can't JSON marshal json")
+	} else {
+		fmt.Printf("lambda sbom:\n%s", s)
+	}
+
+	p.queue <- &model.SBOMEntity{
+		Type:        model.SBOMSourceType_HOST_FILE_SYSTEM,
+		Id:          "ebs",
+		GeneratedAt: timestamppb.New(result.CreatedAt),
+		/* FIXME: complete when we have function name
+		DdTags:				[]string {
+			"function:" + functionName,
+			"blah:vlah"
 		}
-
-		if result.Error != nil {
-			// TODO: add a retry mechanism for retryable errors
-			log.Errorf("Failed to generate SBOM for Lambda: %s", result.Error)
-			return
-		}
-
-		log.Debugf("Successfully generated SBOM for Lambda: %v, %v", result.CreatedAt, result.Duration)
-
-		bom, err := result.Report.ToCycloneDX()
-		if err != nil {
-			log.Errorf("Failed to extract SBOM from report: %s", err)
-			return
-		}
-
-		s, err := json.Marshal(bom)
-		if err != nil {
-			fmt.Printf("can't JSON marshal json")
-		} else {
-			fmt.Printf("lambda sbom:\n%s", s)
-		}
-
-		p.queue <- &model.SBOMEntity{
-			Type:        model.SBOMSourceType_HOST_FILE_SYSTEM,
-			Id:          "ebs",
-			GeneratedAt: timestamppb.New(result.CreatedAt),
-			/* FIXME: complete when we have function name
-			DdTags:				[]string {
-				"function:" + functionName,
-				"blah:vlah"
-			}
-			*/
-			InUse:              true,
-			GenerationDuration: convertDuration(result.Duration),
-			Sbom: &model.SBOMEntity_Cyclonedx{
-				Cyclonedx: convertBOM(bom),
-			},
-		}
-	}()
+		*/
+		InUse:              true,
+		GenerationDuration: convertDuration(result.Duration),
+		Sbom: &model.SBOMEntity_Cyclonedx{
+			Cyclonedx: convertBOM(bom),
+		},
+	}
 }
 
 func (p *processor) processHostRefresh() {
