@@ -312,6 +312,8 @@ kernel_matrix_testing_setup_env:
     - MICRO_VM_NAME=$(cat $CI_PROJECT_DIR/stack.outputs | grep $ARCH-$TAG | cut -d ' ' -f 1)
     - GO_VERSION=$(inv go-version)
     - !reference [.setup_ssh_config]
+    - ssh metal_instance "lsblk && df -h && mount"
+    - ssh metal_instance "ssh ${MICRO_VM_IP} 'lsblk && df -h && mount'"
     # ssh into each micro-vm and run initialization script. This script will also run the tests.
     - NESTED_VM_CMD="/home/ubuntu/connector -host ${MICRO_VM_IP} -user root -ssh-file /home/kernel-version-testing/ddvm_rsa -vm-cmd 'bash /root/fetch_dependencies.sh ${ARCH} && /micro-vm-init.sh ${GO_VERSION} ${RETRY}'"
     - $CI_PROJECT_DIR/connector-$ARCH -host $INSTANCE_IP -user ubuntu -ssh-file $AWS_EC2_SSH_KEY_FILE -vm-cmd "${NESTED_VM_CMD}"
