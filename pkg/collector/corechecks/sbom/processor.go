@@ -30,8 +30,9 @@ import (
 	queue "github.com/DataDog/datadog-agent/pkg/util/aggregatingqueue"
 	"github.com/DataDog/datadog-agent/pkg/util/log"
 	"github.com/DataDog/datadog-agent/pkg/workloadmeta"
-	"github.com/aws/aws-sdk-go/aws"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 
@@ -44,6 +45,10 @@ import (
 var /* const */ (
 	envVarEnv   = ddConfig.Datadog.GetString("env")
 	sourceAgent = "agent"
+)
+
+const (
+	MaxSnapshotRetries = 3
 )
 
 type processor struct {
@@ -189,10 +194,23 @@ func (p *processor) processContainerImagesRefresh(allImages []*workloadmeta.Cont
 
 func (p *processor) createEBSSnapshot(svc *ec2.EC2, volumeID string) (string, error) {
 	log.Debugf("Starting volume snapshotting %s", volumeID)
+	retries := 0
+retry:
 	result, err := svc.CreateSnapshot(&ec2.CreateSnapshotInput{
 		VolumeId: aws.String(volumeID),
 	})
 	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok {
+			if retries <= MaxSnapshotRetries {
+				retries++
+				if aerr.Code() == "SnapshotCreationPerVolumeRateExceeded" {
+					// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/errors-overview.html
+					// Wait at least 15 seconds between concurrent volume snapshots.
+					time.Sleep(15 * time.Second)
+					goto retry
+				}
+			}
+		}
 		return "", err
 	}
 	if result.SnapshotId == nil {
