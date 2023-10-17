@@ -52,11 +52,6 @@ pull_test_dockers_arm64:
     aws ec2 wait instance-status-ok --instance-ids $INSTANCE_IDS
     sleep 10
 
-.wait_for_mountpoint:
-  - |
-    MNT_CNTR=0
-    while ! $(mountpoint -q $NFS_SHARE_MNTPOINT); do MNT_CNTR=$[$MNT_CNTR+1]; sleep 10; done
-
 .write_ssh_key_file:
     - set +x
     - aws ssm get-parameter --region us-east-1 --name ci.datadog-agent.ssh_key --with-decryption --query "Parameter.Value" --out text > $AWS_EC2_SSH_KEY_FILE
@@ -92,7 +87,6 @@ pull_test_dockers_arm64:
     - !reference [.wait_for_instances]
     - INSTANCE_IP=$(aws ec2 describe-instances --filters $FILTER_TEAM $FILTER_MANAGED $FILTER_STATE $FILTER_PIPELINE "Name=instance-type,Values=${INSTANCE_TYPE}" --output text --query $QUERY_PRIVATE_IPS)
     - echo "$ARCH-istance-ip" $INSTANCE_IP
-    - !reference [.wait_for_mountpoint]
     - scp -o StrictHostKeyChecking=no -i $AWS_EC2_SSH_KEY_FILE $DD_AGENT_TESTING_DIR/$ARCHIVE_NAME ubuntu@$INSTANCE_IP:$NFS_SHARE_MNTPOINT
   variables:
     DEPENDENCIES: $DD_AGENT_TESTING_DIR/$ARCH/dependencies
@@ -102,7 +96,7 @@ pull_test_dockers_arm64:
 upload_dependencies_x64:
   extends:
     - .package_dependencies
-  needs: ["pull_test_dockers_x64"]
+  needs: ["pull_test_dockers_x64", "kernel_matrix_testing_setup_env"]
   variables:
     ARCHIVE_NAME: dependencies-x86_64.tar.gz
     ARCH: amd64
@@ -111,7 +105,7 @@ upload_dependencies_x64:
 upload_dependencies_arm64:
   extends:
     - .package_dependencies
-  needs: ["pull_test_dockers_arm64"]
+  needs: ["pull_test_dockers_arm64", "kernel_matrix_testing_setup_env"]
   variables:
     ARCHIVE_NAME: dependencies-arm64.tar.gz
     ARCH: arm64
@@ -159,7 +153,6 @@ upload_dependencies_arm64:
     - !reference [.wait_for_instances]
     - INSTANCE_IP=$(aws ec2 describe-instances --filters $FILTER_TEAM $FILTER_MANAGED $FILTER_STATE $FILTER_PIPELINE "Name=instance-type,Values=${INSTANCE_TYPE}" --output text --query $QUERY_PRIVATE_IPS)
     - echo "$ARCH-istance-ip" $INSTANCE_IP
-    - !reference [.wait_for_mountpoint]
     - scp -o StrictHostKeyChecking=no -i $AWS_EC2_SSH_KEY_FILE $DD_AGENT_TESTING_DIR/$ARCHIVE_NAME ubuntu@$INSTANCE_IP:$NFS_SHARE_MNTPOINT
   variables:
     DEPENDENCIES: $DD_AGENT_TESTING_DIR/$ARCH/tests
@@ -177,7 +170,7 @@ upload_dependencies_arm64:
 upload_system_probe_tests_x64:
   extends:
     - .upload_system_probe_tests
-  needs: ["go_deps", "prepare_ebpf_functional_tests_x64", "tests_ebpf_x64"]
+  needs: ["go_deps", "prepare_ebpf_functional_tests_x64", "tests_ebpf_x64", "kernel_matrix_testing_setup_env"]
   variables:
     ARCHIVE_NAME: tests-x86_64.tar.gz
     ARCH: x86_64
@@ -187,7 +180,7 @@ upload_system_probe_tests_x64:
 upload_system_probe_tests_arm64:
   extends:
     - .upload_system_probe_tests
-  needs: ["go_deps", "prepare_ebpf_functional_tests_arm64", "tests_ebpf_arm64"]
+  needs: ["go_deps", "prepare_ebpf_functional_tests_arm64", "tests_ebpf_arm64", "kernel_matrix_testing_setup_env"]
   variables:
     ARCHIVE_NAME: tests-arm64.tar.gz
     ARCH: arm64
@@ -221,7 +214,6 @@ upload_system_probe_tests_arm64:
     - !reference [.wait_for_instances]
     - INSTANCE_IP=$(aws ec2 describe-instances --filters $FILTER_TEAM $FILTER_MANAGED $FILTER_STATE $FILTER_PIPELINE "Name=instance-type,Values=${INSTANCE_TYPE}" --output text --query $QUERY_PRIVATE_IPS)
     - echo "$ARCH-istance-ip" $INSTANCE_IP
-    - !reference [.wait_for_mountpoint]
     - scp -o StrictHostKeyChecking=no -i $AWS_EC2_SSH_KEY_FILE $DD_AGENT_TESTING_DIR/$ARCHIVE_NAME ubuntu@$INSTANCE_IP:$NFS_SHARE_MNTPOINT
   variables:
     DEPENDENCIES: $DD_AGENT_TESTING_DIR/$ARCH/btfs
@@ -231,7 +223,7 @@ upload_system_probe_tests_arm64:
 upload_minimized_btfs_x64:
   extends:
     - .upload_minimized_btfs
-  needs: ["generate_minimized_btfs_x64"]
+  needs: ["generate_minimized_btfs_x64", "kernel_matrix_testing_setup_env"]
   variables:
     ARCHIVE_NAME: btfs-x86_64.tar.gz
     ARCH: x86_64
@@ -241,7 +233,7 @@ upload_minimized_btfs_x64:
 upload_minimized_btfs_arm64:
   extends:
     - .upload_minimized_btfs
-  needs: ["generate_minimized_btfs_arm64"]
+  needs: ["generate_minimized_btfs_arm64", "kernel_matrix_testing_setup_env"]
   variables:
     ARCHIVE_NAME: btfs-arm64.tar.gz
     ARCH: arm64
@@ -267,7 +259,7 @@ upload_minimized_btfs_arm64:
 setup_dependencies_x64:
   extends:
     - .setup_dependencies
-  needs: ["upload_dependencies_x64", "upload_system_probe_tests_x64", "upload_minimized_btfs_x64"]
+  needs: ["upload_dependencies_x64", "upload_system_probe_tests_x64", "upload_minimized_btfs_x64", "kernel_matrix_testing_setup_env"]
   variables:
     ARCH: x86_64
     AWS_EC2_SSH_KEY_FILE: $CI_PROJECT_DIR/ssh_key
@@ -276,7 +268,7 @@ setup_dependencies_x64:
 setup_dependencies_arm64:
   extends:
     - .setup_dependencies
-  needs: ["upload_dependencies_arm64", "upload_system_probe_tests_arm64", "upload_minimized_btfs_arm64"]
+  needs: ["upload_dependencies_arm64", "upload_system_probe_tests_arm64", "upload_minimized_btfs_arm64", "kernel_matrix_testing_setup_env"]
   variables:
     ARCH: arm64
     AWS_EC2_SSH_KEY_FILE: $CI_PROJECT_DIR/ssh_key
