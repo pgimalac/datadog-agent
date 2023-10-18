@@ -105,6 +105,7 @@ func (inferredSpan *InferredSpan) CompleteInferredSpan(
 	endTime time.Time,
 	isError bool,
 	traceID uint64,
+	parentID uint64,
 	samplingPriority sampler.SamplingPriority) {
 
 	durationIsSet := inferredSpan.Span.Duration != 0
@@ -121,6 +122,7 @@ func (inferredSpan *InferredSpan) CompleteInferredSpan(
 	}
 
 	inferredSpan.Span.TraceID = traceID
+	inferredSpan.Span.ParentID = parentID
 
 	traceChunk := &pb.TraceChunk{
 		Origin:   "lambda",

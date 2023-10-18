@@ -115,7 +115,7 @@ func TestCompleteInferredSpanWithNoError(t *testing.T) {
 		tracePayload = payload
 	}
 
-	inferredSpan.CompleteInferredSpan(mockProcessTrace, endTime, isError, 1234, sampler.PriorityAutoKeep)
+	inferredSpan.CompleteInferredSpan(mockProcessTrace, endTime, isError, 1234, 5678, sampler.PriorityAutoKeep)
 	span := tracePayload.TracerPayload.Chunks[0].Spans[0]
 	assert.Equal(t, "aws.mock", span.Name)
 	assert.Equal(t, "aws.mock", span.Service)
@@ -123,6 +123,7 @@ func TestCompleteInferredSpanWithNoError(t *testing.T) {
 	assert.Equal(t, "http", span.Type)
 	assert.Equal(t, "dev", span.Meta["stage"])
 	assert.Equal(t, uint64(1234), span.TraceID)
+	assert.Equal(t, uint64(5678), span.ParentID)
 	assert.Equal(t, inferredSpan.Span.SpanID, span.SpanID)
 	assert.Equal(t, duration.Nanoseconds(), span.Duration)
 	assert.Equal(t, int32(0), inferredSpan.Span.Error)
@@ -152,7 +153,7 @@ func TestCompleteInferredSpanWithError(t *testing.T) {
 		tracePayload = payload
 	}
 
-	inferredSpan.CompleteInferredSpan(mockProcessTrace, endTime, isError, 1234, sampler.PriorityAutoKeep)
+	inferredSpan.CompleteInferredSpan(mockProcessTrace, endTime, isError, 1234, 5678, sampler.PriorityAutoKeep)
 	span := tracePayload.TracerPayload.Chunks[0].Spans[0]
 	assert.Equal(t, "aws.mock", span.Name)
 	assert.Equal(t, "aws.mock", span.Service)
@@ -160,6 +161,7 @@ func TestCompleteInferredSpanWithError(t *testing.T) {
 	assert.Equal(t, "http", span.Type)
 	assert.Equal(t, "dev", span.Meta["stage"])
 	assert.Equal(t, uint64(1234), span.TraceID)
+	assert.Equal(t, uint64(5678), span.ParentID)
 	assert.Equal(t, inferredSpan.Span.SpanID, span.SpanID)
 	assert.Equal(t, duration.Nanoseconds(), span.Duration)
 	assert.Equal(t, int32(1), inferredSpan.Span.Error)
@@ -190,7 +192,7 @@ func TestCompleteInferredSpanWithAsync(t *testing.T) {
 		tracePayload = payload
 	}
 
-	inferredSpan.CompleteInferredSpan(mockProcessTrace, time.Now(), isError, 1234, sampler.PriorityAutoKeep)
+	inferredSpan.CompleteInferredSpan(mockProcessTrace, time.Now(), isError, 1234, 5678, sampler.PriorityAutoKeep)
 	span := tracePayload.TracerPayload.Chunks[0].Spans[0]
 	assert.Equal(t, "aws.mock", span.Name)
 	assert.Equal(t, "aws.mock", span.Service)
@@ -198,6 +200,7 @@ func TestCompleteInferredSpanWithAsync(t *testing.T) {
 	assert.Equal(t, "http", span.Type)
 	assert.Equal(t, "dev", span.Meta["stage"])
 	assert.Equal(t, uint64(1234), span.TraceID)
+	assert.Equal(t, uint64(5678), span.ParentID)
 	assert.Equal(t, inferredSpan.Span.SpanID, span.SpanID)
 	assert.Equal(t, duration.Nanoseconds(), span.Duration)
 	assert.Equal(t, int32(0), inferredSpan.Span.Error)
