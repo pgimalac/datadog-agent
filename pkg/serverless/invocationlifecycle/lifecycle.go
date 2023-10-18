@@ -284,7 +284,6 @@ func (lp *LifecycleProcessor) OnInvokeEnd(endDetails *InvocationEndDetails) {
 				span0parentID := lp.GetExecutionInfo().parentID
 				if lp.requestHandler.inferredSpans[1] != nil {
 					log.Debug("[lifecycle] Completing a secondary inferred span")
-					lp.setParentIDForMultipleInferredSpans()
 					lp.requestHandler.inferredSpans[1].AddTagToInferredSpan("http.status_code", statusCode)
 					lp.requestHandler.inferredSpans[1].AddTagToInferredSpan("peer.service", lp.GetServiceName())
 					lp.requestHandler.inferredSpans[1].CompleteInferredSpan(lp.ProcessTrace, lp.getInferredSpanStart(), endDetails.IsError, lp.GetExecutionInfo().TraceID, lp.GetExecutionInfo().parentID, lp.GetExecutionInfo().SamplingPriority)
@@ -371,12 +370,4 @@ func (lp *LifecycleProcessor) addTag(key string, value string) {
 		return
 	}
 	lp.requestHandler.triggerTags[key] = value
-}
-
-// Sets the parent and span IDs when multiple inferred spans are necessary.
-// Inferred spans of index 1 are generally sent inside of inferred span index 0.
-// Like an SNS event inside an SQS message, and the parenting order is essential.
-func (lp *LifecycleProcessor) setParentIDForMultipleInferredSpans() {
-	lp.requestHandler.inferredSpans[1].Span.ParentID = lp.requestHandler.inferredSpans[0].Span.ParentID
-	lp.requestHandler.inferredSpans[0].Span.ParentID = lp.requestHandler.inferredSpans[1].Span.SpanID
 }
