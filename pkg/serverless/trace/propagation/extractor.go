@@ -61,6 +61,12 @@ func (e Extractor) extract(event interface{}) (*TraceContext, error) {
 			}
 		}
 		carrier, err = sqsMessageCarrier(ev)
+	case TraceContexter:
+		// TODO: only look for datadog headers
+		if tc := ev.GetTraceContext(); tc != nil {
+			return tc, nil
+		}
+		return nil, errorNoContextFound
 	default:
 		err = errorUnsupportedExtractionType
 	}

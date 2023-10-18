@@ -19,6 +19,7 @@ import (
 	serverlessLog "github.com/DataDog/datadog-agent/pkg/serverless/logs"
 	serverlessMetrics "github.com/DataDog/datadog-agent/pkg/serverless/metrics"
 	"github.com/DataDog/datadog-agent/pkg/serverless/trace/inferredspan"
+	"github.com/DataDog/datadog-agent/pkg/serverless/trace/propagation"
 	"github.com/DataDog/datadog-agent/pkg/serverless/trigger"
 	"github.com/DataDog/datadog-agent/pkg/trace/api"
 	"github.com/DataDog/datadog-agent/pkg/trace/sampler"
@@ -33,6 +34,7 @@ type LifecycleProcessor struct {
 	DetectLambdaLibrary  func() bool
 	InferredSpansEnabled bool
 	SubProcessor         InvocationSubProcessor
+	Extractor            propagation.Extractor
 
 	requestHandler *RequestHandler
 	serviceName    string
@@ -106,6 +108,7 @@ func (lp *LifecycleProcessor) OnInvokeStart(startDetails *InvocationStartDetails
 		log.Debugf("[lifecycle] Error parsing ARN: %v", err)
 	}
 
+	var ev interface{}
 	switch eventType {
 	case trigger.APIGatewayEvent:
 		var event events.APIGatewayProxyRequest
@@ -114,6 +117,7 @@ func (lp *LifecycleProcessor) OnInvokeStart(startDetails *InvocationStartDetails
 			break
 		}
 		lp.initFromAPIGatewayEvent(event, region)
+		ev = event
 	case trigger.APIGatewayV2Event:
 		var event events.APIGatewayV2HTTPRequest
 		if err := json.Unmarshal(payloadBytes, &event); err != nil {
@@ -121,6 +125,7 @@ func (lp *LifecycleProcessor) OnInvokeStart(startDetails *InvocationStartDetails
 			break
 		}
 		lp.initFromAPIGatewayV2Event(event, region)
+		ev = event
 	case trigger.APIGatewayWebsocketEvent:
 		var event events.APIGatewayWebsocketProxyRequest
 		if err := json.Unmarshal(payloadBytes, &event); err != nil {
@@ -135,6 +140,7 @@ func (lp *LifecycleProcessor) OnInvokeStart(startDetails *InvocationStartDetails
 			break
 		}
 		lp.initFromAPIGatewayLambdaAuthorizerTokenEvent(event)
+		ev = event
 	case trigger.APIGatewayLambdaAuthorizerRequestParametersEvent:
 		var event events.APIGatewayCustomAuthorizerRequestTypeRequest
 		if err := json.Unmarshal(payloadBytes, &event); err != nil {
@@ -142,6 +148,7 @@ func (lp *LifecycleProcessor) OnInvokeStart(startDetails *InvocationStartDetails
 			break
 		}
 		lp.initFromAPIGatewayLambdaAuthorizerRequestParametersEvent(event)
+		ev = event
 	case trigger.ALBEvent:
 		var event events.ALBTargetGroupRequest
 		if err := json.Unmarshal(payloadBytes, &event); err != nil {
@@ -149,6 +156,7 @@ func (lp *LifecycleProcessor) OnInvokeStart(startDetails *InvocationStartDetails
 			break
 		}
 		lp.initFromALBEvent(event)
+		ev = event
 	case trigger.CloudWatchEvent:
 		var event events.CloudWatchEvent
 		if err := json.Unmarshal(payloadBytes, &event); err != nil {
@@ -156,6 +164,7 @@ func (lp *LifecycleProcessor) OnInvokeStart(startDetails *InvocationStartDetails
 			break
 		}
 		lp.initFromCloudWatchEvent(event)
+		ev = event
 	case trigger.CloudWatchLogsEvent:
 		var event events.CloudwatchLogsEvent
 		if err := json.Unmarshal(payloadBytes, &event); err != nil && arnParseErr != nil {
@@ -163,6 +172,7 @@ func (lp *LifecycleProcessor) OnInvokeStart(startDetails *InvocationStartDetails
 			break
 		}
 		lp.initFromCloudWatchLogsEvent(event, region, account)
+		ev = event
 	case trigger.DynamoDBStreamEvent:
 		var event events.DynamoDBEvent
 		if err := json.Unmarshal(payloadBytes, &event); err != nil {
@@ -170,6 +180,7 @@ func (lp *LifecycleProcessor) OnInvokeStart(startDetails *InvocationStartDetails
 			break
 		}
 		lp.initFromDynamoDBStreamEvent(event)
+		ev = event
 	case trigger.KinesisStreamEvent:
 		var event events.KinesisEvent
 		if err := json.Unmarshal(payloadBytes, &event); err != nil {
@@ -177,6 +188,7 @@ func (lp *LifecycleProcessor) OnInvokeStart(startDetails *InvocationStartDetails
 			break
 		}
 		lp.initFromKinesisStreamEvent(event)
+		ev = event
 	case trigger.EventBridgeEvent:
 		var event inferredspan.EventBridgeEvent
 		if err := json.Unmarshal(payloadBytes, &event); err != nil {
@@ -184,6 +196,7 @@ func (lp *LifecycleProcessor) OnInvokeStart(startDetails *InvocationStartDetails
 			break
 		}
 		lp.initFromEventBridgeEvent(event)
+		ev = event
 	case trigger.S3Event:
 		var event events.S3Event
 		if err := json.Unmarshal(payloadBytes, &event); err != nil {
@@ -191,6 +204,7 @@ func (lp *LifecycleProcessor) OnInvokeStart(startDetails *InvocationStartDetails
 			break
 		}
 		lp.initFromS3Event(event)
+		ev = event
 	case trigger.SNSEvent:
 		var event events.SNSEvent
 		if err := json.Unmarshal(payloadBytes, &event); err != nil {
@@ -198,6 +212,7 @@ func (lp *LifecycleProcessor) OnInvokeStart(startDetails *InvocationStartDetails
 			break
 		}
 		lp.initFromSNSEvent(event)
+		ev = event
 	case trigger.SQSEvent:
 		var event events.SQSEvent
 		if err := json.Unmarshal(payloadBytes, &event); err != nil {
@@ -205,6 +220,7 @@ func (lp *LifecycleProcessor) OnInvokeStart(startDetails *InvocationStartDetails
 			break
 		}
 		lp.initFromSQSEvent(event)
+		ev = event
 	case trigger.LambdaFunctionURLEvent:
 		var event events.LambdaFunctionURLRequest
 		if err := json.Unmarshal(payloadBytes, &event); err != nil && arnParseErr != nil {
@@ -212,6 +228,7 @@ func (lp *LifecycleProcessor) OnInvokeStart(startDetails *InvocationStartDetails
 			break
 		}
 		lp.initFromLambdaFunctionURLEvent(event, region, account, resource)
+		ev = event
 	default:
 		log.Debug("Skipping adding trigger types and inferred spans as a non-supported payload was received.")
 	}
@@ -221,7 +238,7 @@ func (lp *LifecycleProcessor) OnInvokeStart(startDetails *InvocationStartDetails
 	}
 
 	if !lp.DetectLambdaLibrary() {
-		lp.startExecutionSpan(payloadBytes, startDetails)
+		lp.startExecutionSpan(ev, payloadBytes, startDetails)
 	}
 }
 

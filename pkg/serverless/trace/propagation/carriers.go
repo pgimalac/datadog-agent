@@ -120,3 +120,15 @@ func snsSqsMessageCarrier(event events.SQSMessage) (tracer.TextMapReader, error)
 	}
 	return carrier, nil
 }
+
+type invocationPayload struct {
+	Headers tracer.TextMapCarrier `json:"headers"`
+}
+
+func rawPayloadCarrier(rawPayload []byte) (tracer.TextMapReader, error) {
+	var payload invocationPayload
+	if err := json.Unmarshal(rawPayload, &payload); err != nil {
+		return nil, errors.New("Could not unmarshal the invocation event payload")
+	}
+	return payload.Headers, nil
+}

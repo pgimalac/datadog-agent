@@ -17,6 +17,7 @@ import (
 
 	"github.com/DataDog/datadog-agent/pkg/config"
 	pb "github.com/DataDog/datadog-agent/pkg/proto/pbgo/trace"
+	"github.com/DataDog/datadog-agent/pkg/serverless/trace/propagation"
 	"github.com/DataDog/datadog-agent/pkg/trace/api"
 	"github.com/DataDog/datadog-agent/pkg/trace/info"
 	"github.com/DataDog/datadog-agent/pkg/trace/sampler"
@@ -39,62 +40,24 @@ type ExecutionStartInfo struct {
 	SamplingPriority sampler.SamplingPriority
 }
 
-type invocationPayload struct {
-	Headers map[string]string `json:"headers"`
-}
-
 // startExecutionSpan records information from the start of the invocation.
 // It should be called at the start of the invocation.
-func (lp *LifecycleProcessor) startExecutionSpan(rawPayload []byte, startDetails *InvocationStartDetails) {
-	payload := convertRawPayload(rawPayload)
-	inferredSpan := lp.GetInferredSpan()
+func (lp *LifecycleProcessor) startExecutionSpan(event interface{}, rawPayload []byte, startDetails *InvocationStartDetails) {
 	executionContext := lp.GetExecutionInfo()
 	executionContext.requestPayload = rawPayload
 	executionContext.startTime = startDetails.StartTime
 
-	if lp.InferredSpansEnabled && inferredSpan.Span.Start != 0 {
-		executionContext.TraceID = inferredSpan.Span.TraceID
-		executionContext.parentID = inferredSpan.Span.SpanID
+	if tc, err := lp.Extractor.Extract(event, rawPayload, startDetails.InvokeEventHeaders); err != nil {
+		log.Debug(err)
+		// TODO: this doesn't look pretty enough
+		executionContext.TraceID = 0
+		executionContext.parentID = 0
+		executionContext.SamplingPriority = sampler.PriorityNone
+	} else {
+		executionContext.TraceID = tc.TraceID
+		executionContext.parentID = tc.ParentID
+		executionContext.SamplingPriority = tc.Priority
 	}
-
-	if payload.Headers != nil {
-
-		traceID, err := strconv.ParseUint(payload.Headers[TraceIDHeader], 0, 64)
-		if err != nil {
-			log.Debug("Unable to parse traceID from payload headers")
-		} else {
-			executionContext.TraceID = traceID
-			if lp.InferredSpansEnabled {
-				inferredSpan.Span.TraceID = traceID
-			}
-		}
-
-		parentID, err := strconv.ParseUint(payload.Headers[ParentIDHeader], 0, 64)
-		if err != nil {
-			log.Debug("Unable to parse parentID from payload headers")
-		} else {
-			if lp.InferredSpansEnabled {
-				inferredSpan.Span.ParentID = parentID
-			} else {
-				executionContext.parentID = parentID
-			}
-		}
-	} else if startDetails.InvokeEventHeaders.TraceID != "" { // trace context from a direct invocation
-		traceID, err := strconv.ParseUint(startDetails.InvokeEventHeaders.TraceID, 0, 64)
-		if err != nil {
-			log.Debug("Unable to parse traceID from invokeEventHeaders")
-		} else {
-			executionContext.TraceID = traceID
-		}
-
-		parentID, err := strconv.ParseUint(startDetails.InvokeEventHeaders.ParentID, 0, 64)
-		if err != nil {
-			log.Debug("Unable to parse parentID from invokeEventHeaders")
-		} else {
-			executionContext.parentID = parentID
-		}
-	}
-	executionContext.SamplingPriority = getSamplingPriority(payload.Headers[SamplingPriorityHeader], startDetails.InvokeEventHeaders.SamplingPriority)
 }
 
 // endExecutionSpan builds the function execution span and sends it to the intake.
@@ -163,6 +126,35 @@ func (lp *LifecycleProcessor) endExecutionSpan(endDetails *InvocationEndDetails)
 	})
 }
 
+func (h LambdaInvokeEventHeaders) GetTraceContext() *propagation.TraceContext {
+	var traceId uint64
+	if value, err := convertStrToUnit64(h.TraceID); err == nil {
+		log.Debugf("injecting traceID = %v", value)
+		traceId = value
+	}
+	if traceId == 0 {
+		log.Debug("traceId not found")
+		return nil
+	}
+
+	var parentId uint64
+	if value, err := convertStrToUnit64(h.ParentID); err == nil {
+		log.Debugf("injecting parentId = %v", value)
+		parentId = value
+	}
+
+	priority := sampler.PriorityNone
+	if value, err := strconv.ParseInt(h.SamplingPriority, 10, 8); err == nil {
+		log.Debugf("injecting samplingPriority = %v", value)
+		priority = sampler.SamplingPriority(value)
+	}
+	return &propagation.TraceContext{
+		TraceID:  traceId,
+		ParentID: parentId,
+		Priority: priority,
+	}
+}
+
 // ParseLambdaPayload removes extra data sent by the proxy that surrounds
 // a JSON payload. For example, for `a5a{"event":"aws_lambda"...}0` it would remove
 // a5a at the front and 0 at the end, and just leave a correct JSON payload.
@@ -173,17 +165,6 @@ func ParseLambdaPayload(rawPayload []byte) []byte {
 		return rawPayload
 	}
 	return rawPayload[leftIndex : rightIndex+1]
-}
-
-func convertRawPayload(payloadString []byte) invocationPayload {
-	payload := invocationPayload{}
-
-	err := json.Unmarshal(payloadString, &payload)
-	if err != nil {
-		log.Debug("Could not unmarshal the invocation event payload")
-	}
-
-	return payload
 }
 
 func convertStrToUnit64(s string) (uint64, error) {
