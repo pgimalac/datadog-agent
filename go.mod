@@ -54,29 +54,17 @@ require (
 	code.cloudfoundry.org/lager v2.0.0+incompatible
 	github.com/CycloneDX/cyclonedx-go v0.7.1
 	github.com/DataDog/appsec-internal-go v1.0.1-0.20230723140106-7cb513f54ce1
-	github.com/DataDog/datadog-agent/pkg/gohai v0.48.0-rc.2
 	github.com/DataDog/datadog-agent/pkg/gohai v0.49.0-rc.2
-	github.com/DataDog/datadog-agent/pkg/obfuscate v0.48.0
 	github.com/DataDog/datadog-agent/pkg/obfuscate v0.49.0-rc.2
-	github.com/DataDog/datadog-agent/pkg/remoteconfig/state v0.48.0-rc.2
 	github.com/DataDog/datadog-agent/pkg/remoteconfig/state v0.49.0-rc.2
-	github.com/DataDog/datadog-agent/pkg/security/secl v0.48.0-rc.2
 	github.com/DataDog/datadog-agent/pkg/security/secl v0.49.0-rc.2
-	github.com/DataDog/datadog-agent/pkg/trace v0.48.0-rc.2
 	github.com/DataDog/datadog-agent/pkg/trace v0.49.0-rc.2
-	github.com/DataDog/datadog-agent/pkg/util/cgroups v0.48.0-rc.2
 	github.com/DataDog/datadog-agent/pkg/util/cgroups v0.49.0-rc.2
-	github.com/DataDog/datadog-agent/pkg/util/log v0.48.0-rc.2
 	github.com/DataDog/datadog-agent/pkg/util/log v0.49.0-rc.2
-	github.com/DataDog/datadog-agent/pkg/util/pointer v0.48.0-rc.2
 	github.com/DataDog/datadog-agent/pkg/util/pointer v0.49.0-rc.2
-	github.com/DataDog/datadog-agent/pkg/util/scrubber v0.48.0-rc.2
 	github.com/DataDog/datadog-agent/pkg/util/scrubber v0.49.0-rc.2
 	github.com/DataDog/datadog-go/v5 v5.3.0
-	github.com/DataDog/datadog-go/v5 v5.3.0
 	github.com/DataDog/datadog-operator v1.1.0
-	github.com/DataDog/datadog-operator v1.1.0
-	github.com/DataDog/ebpf-manager v0.2.16
 	github.com/DataDog/ebpf-manager v0.3.4
 	github.com/DataDog/go-libddwaf v1.5.0
 	github.com/DataDog/go-tuf v1.0.2-0.5.2
@@ -230,19 +218,12 @@ require (
 	go.uber.org/zap v1.26.0
 	go4.org/netipx v0.0.0-20220812043211-3cc044ffd68d
 	golang.org/x/arch v0.5.0
-	golang.org/x/exp v0.0.0-20230711023510-fffb14384f22
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
 	golang.org/x/net v0.17.0
-	golang.org/x/net v0.17.0
-	golang.org/x/sync v0.3.0
 	golang.org/x/sync v0.4.0
 	golang.org/x/sys v0.13.0
-	golang.org/x/sys v0.13.0
-	golang.org/x/text v0.13.0
 	golang.org/x/text v0.13.0
 	golang.org/x/time v0.3.0
-	golang.org/x/time v0.3.0
-	golang.org/x/tools v0.12.1-0.20230815132531-74c255bcf846
 	golang.org/x/tools v0.14.0
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2
 	google.golang.org/genproto v0.0.0-20230711160842-782d3b101e98 // indirect
@@ -405,7 +386,6 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.4 // indirect
 	github.com/hashicorp/go-rootcerts v1.0.2 // indirect
 	github.com/hashicorp/go-version v1.6.0
-	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/hashicorp/golang-lru v1.0.2 // indirect
 	github.com/hashicorp/hcl v1.0.1-vault-5 // indirect
 	github.com/hashicorp/serf v0.10.1 // indirect
@@ -463,7 +443,6 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/montanaflynn/stats v0.6.6 // indirect
-	github.com/mostynb/go-grpc-compression v1.2.0 // indirect
 	github.com/mostynb/go-grpc-compression v1.2.1 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f // indirect
@@ -502,9 +481,6 @@ require (
 	github.com/tchap/go-patricia/v2 v2.3.1 // indirect
 	github.com/tedsuo/ifrit v0.0.0-20191009134036-9a97d0632f00 // indirect
 	github.com/tedsuo/rata v1.0.0 // indirect
-	github.com/tidwall/gjson v1.16.0 // indirect
-	github.com/tidwall/match v1.1.1 // indirect
-	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
 	github.com/tmthrgd/go-hex v0.0.0-20190904060850-447a3041c3bc // indirect
@@ -536,42 +512,23 @@ require (
 	go.etcd.io/etcd/client/v3 v3.6.0-alpha.0 // indirect
 	go.etcd.io/etcd/server/v3 v3.6.0-alpha.0.0.20220522111935-c3bc4116dcd1 // indirect
 	go.opencensus.io v0.24.0 // indirect
-	go.opentelemetry.io/collector/consumer v0.84.0
 	go.opentelemetry.io/collector/consumer v0.87.0
-	go.opentelemetry.io/collector/featuregate v1.0.0-rcv0014 // indirect
 	go.opentelemetry.io/collector/featuregate v1.0.0-rcv0016 // indirect
-	go.opentelemetry.io/collector/semconv v0.84.0 // indirect
 	go.opentelemetry.io/collector/semconv v0.87.0 // indirect
-	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.42.1-0.20230612162650-64be7e574a17 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.45.0 // indirect
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.42.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.45.0 // indirect
-	go.opentelemetry.io/contrib/propagators/b3 v1.17.0 // indirect
 	go.opentelemetry.io/contrib/propagators/b3 v1.19.0 // indirect
-	go.opentelemetry.io/otel v1.16.0 // indirect
 	go.opentelemetry.io/otel v1.19.0 // indirect
-	go.opentelemetry.io/otel/exporters/otlp/internal/retry v1.16.0 // indirect
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.16.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.19.0
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.16.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.19.0
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.16.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.19.0
-	go.opentelemetry.io/otel/exporters/prometheus v0.39.0
 	go.opentelemetry.io/otel/exporters/prometheus v0.42.0
-	go.opentelemetry.io/otel/metric v1.16.0
 	go.opentelemetry.io/otel/metric v1.19.0
-	go.opentelemetry.io/otel/sdk v1.16.0
 	go.opentelemetry.io/otel/sdk v1.19.0
-	go.opentelemetry.io/otel/sdk/metric v0.39.0
 	go.opentelemetry.io/otel/sdk/metric v1.19.0
-	go.opentelemetry.io/otel/trace v1.16.0 // indirect
 	go.opentelemetry.io/otel/trace v1.19.0 // indirect
-	go.opentelemetry.io/proto/otlp v0.19.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.0.0 // indirect
 	golang.org/x/crypto v0.14.0 // indirect
-	golang.org/x/crypto v0.14.0 // indirect
-	golang.org/x/mod v0.12.0
 	golang.org/x/mod v0.13.0
 	golang.org/x/oauth2 v0.10.0 // indirect
 	golang.org/x/term v0.13.0 // indirect
@@ -632,10 +589,8 @@ require (
 	github.com/kr/pretty v0.3.1
 	github.com/protocolbuffers/protoscope v0.0.0-20221109213918-8e7a6aafa2c9
 	github.com/sijms/go-ora/v2 v2.7.6
-	go.opentelemetry.io/collector/extension v0.84.0
 	go.opentelemetry.io/collector/extension v0.87.0
 	go.opentelemetry.io/collector/otelcol v0.87.0
-	go.opentelemetry.io/collector/processor v0.84.0
 	go.opentelemetry.io/collector/processor v0.87.0
 	go4.org/intern v0.0.0-20230525184215-6c62f75575cb
 )
@@ -696,7 +651,6 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	honnef.co/go/tools v0.3.2 // indirect
 	inet.af/netaddr v0.0.0-20230525184311-b8eac61e914a // indirect
-	k8s.io/kms v0.27.2 // indirect
 	k8s.io/kms v0.27.6 // indirect
 )
 
