@@ -100,12 +100,17 @@ var (
 	}
 )
 
-func TestNilExtractor(t *testing.T) {
-	var extractor *Extractor
-	tc, err := extractor.Extract("hello world")
+func TestNilPropagator(t *testing.T) {
+	var extractor Extractor
+	tc, err := extractor.Extract([]byte(`{"headers":` + headersAll + `}`))
 	t.Logf("Extract returned TraceContext=%#v error=%#v", tc, err)
-	assert.Equal(t, "Extraction not configured", err.Error())
-	assert.Nil(t, tc)
+	assert.Nil(t, err)
+	expected := &TraceContext{
+		TraceID:  w3c.trace.asUint,
+		ParentID: w3c.span.asUint,
+		Priority: w3c.priority.asInt,
+	}
+	assert.Equal(t, expected, tc)
 }
 
 func TestExtractorExtract(t *testing.T) {
@@ -199,7 +204,7 @@ func TestExtractorExtract(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			extractor := NewExtractor()
+			extractor := Extractor{}
 			ctx, err := extractor.Extract(tc.event)
 			t.Logf("Extract returned TraceContext=%#v error=%#v", ctx, err)
 			assert.Equal(t, tc.expNoErr, err == nil)
@@ -265,7 +270,7 @@ func TestPropagationStyle(t *testing.T) {
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Setenv("DD_TRACE_PROPAGATION_STYLE", tc.propType)
-			extractor := NewExtractor()
+			extractor := Extractor{}
 			event := eventSqsMessage(tc.hdrs, headersNone, headersNone)
 			ctx, err := extractor.Extract(event)
 			t.Logf("Extract returned TraceContext=%#v error=%#v", ctx, err)
