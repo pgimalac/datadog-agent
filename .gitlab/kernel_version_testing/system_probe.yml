@@ -85,7 +85,7 @@
     - !reference [.setup_ssh_config]
     - scp $DD_AGENT_TESTING_DIR/$ARCHIVE_NAME metal_instance:/opt/kernel-version-testing/
     - inv system-probe.test-docker-image-list > docker-images.txt
-    - scp docker-images.txt docker-username docker-password docker-registry metal_instance:/home/ubuntu/
+    - scp $CI_PROJECT_DIR/docker-images.txt $CI_PROJECT_DIR/docker-username $CI_PROJECT_DIR/docker-password $CI_PROJECT_DIR/docker-registry metal_instance:/home/ubuntu/
     - ssh metal_instance "docker login --username $(</home/ubuntu/docker-username) --password-stdin $(</home/ubuntu/docker-registry) < /home/ubuntu/docker-password && docker run -d -p 5000:5000 --restart=always --name registry registry:2 && xargs -L1 -I{} -a /home/ubuntu/docker-images.txt bash -c 'docker pull {} && docker tag {} localhost:5000/{} && docker push localhost:5000/{}'"
   variables:
     DEPENDENCIES: $DD_AGENT_TESTING_DIR/$ARCH/dependencies
