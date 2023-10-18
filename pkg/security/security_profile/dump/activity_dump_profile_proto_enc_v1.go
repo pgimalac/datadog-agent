@@ -12,7 +12,6 @@ import (
 	proto "github.com/DataDog/agent-payload/v5/cws/dumpsv1"
 
 	"github.com/DataDog/datadog-agent/pkg/security/secl/model"
-	security_profile "github.com/DataDog/datadog-agent/pkg/security/security_profile"
 	activity_tree "github.com/DataDog/datadog-agent/pkg/security/security_profile/activity_tree"
 	mtdt "github.com/DataDog/datadog-agent/pkg/security/security_profile/activity_tree/metadata"
 )
@@ -24,14 +23,17 @@ func ActivityDumpToSecurityProfileProto(input *ActivityDump) *proto.SecurityProf
 	}
 
 	output := proto.SecurityProfile{
-		Status:   uint32(model.AnomalyDetection),
-		Version:  security_profile.LocalProfileVersion,
-		Metadata: mtdt.ToProto(&input.Metadata),
+		Status:          uint32(model.AnomalyDetection),
+		Metadata:        mtdt.ToProto(&input.Metadata),
+		ProfileContexts: make(map[string]*proto.ProfileContext),
+		Tree:            activity_tree.ToProto(input.ActivityTree),
+	}
+	ctx := &proto.ProfileContext{
 		Syscalls: input.ActivityTree.ComputeSyscallsList(),
 		Tags:     make([]string, len(input.Tags)),
-		Tree:     activity_tree.ToProto(input.ActivityTree),
 	}
-	copy(output.Tags, input.Tags)
+	copy(ctx.Tags, input.Tags)
+	output.ProfileContexts[input.selector.Tag] = ctx
 
 	return &output
 }

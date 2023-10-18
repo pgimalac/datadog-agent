@@ -620,6 +620,8 @@ require (
 	go4.org/intern v0.0.0-20230525184215-6c62f75575cb
 )
 
+replace github.com/DataDog/agent-payload/v5 v5.0.97 => github.com/DataDog/agent-payload/v5 v5.0.100-0.20231108142347-a7a728a2b7d6
+
 require (
 	github.com/AdaLogics/go-fuzz-headers v0.0.0-20230811130428-ced1acdcaa24 // indirect
 	github.com/AdamKorcz/go-118-fuzz-build v0.0.0-20230306123547-8075edf89bb0 // indirect

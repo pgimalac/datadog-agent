@@ -45,8 +45,7 @@ var profileExtension = "." + config.Profile.String()
 var _ Provider = (*DirectoryProvider)(nil)
 
 type profileFSEntry struct {
-	path    string
-	version string
+	path string
 }
 
 // DirectoryProvider is a ProfileProvider that fetches Security Profiles from the filesystem
@@ -214,7 +213,26 @@ func (dp *DirectoryProvider) loadProfile(profilePath string) error {
 		profile.Status = uint32(dp.status)
 	}
 
-	workloadSelector, err := cgroupModel.NewWorkloadSelector(utils.GetTagValue("image_name", profile.Tags), utils.GetTagValue("image_tag", profile.Tags))
+	// check if the profile is holding multiple versions or not and grab image name and tag[s]
+	imageTag := ""
+	imageName := ""
+	if len(profile.ProfileContexts) == 0 {
+		return fmt.Errorf("couldn't load profile %s: it did not contains any version", profilePath)
+	} else {
+		for key, ctx := range profile.ProfileContexts {
+			imageTag = key
+			imageName = utils.GetTagValue("image_name", ctx.Tags)
+			break
+		}
+	}
+	if len(profile.ProfileContexts) > 1 {
+		imageTag = "*"
+	}
+	if imageTag == "" || imageName == "" {
+		return fmt.Errorf("couldn't load profile %s: it did not contains any valid image_name (%s) or image_tag (%s)", profilePath, imageName, imageTag)
+	}
+
+	workloadSelector, err := cgroupModel.NewWorkloadSelector(imageName, imageTag)
 	if err != nil {
 		return err
 	}
@@ -224,18 +242,11 @@ func (dp *DirectoryProvider) loadProfile(profilePath string) error {
 	defer dp.Unlock()
 
 	// update profile mapping
-	if existingProfile, ok := dp.profileMapping[workloadSelector]; ok {
-		if existingProfile.version > profile.Version {
-			seclog.Warnf("ignoring %s (version: %v status: %s): a more recent version of this profile already exists (existing version is %v)", profilePath, profile.Version, model.Status(profile.Status), existingProfile.version)
-			return nil
-		}
-	}
 	dp.profileMapping[workloadSelector] = profileFSEntry{
-		path:    profilePath,
-		version: profile.Version,
+		path: profilePath,
 	}
 
-	seclog.Debugf("security profile %s (version: %s status: %s) loaded from file system", workloadSelector, profile.Version, model.Status(profile.Status))
+	seclog.Debugf("security profile %s (status: %s) loaded from file system", workloadSelector, model.Status(profile.Status))
 
 	if dp.onNewProfileCallback == nil {
 		return nil
@@ -372,7 +383,7 @@ func (dp *DirectoryProvider) watch(ctx context.Context) {
 							// delete profile
 							dp.deleteProfile(selector)
 
-							seclog.Debugf("security profile %s (version %s) removed from profile mapping", selector, profile.version)
+							seclog.Debugf("security profile %s removed from profile mapping", selector)
 						}
 					}
 

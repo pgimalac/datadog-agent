@@ -394,7 +394,8 @@ func (p *Probe) DispatchEvent(event *model.Event) {
 	// handle anomaly detections
 	if event.IsAnomalyDetectionEvent() {
 		if event.IsKernelSpaceAnomalyDetectionEvent() {
-			p.profileManagers.securityProfileManager.FillProfileContextFromContainerID(event.FieldHandlers.ResolveContainerID(event, event.ContainerContext), &event.SecurityProfileContext)
+			imageTag := utils.GetTagValue("image_tag", event.ContainerContext.Tags)
+			p.profileManagers.securityProfileManager.FillProfileContextFromContainerID(event.FieldHandlers.ResolveContainerID(event, event.ContainerContext), &event.SecurityProfileContext, imageTag)
 		}
 		p.sendAnomalyDetection(event)
 	} else if event.Error == nil {

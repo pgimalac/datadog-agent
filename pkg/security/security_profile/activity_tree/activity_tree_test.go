@@ -61,7 +61,7 @@ func TestInsertFileEvent(t *testing.T) {
 				},
 			},
 		}
-		pan.InsertFileEvent(&event.Open.File, event, Unknown, stats, false, nil, nil)
+		pan.InsertFileEvent(&event.Open.File, event, "tag", Unknown, stats, false, nil, nil)
 	}
 
 	var builder strings.Builder
@@ -196,7 +196,7 @@ func TestActivityTree_Patterns(t *testing.T) {
 			},
 		}
 
-		_, newEntry, err := tree.CreateProcessNode(event.ProcessCacheEntry, Runtime, false, nil)
+		_, newEntry, err := tree.CreateProcessNode(event.ProcessCacheEntry, "tag", Runtime, false, nil)
 		assert.NoError(t, err)
 		assert.True(t, newEntry)
 		assertTreeEqual(t, wanted, tree)
@@ -228,7 +228,7 @@ func TestActivityTree_Patterns(t *testing.T) {
 			},
 		}
 
-		_, newEntry, err = tree.CreateProcessNode(event.ProcessCacheEntry, Runtime, false, nil)
+		_, newEntry, err = tree.CreateProcessNode(event.ProcessCacheEntry, "tag", Runtime, false, nil)
 		assert.NoError(t, err)
 		assert.False(t, newEntry)
 		assertTreeEqual(t, wanted, tree)
@@ -271,7 +271,7 @@ func TestActivityTree_Patterns(t *testing.T) {
 			},
 		}
 
-		_, newEntry, err := tree.CreateProcessNode(event.ProcessCacheEntry, Runtime, false, nil)
+		_, newEntry, err := tree.CreateProcessNode(event.ProcessCacheEntry, "tag", Runtime, false, nil)
 		assert.NoError(t, err)
 		assert.True(t, newEntry)
 		assertTreeEqual(t, wanted, tree)
@@ -303,7 +303,7 @@ func TestActivityTree_Patterns(t *testing.T) {
 			},
 		}
 
-		_, newEntry, err = tree.CreateProcessNode(event.ProcessCacheEntry, Runtime, true, nil)
+		_, newEntry, err = tree.CreateProcessNode(event.ProcessCacheEntry, "tag", Runtime, true, nil)
 		assert.NoError(t, err)
 		assert.True(t, newEntry)
 		assertTreeEqual(t, wanted, tree)
