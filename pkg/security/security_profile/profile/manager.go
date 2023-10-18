@@ -657,23 +657,27 @@ func (m *SecurityProfileManager) unlinkProfile(profile *SecurityProfile, workloa
 func (m *SecurityProfileManager) LookupEventInProfiles(event *model.Event) {
 	// ignore events with an error
 	if event.Error != nil {
+		seclog.Debugf("LookupEventInProfiles/Error ? %v : %+v", event.Error, event.ProcessContext.FileEvent.PathnameStr)
 		return
 	}
 
 	// shortcut for dedicated anomaly detection events
 	if event.IsKernelSpaceAnomalyDetectionEvent() {
 		event.AddToFlags(model.EventFlagsSecurityProfileInProfile)
+		seclog.Debugf("LookupEventInProfiles/Kernel ? %v : %+v", event.Error, event.ProcessContext.FileEvent.PathnameStr)
 		return
 	}
 
 	// create profile selector
 	event.FieldHandlers.ResolveContainerTags(event, event.ContainerContext)
 	if len(event.ContainerContext.Tags) == 0 {
+		seclog.Debugf("LookupEventInProfiles/Tags ? %v : %+v", event.Error, event.ProcessContext.FileEvent.PathnameStr)
 		return
 	}
 
 	selector, err := cgroupModel.NewWorkloadSelector(utils.GetTagValue("image_name", event.ContainerContext.Tags), utils.GetTagValue("image_tag", event.ContainerContext.Tags))
 	if err != nil {
+		seclog.Debugf("LookupEventInProfiles/Selector ? %v : %+v", event.Error, event.ProcessContext.FileEvent.PathnameStr)
 		return
 	}
 
@@ -681,6 +685,7 @@ func (m *SecurityProfileManager) LookupEventInProfiles(event *model.Event) {
 	profile := m.GetProfile(selector)
 	if profile == nil || profile.Status == 0 {
 		m.incrementEventFilteringStat(event.GetEventType(), NoProfile, NA)
+		seclog.Debugf("LookupEventInProfiles/NoProfile ? %v : %+v", event.Error, event.ProcessContext.FileEvent.PathnameStr)
 		return
 	}
 
@@ -692,11 +697,13 @@ func (m *SecurityProfileManager) LookupEventInProfiles(event *model.Event) {
 	case NoProfile, ProfileAtMaxSize, UnstableEventType:
 		// an error occurred or we are in unstable state
 		// do not link the profile to avoid sending anomalies
+		seclog.Debugf("LookupEventInProfiles/NotStable ? %v : %+v", event.Error, event.ProcessContext.FileEvent.PathnameStr)
 		return
 	case AutoLearning, WorkloadWarmup:
 		// the event was either already in the profile, or has just been inserted
 		FillProfileContextFromProfile(&event.SecurityProfileContext, profile)
 		event.AddToFlags(model.EventFlagsSecurityProfileInProfile)
+		seclog.Debugf("LookupEventInProfiles/AutoLearn ? %v : %+v", event.Error, event.ProcessContext.FileEvent.PathnameStr)
 		return
 	case StableEventType:
 		// check if the event is in its profile
