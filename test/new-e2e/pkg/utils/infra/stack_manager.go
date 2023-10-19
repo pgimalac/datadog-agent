@@ -3,7 +3,7 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2016-present Datadog, Inc.
 
-// Package infra implements utilities to interact with a Pulumi infrastructure
+// Package infra implements utilities to interact with testing infrastructure
 package infra
 
 import (

@@ -19,20 +19,20 @@ import (
 
 var _ connInitializer = (*VM)(nil)
 
-// VM is a client VM that is connected to a VM defined in test-infra-definition.
-type VM struct {
+// PulumiVM is a client VM that is connected to a VM defined in test-infra-definition.
+type PulumiVM struct {
 	deserializer utils.RemoteServiceDeserializer[commonvm.ClientData]
 	*VMClient
 	os commonos.OS
 }
 
-// NewVM creates a new instance of VM
-func NewVM(infraVM commonvm.VM) *VM {
-	return &VM{deserializer: infraVM, os: infraVM.GetOS()}
+// NewVM creates a new instance of PulumiVM
+func NewVM(infraVM commonvm.VM) *PulumiVM {
+	return &PulumiVM{deserializer: infraVM, os: infraVM.GetOS()}
 }
 
 //lint:ignore U1000 Ignore unused function as this function is called using reflection
-func (vm *VM) setConn(t *testing.T, result map[string]interface{}) error {
+func (vm *PulumiVM) setConn(t *testing.T, result map[string]interface{}) error {
 	clientData, err := vm.deserializer.Deserialize(result)
 	if err != nil {
 		return err
