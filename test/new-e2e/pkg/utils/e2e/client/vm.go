@@ -15,10 +15,9 @@ import (
 	"github.com/DataDog/test-infra-definitions/common/utils"
 	commonos "github.com/DataDog/test-infra-definitions/components/os"
 	commonvm "github.com/DataDog/test-infra-definitions/components/vm"
-	"github.com/pulumi/pulumi/sdk/v3/go/auto"
 )
 
-var _ stackInitializer = (*VM)(nil)
+var _ connInitializer = (*VM)(nil)
 
 // VM is a client VM that is connected to a VM defined in test-infra-definition.
 type VM struct {
@@ -33,8 +32,8 @@ func NewVM(infraVM commonvm.VM) *VM {
 }
 
 //lint:ignore U1000 Ignore unused function as this function is called using reflection
-func (vm *VM) setStack(t *testing.T, stackResult auto.UpResult) error {
-	clientData, err := vm.deserializer.Deserialize(stackResult)
+func (vm *VM) setConn(t *testing.T, result map[string]interface{}) error {
+	clientData, err := vm.deserializer.Deserialize(result)
 	if err != nil {
 		return err
 	}

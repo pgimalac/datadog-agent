@@ -17,10 +17,9 @@ import (
 	"github.com/DataDog/test-infra-definitions/common/utils"
 	"github.com/DataDog/test-infra-definitions/components/datadog/agent"
 	e2eOs "github.com/DataDog/test-infra-definitions/components/os"
-	"github.com/pulumi/pulumi/sdk/v3/go/auto"
 )
 
-var _ stackInitializer = (*Agent)(nil)
+var _ connInitializer = (*Agent)(nil)
 
 // An Agent that is connected to an [agent.Installer].
 //
@@ -47,8 +46,8 @@ func NewAgent(installer *agent.Installer, agentClientOptions ...agentclientparam
 }
 
 //lint:ignore U1000 Ignore unused function as this function is called using reflection
-func (agent *Agent) setStack(t *testing.T, stackResult auto.UpResult) error {
-	clientData, err := agent.deserializer.Deserialize(stackResult)
+func (agent *Agent) setConn(t *testing.T, result map[string]interface{}) error {
+	clientData, err := agent.deserializer.Deserialize(result)
 	if err != nil {
 		return err
 	}

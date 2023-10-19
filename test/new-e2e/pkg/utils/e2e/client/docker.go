@@ -18,11 +18,10 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/stdcopy"
-	"github.com/pulumi/pulumi/sdk/v3/go/auto"
 	"github.com/stretchr/testify/require"
 )
 
-var _ stackInitializer = (*Docker)(nil)
+var _ connInitializer = (*Docker)(nil)
 
 // A Docker client that is connected to an [docker.Deamon].
 //
@@ -46,8 +45,8 @@ func NewDocker(daemon *docker.Daemon) *Docker {
 }
 
 //lint:ignore U1000 Ignore unused function as this function is call using reflection
-func (docker *Docker) setStack(t *testing.T, stackResult auto.UpResult) error {
-	clientData, err := docker.deserializer.Deserialize(stackResult)
+func (docker *Docker) setConn(t *testing.T, result map[string]interface{}) error {
+	clientData, err := docker.deserializer.Deserialize(result)
 	if err != nil {
 		return err
 	}

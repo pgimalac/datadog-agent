@@ -9,12 +9,10 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
-
-	"github.com/pulumi/pulumi/sdk/v3/go/auto"
 )
 
-type stackInitializer interface {
-	setStack(t *testing.T, stackResult auto.UpResult) error
+type connInitializer interface {
+	setConn(t *testing.T, result map[string]interface{}) error
 }
 
 // CheckEnvStructValid validates an environment struct
@@ -24,17 +22,17 @@ func CheckEnvStructValid[Env any]() error {
 	return err
 }
 
-// CallStackInitializers validate an environment struct and initialise a stack
-func CallStackInitializers[Env any](t *testing.T, env *Env, upResult auto.UpResult) error {
+// CallConnInitializers validates an environment struct and initializes a connection to the testing infrastructure
+func CallConnInitializers[Env any](t *testing.T, env *Env, connResult map[string]interface{}) error {
 	fields, err := getFields(env)
 
 	for _, field := range fields {
-		initializer := field.stackInitializer
+		initializer := field.connInitializer
 		if reflect.TypeOf(initializer).Kind() == reflect.Ptr && reflect.ValueOf(initializer).IsNil() {
 			return fmt.Errorf("the field %v of %v is nil", field.name, reflect.TypeOf(env))
 		}
 
-		if err = initializer.setStack(t, upResult); err != nil {
+		if err = initializer.setConn(t, connResult); err != nil {
 			return err
 		}
 	}
@@ -43,8 +41,8 @@ func CallStackInitializers[Env any](t *testing.T, env *Env, upResult auto.UpResu
 }
 
 type field struct {
-	stackInitializer stackInitializer
-	name             string
+	connInitializer connInitializer
+	name            string
 }
 
 func getFields[Env any](env *Env) ([]field, error) {
@@ -59,24 +57,24 @@ func getFields[Env any](env *Env) ([]field, error) {
 		}
 	}
 
-	stackInitializerType := reflect.TypeOf((*stackInitializer)(nil)).Elem()
+	connInitializerType := reflect.TypeOf((*connInitializer)(nil)).Elem()
 	for i := 0; i < envValue.NumField(); i++ {
 		fieldName := envValue.Type().Field(i).Name
 		if _, found := exportedFields[fieldName]; !found {
 			return nil, fmt.Errorf("the field %v in %v is not exported", fieldName, envType)
 		}
 
-		initializer, ok := envValue.Field(i).Interface().(stackInitializer)
+		initializer, ok := envValue.Field(i).Interface().(connInitializer)
 		if !ok {
 			return nil, fmt.Errorf("%v contains %v which doesn't implement %v",
 				envType,
 				fieldName,
-				stackInitializerType,
+				connInitializerType,
 			)
 		}
 		fields = append(fields, field{
-			stackInitializer: initializer,
-			name:             fieldName,
+			connInitializer: initializer,
+			name:            fieldName,
 		})
 	}
 	return fields, nil

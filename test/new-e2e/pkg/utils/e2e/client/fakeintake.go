@@ -11,10 +11,9 @@ import (
 	fakeintake "github.com/DataDog/datadog-agent/test/fakeintake/client"
 	"github.com/DataDog/test-infra-definitions/common/utils"
 	infraFakeintake "github.com/DataDog/test-infra-definitions/components/datadog/fakeintake"
-	"github.com/pulumi/pulumi/sdk/v3/go/auto"
 )
 
-var _ stackInitializer = (*Fakeintake)(nil)
+var _ connInitializer = (*Fakeintake)(nil)
 
 // A Fakeintake client that is connected to a fakeintake ECS task defined in test-infra-definition.
 type Fakeintake struct {
@@ -28,8 +27,8 @@ func NewFakeintake(exporter *infraFakeintake.ConnectionExporter) *Fakeintake {
 }
 
 //lint:ignore U1000 Ignore unused function as this function is call using reflection
-func (fi *Fakeintake) setStack(_ *testing.T, stackResult auto.UpResult) error {
-	clientData, err := fi.deserializer.Deserialize(stackResult)
+func (fi *Fakeintake) setConn(t *testing.T, result map[string]interface{}) error {
+	clientData, err := fi.deserializer.Deserialize(result)
 	if err != nil {
 		return err
 	}

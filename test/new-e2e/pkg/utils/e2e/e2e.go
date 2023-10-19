@@ -361,7 +361,6 @@ import (
 	"github.com/DataDog/datadog-agent/test/new-e2e/pkg/utils/e2e/params"
 	"github.com/DataDog/datadog-agent/test/new-e2e/pkg/utils/infra"
 	"github.com/DataDog/test-infra-definitions/common/utils"
-	"github.com/pulumi/pulumi/sdk/v3/go/auto"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/stretchr/testify/suite"
 )
@@ -517,11 +516,11 @@ func (suite *Suite[Env]) TearDownSuite() {
 	}
 }
 
-func createEnv[Env any](suite *Suite[Env], stackDef *StackDefinition[Env]) (*Env, auto.UpResult, error) {
+func createEnv[Env any](suite *Suite[Env], stackDef *StackDefinition[Env]) (*Env, map[string]interface{}, error) {
 	var env *Env
 	ctx := context.Background()
 
-	_, stackOutput, err := infra.GetStackManager().GetStackNoDeleteOnFailure(
+	_, connOutput, err := infra.GetStackManager().GetStackNoDeleteOnFailure(
 		ctx,
 		suite.params.StackName,
 		stackDef.configMap,
@@ -531,7 +530,7 @@ func createEnv[Env any](suite *Suite[Env], stackDef *StackDefinition[Env]) (*Env
 			return err
 		}, false)
 
-	return env, stackOutput, err
+	return env, connOutput, err
 }
 
 // UpdateEnv updates the environment.
@@ -543,9 +542,9 @@ func (suite *Suite[Env]) UpdateEnv(stackDef *StackDefinition[Env]) {
 			// In case of failure, do not override the environment
 			suite.T().SkipNow()
 		}
-		env, upResult, err := createEnv(suite, stackDef)
+		env, connResult, err := createEnv(suite, stackDef)
 		suite.Require().NoError(err)
-		err = client.CallStackInitializers(suite.T(), env, upResult)
+		err = client.CallConnInitializers(suite.T(), env, connResult)
 		suite.Require().NoError(err)
 		suite.env = env
 		suite.currentStackDef = stackDef
