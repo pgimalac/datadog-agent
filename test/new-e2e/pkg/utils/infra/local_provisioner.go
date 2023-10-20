@@ -13,7 +13,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/auto"
 )
 
-var _ utils.RemoteServiceDeserializer[commonvm.ClientData] = (*LocalVM[commonvm.ClientData])(nil)
+var _ utils.RemoteServiceDeserializer[commonvm.ClientData] = (*LocalVM)(nil)
 
 type LocalVM struct{}
 
