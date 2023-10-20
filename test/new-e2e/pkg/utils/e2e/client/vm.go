@@ -7,6 +7,8 @@
 package client
 
 import (
+	"github.com/DataDog/datadog-agent/test/new-e2e/pkg/utils/infra"
+	"github.com/pulumi/pulumi/sdk/v3/go/auto"
 	"os"
 	"testing"
 
@@ -19,21 +21,26 @@ import (
 
 var _ connInitializer = (*VM)(nil)
 
-// PulumiVM is a client VM that is connected to a VM defined in test-infra-definition.
-type PulumiVM struct {
-	deserializer utils.RemoteServiceDeserializer[commonvm.ClientData]
+type VM struct {
 	*VMClient
-	os commonos.OS
+	deserializer utils.RemoteServiceDeserializer[commonvm.ClientData]
+	os           commonos.OS
 }
 
-// NewVM creates a new instance of PulumiVM
-func NewVM(infraVM commonvm.VM) *PulumiVM {
-	return &PulumiVM{deserializer: infraVM, os: infraVM.GetOS()}
+// NewPulumiVM creates a VM defined in test-infra-definition.
+func NewPulumiVM(infraVM commonvm.VM) *VM {
+	return &VM{deserializer: infraVM, os: infraVM.GetOS()}
+}
+
+// NewLocalVM creates a VM which runs locally
+func NewLocalVM(vm infra.LocalVM) *VM {
+	return &VM{deserializer: vm, os: commonos.WindowsType}
 }
 
 //lint:ignore U1000 Ignore unused function as this function is called using reflection
-func (vm *PulumiVM) setConn(t *testing.T, result map[string]interface{}) error {
-	clientData, err := vm.deserializer.Deserialize(result)
+func (vm *VM) setConn(t *testing.T, connResult auto.UpResult) error {
+	clientData, err := vm.deserializer.Deserialize(connResult)
+
 	if err != nil {
 		return err
 	}

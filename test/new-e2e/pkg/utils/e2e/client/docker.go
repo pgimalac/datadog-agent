@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/pulumi/pulumi/sdk/v3/go/auto"
 	"testing"
 
 	"github.com/DataDog/test-infra-definitions/common/utils"
@@ -45,8 +46,8 @@ func NewDocker(daemon *docker.Daemon) *Docker {
 }
 
 //lint:ignore U1000 Ignore unused function as this function is call using reflection
-func (docker *Docker) setConn(t *testing.T, result map[string]interface{}) error {
-	clientData, err := docker.deserializer.Deserialize(result)
+func (docker *Docker) setConn(t *testing.T, connResult auto.UpResult) error {
+	clientData, err := docker.deserializer.Deserialize(connResult)
 	if err != nil {
 		return err
 	}

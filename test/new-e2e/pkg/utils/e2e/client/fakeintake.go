@@ -6,6 +6,7 @@
 package client
 
 import (
+	"github.com/pulumi/pulumi/sdk/v3/go/auto"
 	"testing"
 
 	fakeintake "github.com/DataDog/datadog-agent/test/fakeintake/client"
@@ -27,8 +28,8 @@ func NewFakeintake(exporter *infraFakeintake.ConnectionExporter) *Fakeintake {
 }
 
 //lint:ignore U1000 Ignore unused function as this function is call using reflection
-func (fi *Fakeintake) setConn(t *testing.T, result map[string]interface{}) error {
-	clientData, err := fi.deserializer.Deserialize(result)
+func (fi *Fakeintake) setConn(t *testing.T, connResult auto.UpResult) error {
+	clientData, err := fi.deserializer.Deserialize(connResult)
 	if err != nil {
 		return err
 	}

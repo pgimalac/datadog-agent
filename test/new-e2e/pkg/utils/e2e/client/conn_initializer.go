@@ -7,12 +7,13 @@ package client
 
 import (
 	"fmt"
+	"github.com/pulumi/pulumi/sdk/v3/go/auto"
 	"reflect"
 	"testing"
 )
 
 type connInitializer interface {
-	setConn(t *testing.T, result map[string]interface{}) error
+	setConn(t *testing.T, result auto.UpResult) error
 }
 
 // CheckEnvStructValid validates an environment struct
@@ -23,7 +24,7 @@ func CheckEnvStructValid[Env any]() error {
 }
 
 // CallConnInitializers validates an environment struct and initializes a connection to the testing infrastructure
-func CallConnInitializers[Env any](t *testing.T, env *Env, connResult map[string]interface{}) error {
+func CallConnInitializers[Env any](t *testing.T, env *Env, connResult auto.UpResult) error {
 	fields, err := getFields(env)
 
 	for _, field := range fields {

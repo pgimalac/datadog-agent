@@ -7,13 +7,15 @@ package e2e
 
 import (
 	"context"
+	"fmt"
 	"github.com/DataDog/datadog-agent/test/new-e2e/pkg/runner"
 	"github.com/DataDog/datadog-agent/test/new-e2e/pkg/utils/infra"
+	"github.com/pulumi/pulumi/sdk/v3/go/auto"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
 type InfraDefinition[Env any] interface {
-	GetInfraNoDeleteOnFailure(ctx context.Context, name string, failOnMissing bool) (*Env, map[string]interface{}, error)
+	GetInfraNoDeleteOnFailure(ctx context.Context, name string, failOnMissing bool) (*Env, auto.UpResult, error)
 	Delete(ctx context.Context, name string) error
 }
 
@@ -25,7 +27,7 @@ type PulumiStackDefinition[Env any] struct {
 	configMap    runner.ConfigMap
 }
 
-func (ps *PulumiStackDefinition[Env]) GetInfraNoDeleteOnFailure(ctx context.Context, name string, failOnMissing bool) (*Env, map[string]interface{}, error) {
+func (ps *PulumiStackDefinition[Env]) GetInfraNoDeleteOnFailure(ctx context.Context, name string, failOnMissing bool) (*Env, auto.UpResult, error) {
 	var env *Env
 
 	deployFunc := func(ctx *pulumi.Context) error {
@@ -33,18 +35,8 @@ func (ps *PulumiStackDefinition[Env]) GetInfraNoDeleteOnFailure(ctx context.Cont
 		env, err = ps.envFactory(ctx)
 		return err
 	}
-	_, _, err := ps.stackManager.GetStackNoDeleteOnFailure(ctx, name, ps.configMap, deployFunc, failOnMissing)
-
-	result := make(map[string]interface{})
-	/*
-		type UpResult struct {
-			StdOut  string
-			StdErr  string
-			Outputs OutputMap
-			Summary UpdateSummary
-		}
-	*/
-	return env, result, err
+	_, stackResult, err := ps.stackManager.GetStackNoDeleteOnFailure(ctx, name, ps.configMap, deployFunc, failOnMissing)
+	return env, stackResult, err
 }
 
 func (ps *PulumiStackDefinition[Env]) Delete(ctx context.Context, name string) error {
@@ -54,20 +46,26 @@ func (ps *PulumiStackDefinition[Env]) Delete(ctx context.Context, name string) e
 var _ InfraDefinition[int] = (*LocalInfraDefinition[int])(nil)
 
 type LocalInfraDefinition[Env any] struct {
-	envFactory func(jsonPath string) (*Env, error)
-	configMap  runner.ConfigMap
+	envFactory    func() (*Env, error)
+	infraProvider *infra.LocalVMManager
+	configMap     runner.ConfigMap
 }
 
-func (li *LocalInfraDefinition[Env]) GetInfraNoDeleteOnFailure(ctx context.Context, name string, failOnMissing bool) (*Env, map[string]interface{}, error) {
+func (li *LocalInfraDefinition[Env]) GetInfraNoDeleteOnFailure(_ context.Context, _ string, failOnMissing bool) (*Env, auto.UpResult, error) {
+	jsonPath, ok := li.configMap["jsonPath"]
+	if !ok {
+		return nil, auto.UpResult{}, fmt.Errorf("'jsonPath' key must be provided in the config map for locally provisioned VMs")
+	}
 
-	// TODO
+	connResult, err := li.infraProvider.ProvisionLocalVM(jsonPath.Value)
+	if err != nil {
+		return nil, auto.UpResult{}, fmt.Errorf("error provisioning local VM: %s", err)
+	}
 
-	return nil, map[string]interface{}{}, nil
+	env, err := li.envFactory()
+	return env, connResult, err
 }
 
 func (li *LocalInfraDefinition[Env]) Delete(ctx context.Context, name string) error {
-
-	// TODO
-
-	return nil
+	return li.infraProvider.Delete()
 }

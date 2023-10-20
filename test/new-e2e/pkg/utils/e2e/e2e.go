@@ -350,6 +350,7 @@ package e2e
 import (
 	"context"
 	"fmt"
+	"github.com/pulumi/pulumi/sdk/v3/go/auto"
 	"reflect"
 	"strings"
 	"testing"
@@ -402,6 +403,7 @@ type suiteConstraint[Env any] interface {
 //	// ...
 //	e2e.Run(t, &vmSuite{}, e2e.EC2VMStackDef())
 func Run[Env any, T suiteConstraint[Env]](t *testing.T, e2eSuite T, infraDef InfraDefinition[Env], options ...params.Option) {
+	// TODO: we should try to move the "name" parameter out of the test suite definition & into the infra definitions, since it only applies to pulumi stacks
 	suiteType := reflect.TypeOf(e2eSuite).Elem()
 	name := suiteType.Name()
 	pkgPaths := suiteType.PkgPath()
@@ -513,7 +515,7 @@ func (suite *Suite[Env]) TearDownSuite() {
 	}
 }
 
-func createEnv[Env any](suite *Suite[Env], infraDef InfraDefinition[Env]) (*Env, map[string]interface{}, error) {
+func createEnv[Env any](suite *Suite[Env], infraDef InfraDefinition[Env]) (*Env, auto.UpResult, error) {
 	ctx := context.Background()
 	return infraDef.GetInfraNoDeleteOnFailure(ctx, suite.params.Name, false)
 }

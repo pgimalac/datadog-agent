@@ -6,6 +6,7 @@
 package client
 
 import (
+	"github.com/pulumi/pulumi/sdk/v3/go/auto"
 	"os"
 	"strings"
 	"testing"
@@ -46,8 +47,8 @@ func NewAgent(installer *agent.Installer, agentClientOptions ...agentclientparam
 }
 
 //lint:ignore U1000 Ignore unused function as this function is called using reflection
-func (agent *Agent) setConn(t *testing.T, result map[string]interface{}) error {
-	clientData, err := agent.deserializer.Deserialize(result)
+func (agent *Agent) setConn(t *testing.T, connResult auto.UpResult) error {
+	clientData, err := agent.deserializer.Deserialize(connResult)
 	if err != nil {
 		return err
 	}
