@@ -149,6 +149,7 @@ func NewCheckConfig(rawInstance integration.Data, rawInitConfig integration.Data
 	instance.ObfuscatorOptions.TableNames = true
 	instance.ObfuscatorOptions.CollectCommands = true
 	instance.ObfuscatorOptions.CollectComments = true
+	instance.ObfuscatorOptions.ObfuscationMode = obfuscate.ObfuscateAndNormalize // set ObfuscationMode will enable obfuscator to use go-sqllexer pkg
 
 	instance.QuerySamples.Enabled = true
 
