@@ -38,6 +38,11 @@ func TestHTTP2Path(t *testing.T) {
 			rawPath:     "",
 			expectedErr: true,
 		},
+		{
+			name:        "Only backslash",
+			rawPath:     "/",
+			expectedErr: true,
+		},
 	}
 
 	for _, tt := range tests {
