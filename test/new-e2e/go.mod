@@ -15,15 +15,9 @@ require (
 	// `TEST_INFRA_DEFINITIONS_BUILDIMAGES` matches the commit sha in the module version
 	// Example: 	github.com/DataDog/test-infra-definitions v0.0.0-YYYYMMDDHHmmSS-0123456789AB
 	// => TEST_INFRA_DEFINITIONS_BUILDIMAGES: 0123456789AB
-	github.com/DataDog/test-infra-definitions v0.0.0-20231020142939-8d38c2a2a794
-	github.com/aws/aws-sdk-go-v2 v1.21.2
-	github.com/aws/aws-sdk-go-v2/config v1.18.40
-	github.com/aws/aws-sdk-go-v2/service/eks v1.29.7
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.36.4
-	github.com/cenkalti/backoff v2.2.1+incompatible
-	github.com/fatih/color v1.13.0
-	github.com/pulumi/pulumi-command/sdk v0.9.0 // indirect
-	github.com/pulumi/pulumi/sdk/v3 v3.83.0
+	github.com/DataDog/test-infra-definitions v0.0.0-20231024095424-8978ad1efe78
+	github.com/pulumi/pulumi-command/sdk v0.9.1 // indirect
+	github.com/pulumi/pulumi/sdk/v3 v3.84.0
 	github.com/samber/lo v1.38.1
 	github.com/sethvargo/go-retry v0.2.4
 	github.com/stretchr/testify v1.8.5-0.20231013065317-89920137cdfa
@@ -38,8 +32,14 @@ require (
 	github.com/DataDog/datadog-agent/pkg/util/pointer v0.48.1
 	github.com/DataDog/datadog-api-client-go v1.16.0
 	github.com/DataDog/datadog-api-client-go/v2 v2.15.0
+	github.com/aws/aws-sdk-go-v2 v1.21.2
+	github.com/aws/aws-sdk-go-v2/config v1.18.40
+	github.com/aws/aws-sdk-go-v2/service/eks v1.29.7
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.39.0
+	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/docker/cli v24.0.4+incompatible
 	github.com/docker/docker v24.0.4+incompatible
+	github.com/fatih/color v1.13.0
 	github.com/google/uuid v1.3.0
 	github.com/kr/pretty v0.3.1
 	github.com/pkg/sftp v1.13.6
