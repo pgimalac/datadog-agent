@@ -34,8 +34,8 @@ func (tx *EbpfTx) Path(buffer []byte) ([]byte, bool) {
 		return nil, false
 	}
 
-	// ensure we found a '/' in the beginning of the path
-	if len(str) == 0 || str[0] != '/' {
+	// ensure we found a '/' in the beginning of the path and validate that the path do exists.
+	if len(str) <= 1 || str[0] != '/' {
 		return nil, false
 	}
 
