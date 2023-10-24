@@ -21,6 +21,7 @@ import (
 	"time"
 
 	flaretypes "github.com/DataDog/datadog-agent/comp/core/flare/types"
+	"github.com/DataDog/datadog-agent/comp/core/secrets"
 	"github.com/DataDog/datadog-agent/pkg/aggregator/sender"
 	"github.com/DataDog/datadog-agent/pkg/api/security"
 	apiutil "github.com/DataDog/datadog-agent/pkg/api/util"
@@ -28,7 +29,6 @@ import (
 	"github.com/DataDog/datadog-agent/pkg/diagnose"
 	"github.com/DataDog/datadog-agent/pkg/diagnose/diagnosis"
 	"github.com/DataDog/datadog-agent/pkg/metadata/inventories"
-	"github.com/DataDog/datadog-agent/pkg/secrets"
 	"github.com/DataDog/datadog-agent/pkg/status"
 	"github.com/DataDog/datadog-agent/pkg/status/health"
 	"github.com/DataDog/datadog-agent/pkg/util/installinfo"
@@ -243,7 +243,9 @@ func getConfigFiles(fb flaretypes.FlareBuilder, confSearchPaths map[string]strin
 
 func getSecrets() ([]byte, error) {
 	fct := func(writer io.Writer) error {
-		secrets.GetDebugInfo(writer)
+		// TODO: temporary hack to get the secret resolver
+		secretResolver := secrets.GetInstance()
+		secretResolver.GetDebugInfo(writer)
 		return nil
 	}
 

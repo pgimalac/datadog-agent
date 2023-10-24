@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/DataDog/datadog-agent/pkg/secrets"
+	"github.com/DataDog/datadog-agent/comp/core/secrets"
 	"github.com/DataDog/datadog-agent/pkg/util/log"
 )
 
@@ -95,7 +95,9 @@ func InitSystemProbeConfig(cfg Config) {
 	// secrets backend
 	cfg.BindEnvAndSetDefault("secret_backend_command", "")
 	cfg.BindEnvAndSetDefault("secret_backend_arguments", []string{})
-	cfg.BindEnvAndSetDefault("secret_backend_output_max_size", secrets.SecretBackendOutputMaxSize)
+	// TODO: temporary hack to get the secret resolver
+	secretResolver := secrets.GetInstance()
+	cfg.BindEnvAndSetDefault("secret_backend_output_max_size", secretResolver.ResponseMaxSize())
 	cfg.BindEnvAndSetDefault("secret_backend_timeout", 30)
 	cfg.BindEnvAndSetDefault("secret_backend_command_allow_group_exec_perm", false)
 	cfg.BindEnvAndSetDefault("secret_backend_skip_checks", false)

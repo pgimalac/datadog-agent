@@ -8,14 +8,17 @@ package autodiscovery
 import (
 	"fmt"
 
+	"github.com/DataDog/datadog-agent/comp/core/secrets"
 	"github.com/DataDog/datadog-agent/pkg/autodiscovery/integration"
 	"github.com/DataDog/datadog-agent/pkg/config"
-	"github.com/DataDog/datadog-agent/pkg/secrets"
 	"github.com/DataDog/datadog-agent/pkg/util/log"
 )
 
 // secretsDecrypt allows tests to intercept calls to secrets.Decrypt.
-var secretsDecrypt = secrets.Decrypt
+var secretsDecrypt = func(data []byte, origin string) ([]byte, error) {
+	secretResolver := secrets.GetInstance()
+	return secretResolver.Decrypt(data, origin)
+}
 
 func decryptConfig(conf integration.Config) (integration.Config, error) {
 	if config.Datadog.GetBool("secret_backend_skip_checks") {
