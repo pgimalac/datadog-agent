@@ -6,7 +6,10 @@
 // Package payload defines the JSON payload we send to the events platform.
 package payload
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"reflect"
+)
 
 // Device contains device details (device sending NetFlow flows)
 type Device struct {
@@ -69,10 +72,9 @@ type FlowPayload struct {
 }
 
 // MarshalJSON Custom marshaller that moves AdditionalFields to the root of the payload
-func (p FlowPayload) MarshalJSON() ([]byte, error) {
+func (p FlowPayload) MarshalWithAdditionalFields() ([]byte, error) {
 	// Turn FlowPayload into a map
-	type FlowPayload_ FlowPayload // prevent recursion
-	b, err := json.Marshal(FlowPayload_(p))
+	b, err := json.Marshal(p)
 
 	if err != nil {
 		return nil, err
@@ -87,10 +89,6 @@ func (p FlowPayload) MarshalJSON() ([]byte, error) {
 
 	// Move additional fields to the root of the payload
 	for k, v := range p.AdditionalFields {
-		if _, ok := m[k]; ok {
-			// Do not override, custom fields override is handled in goflowlib converter
-			continue
-		}
 		b, err = json.Marshal(v)
 		if err != nil {
 			// We failed to marshall a custom field, continuing anyway TODO : log
@@ -100,4 +98,50 @@ func (p FlowPayload) MarshalJSON() ([]byte, error) {
 	}
 
 	return json.Marshal(m)
+}
+
+// MarshalJSON Custom marshaller that moves AdditionalFields to the root of the payload
+func (p FlowPayload) MarshalWithAdditionalFieldsLessMarshall() ([]byte, error) {
+	marshaled, err := json.Marshal(p)
+	if err != nil {
+		return nil, err
+	}
+
+	fields := make(map[string]any)
+	err = json.Unmarshal(marshaled, &fields)
+	if err != nil {
+		return nil, err
+	}
+
+	delete(fields, "additional_fields")
+
+	for k, v := range p.AdditionalFields {
+		fields[k] = v
+	}
+
+	return json.Marshal(fields)
+}
+
+// MarshalJSON Custom marshaller that moves AdditionalFields to the root of the payload
+func (p FlowPayload) MarshalWithAdditionalFieldsReflect() ([]byte, error) {
+	v := reflect.ValueOf(p)
+	typeOfV := v.Type()
+
+	fields := make(map[string]any)
+
+	for i := 0; i < v.NumField(); i++ {
+		jsonTag := typeOfV.Field(i).Tag.Get("json")
+		fields[jsonTag] = v.Field(i).Interface()
+	}
+
+	delete(fields, "additional_fields")
+
+	for k, v := range p.AdditionalFields {
+		if _, ok := fields[k]; ok {
+			continue
+		}
+		fields[k] = v
+	}
+
+	return json.Marshal(fields)
 }

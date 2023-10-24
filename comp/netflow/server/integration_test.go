@@ -9,8 +9,10 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/DataDog/datadog-agent/comp/netflow/goflowlib"
 	"github.com/DataDog/datadog-agent/comp/netflow/goflowlib/netflowstate"
+	"github.com/DataDog/datadog-agent/comp/netflow/payload"
 	"github.com/netsampler/goflow2/decoders/netflow/templates"
 	"github.com/netsampler/goflow2/utils"
 	"github.com/sirupsen/logrus"
@@ -271,6 +273,82 @@ func BenchmarkNetflowCustomFields(b *testing.B) {
 	b.Run("goflow2 netflow custom state with custom fields", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			err = customState.DecodeFlow(flowPacket)
+			require.NoError(b, err, "error processing packet")
+		}
+	})
+}
+
+func BenchmarkNetflowPayloadMarshalling(b *testing.B) {
+	flowPayload := payload.FlowPayload{
+		FlushTimestamp: 1000,
+		FlowType:       "netflow9",
+		SamplingRate:   1,
+		Direction:      "ingress",
+		Start:          13213234,
+		End:            24342343,
+		Bytes:          23423423,
+		Packets:        13212,
+		EtherType:      "a",
+		IPProtocol:     "a",
+		Device: payload.Device{
+			Namespace: "default",
+		},
+		Exporter: payload.Exporter{
+			IP: "10.0.0.3",
+		},
+		Source: payload.Endpoint{
+			IP:   "10.0.1.13",
+			Port: "4567",
+			Mac:  "00:01:qq:02",
+			Mask: "24",
+		},
+		Destination: payload.Endpoint{
+			IP:   "10.0.1.14",
+			Port: "22",
+			Mac:  "00:01:qq:03",
+			Mask: "24",
+		},
+		Ingress: payload.ObservationPoint{
+			Interface: payload.Interface{
+				Index: 5,
+			},
+		},
+		Egress: payload.ObservationPoint{
+			Interface: payload.Interface{
+				Index: 12,
+			},
+		},
+		Host:     "127.0.0.1",
+		TCPFlags: nil,
+		NextHop: payload.NextHop{
+			IP: "10.4.5.6",
+		},
+		AdditionalFields: map[string]any{
+			"test_fields": "bonjour",
+		},
+	}
+
+	b.Run("Without custom marshaller", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			_, err := json.Marshal(flowPayload)
+			require.NoError(b, err, "error processing packet")
+		}
+	})
+	b.Run("With Thibaud custom marshaller", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			_, err := flowPayload.MarshalWithAdditionalFields()
+			require.NoError(b, err, "error processing packet")
+		}
+	})
+	b.Run("With Alex custom marshaller", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			_, err := flowPayload.MarshalWithAdditionalFieldsLessMarshall()
+			require.NoError(b, err, "error processing packet")
+		}
+	})
+	b.Run("With Reflection custom marshaller", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			_, err := flowPayload.MarshalWithAdditionalFieldsReflect()
 			require.NoError(b, err, "error processing packet")
 		}
 	})
