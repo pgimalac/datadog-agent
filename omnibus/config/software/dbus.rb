@@ -7,7 +7,6 @@ name "dbus"
 default_version "1.14.10"
 
 dependency "expat"
-dependency "libtool"
 dependency "pkg-config"
 
 license "AFL-2.1"
