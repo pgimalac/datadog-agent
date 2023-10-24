@@ -343,8 +343,8 @@ func (p *Probe) playSnapshot() {
 		event.Exec.Process = &entry.Process
 		event.ProcessContext.Process.ContainerID = entry.ContainerID
 
-		if !entry.HasCompleteLineage() {
-			event.Error = &ErrProcessBrokenLineage{PIDContext: entry.PIDContext}
+		if _, err := entry.HasValidLineage(); err != nil {
+			event.Error = &model.ErrProcessBrokenLineage{PIDContext: entry.PIDContext, Err: err}
 		}
 
 		events = append(events, event)
@@ -518,9 +518,9 @@ func (p *Probe) setProcessContext(eventType model.EventType, event *model.Event)
 	entry, isResolved := p.fieldHandlers.ResolveProcessCacheEntry(event)
 	if !eventWithNoProcessContext(eventType) {
 		if !isResolved {
-			event.Error = &ErrNoProcessContext{Err: errors.New("process context not resolved")}
-		} else if !entry.HasValidLineage() {
-			event.Error = &ErrProcessBrokenLineage{PIDContext: entry.PIDContext}
+			event.Error = &model.ErrNoProcessContext{Err: errors.New("process context not resolved")}
+		} else if _, err := entry.HasValidLineage(); err != nil {
+			event.Error = &model.ErrProcessBrokenLineage{PIDContext: entry.PIDContext, Err: err}
 			p.resolvers.ProcessResolver.CountBrokenLineage()
 		}
 	}
