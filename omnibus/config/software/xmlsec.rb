@@ -23,7 +23,6 @@ skip_transitive_dependency_licensing true
 
 dependency "libxml2"
 dependency "libxslt"
-dependency "libtool"
 dependency "libgcrypt"
 dependency "gnutls"
 dependency ENV["OMNIBUS_OPENSSL_SOFTWARE"] || "openssl"
