@@ -88,7 +88,7 @@ func TestCollect(t *testing.T) {
 			jsonPayload, err := json.Marshal(payload)
 			require.NoError(t, err)
 			assert.Equal(t, expectedPayload, string(jsonPayload))
-			return bytes.Compare(jsonPayload, []byte(expectedPayload)) == 0
+			return bytes.Equal(jsonPayload, []byte(expectedPayload))
 		}),
 	).Return(nil)
 
