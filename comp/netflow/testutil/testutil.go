@@ -168,13 +168,10 @@ func ExpectPayloadWithCustomFields(t *testing.T, mockEpForwarder forwarder.MockC
 	events := [][]byte{
 		[]byte(`
 {
-  "additional_fields": {
-    "icmp_type": "0000"
-  },
-  "bytes": 1291859200,
+  "bytes": 114702,
   "destination": {
-    "ip": "184.0.78.139",
-    "port": "12628",
+    "ip": "53.0.97.192",
+    "port": "5915",
     "mac": "00:00:00:00:00:00",
     "mask": "0.0.0.0/0"
   },
@@ -184,41 +181,35 @@ func ExpectPayloadWithCustomFields(t *testing.T, mockEpForwarder forwarder.MockC
   "direction": "ingress",
   "egress": {
     "interface": {
-      "index": 4883
+      "index": 4352
     }
   },
-  "end": 1678480236,
+  "end": 1675541179,
   "ether_type": "IPv4",
   "exporter": {
     "ip": "127.0.0.1"
   },
   "flush_timestamp": 1550505606000,
   "host": "my-hostname",
-  "icmp_type": "0000",
+  "icmp_type": "1200",
   "ingress": {
     "interface": {
-      "index": 5930
+      "index": 27505
     }
   },
-  "ip_protocol": "",
+  "ip_protocol": "ICMP",
   "next_hop": {
     "ip": ""
   },
-  "packets": 1807745480,
+  "packets": 840155153,
   "sampling_rate": 0,
   "source": {
-    "ip": "0.0.78.234",
-    "port": "1",
+    "ip": "2.10.65.0",
+    "port": "0",
     "mac": "00:00:00:00:00:00",
     "mask": "0.0.0.0/0"
   },
-  "start": 1675543473,
-  "tcp_flags": [
-    "FIN",
-    "SYN",
-    "RST",
-    "PSH"
-  ],
+  "start": 1675307019,
   "type": "netflow9"
 }
 `),

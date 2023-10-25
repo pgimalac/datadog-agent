@@ -279,6 +279,7 @@ func BenchmarkNetflowCustomFields(b *testing.B) {
 }
 
 func BenchmarkNetflowPayloadMarshalling(b *testing.B) {
+	type FlowPayload_ payload.FlowPayload
 	flowPayload := payload.FlowPayload{
 		FlushTimestamp: 1000,
 		FlowType:       "netflow9",
@@ -330,7 +331,7 @@ func BenchmarkNetflowPayloadMarshalling(b *testing.B) {
 
 	b.Run("Without custom marshaller", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			_, err := json.Marshal(flowPayload)
+			_, err := json.Marshal(FlowPayload_(flowPayload))
 			require.NoError(b, err, "error processing packet")
 		}
 	})
@@ -349,6 +350,12 @@ func BenchmarkNetflowPayloadMarshalling(b *testing.B) {
 	b.Run("With Reflection custom marshaller", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
 			_, err := flowPayload.MarshalWithAdditionalFieldsReflect()
+			require.NoError(b, err, "error processing packet")
+		}
+	})
+	b.Run("With Manual custom marshaller", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			_, err := flowPayload.MarshalJSON()
 			require.NoError(b, err, "error processing packet")
 		}
 	})
