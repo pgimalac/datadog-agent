@@ -45,7 +45,6 @@
             "name": "distro_arm64",
             "recipe": "distro-arm64",
             "arch": "arm64",
-            "console_type": "file",
             "kernels": [
                 {
                     "dir": "focal-server-cloudimg-arm64.qcow2",
