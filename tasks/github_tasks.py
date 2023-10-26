@@ -11,7 +11,7 @@ from .libs.github_actions_tools import (
     trigger_macos_workflow,
 )
 from .release import _get_release_json_value
-from .utils import DEFAULT_BRANCH
+from .utils import DEFAULT_BRANCH, DEFAULT_INTEGRATIONS_CORE_BRANCH
 
 
 def _trigger_macos_workflow(release, destination=None, retry_download=0, retry_interval=0, **kwargs):
@@ -47,6 +47,7 @@ def trigger_macos_build(
     version_cache=None,
     retry_download=3,
     retry_interval=10,
+    integrations_core_ref=DEFAULT_INTEGRATIONS_CORE_BRANCH,
 ):
     _trigger_macos_workflow(
         # Provide the release version to be able to fetch the associated
@@ -66,6 +67,7 @@ def trigger_macos_build(
         gitlab_pipeline_id=os.environ.get("CI_PIPELINE_ID", None),
         bucket_branch=os.environ.get("BUCKET_BRANCH", None),
         version_cache_file_content=version_cache,
+        integrations_core_ref=integrations_core_ref,
     )
 
 
