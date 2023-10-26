@@ -4,6 +4,8 @@ package datadog.trace;
 
 option go_package="pkg/proto/pbgo/trace";
 
+import "datadog/trace/span_event.proto";
+
 message Span {
     // service is the name of the service with which this span is associated.
     // @gotags: json:"service" msg:"service"
@@ -44,4 +46,10 @@ message Span {
     // meta_struct is a registry of structured "other" data used by, e.g., AppSec.
     // @gotags: json:"meta_struct,omitempty" msg:"meta_struct,omitempty"
     map<string, bytes> meta_struct = 13;
+    // events contains interesting signals that happened during the lifetime of a span.
+    // @gotags: json:"events" msg:"events"
+    repeated SpanEvent events = 14;
+    // The number of span events that could not be captured into the `events` field.
+    // @gotags: json:"dropped_events_count" msg:"dropped_events_count"
+    optional uint32 dropped_events_count = 15;
 }

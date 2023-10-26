@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package datadog.trace;
+
+option go_package="pkg/proto/pbgo/trace";
+
+message SpanEvent {
+    // time is the number of nanoseconds between the Unix epoch and this event.
+    // @gotags: json:"time" msg:"time"
+    int64 time = 1;
+    // name is this event's name.
+    // @gotags: json:"name" msg:"name"
+    string name = 2;
+    // attributes is a mapping from attribute name to value for string-valued tags.
+    // @gotags: json:"attributes" msg:"attributes"
+    map<string, AttributeValue> attributes = 3;
+    // The number of attributes that could not be captured into the `attributes` field.
+    // @gotags: json:"dropped_attributes_count" msg:"dropped_attributes_count"
+    optional uint32 dropped_attributes_count = 4;
+}
+
+// Value is either:
+//   * a scalar
+//   * a homogeneous array of scalars
+message AttributeValue {
+  oneof value {
+    AttributeValueScalar scalar = 1;
+    AttributeValueStringArray string_array = 3;
+    AttributeValueBoolArray bool_array = 4;
+    AttributeValueIntArray int_array = 5;
+    AttributeValueDoubleArray double_array = 6;
+  }
+}
+
+message AttributeValueScalar {
+  oneof value {
+    string string = 1;
+    bool bool = 2;
+    int64 int = 3;
+    double double = 4;
+  }
+}
+
+message AttributeValueStringArray {
+  repeated string value = 1;
+}
+
+message AttributeValueBoolArray {
+  repeated bool value = 1;
+}
+
+message AttributeValueIntArray {
+  repeated int64 value = 1;
+}
+
+message AttributeValueDoubleArray {
+  repeated double value = 1;
+}
