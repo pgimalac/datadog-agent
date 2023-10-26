@@ -538,7 +538,7 @@ int socket__http2_filter(struct __sk_buff *skb) {
     // processing into multiple tail calls, where each tail call process a single frame. We must have context when
     // we are processing the frames, for example, to know how many bytes have we read in the packet, or it we reached
     // to the maximum number of frames we can process. For that we are checking if the iteration context already exists.
-    // If not, creating a new one to be used for further processing
+    // If not, creating a new one to be used for further processing.
     http2_tail_call_state_t iteration_value = {};
     bpf_memset(iteration_value.frames_array, 0, HTTP2_MAX_FRAMES_ITERATIONS * sizeof(http2_frame_with_offset));
 
