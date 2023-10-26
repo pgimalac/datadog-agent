@@ -12,11 +12,18 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"runtime/debug"
 	"strings"
+	"time"
 
 	"github.com/DataDog/datadog-agent/cmd/internal/runcmd"
+	"github.com/DataDog/datadog-agent/pkg/util/log"
+
 	"github.com/spf13/cobra"
 )
+
+const temporaryGOGCDuration = 5 * time.Second
+const temporaryGOGCPercent = 1
 
 var agents = map[string]func() *cobra.Command{}
 
@@ -27,6 +34,15 @@ func registerAgent(getCommand func() *cobra.Command, names ...string) {
 }
 
 func main() {
+	previousGCPercent := debug.SetGCPercent(temporaryGOGCPercent)
+
+	go func() {
+		time.Sleep(temporaryGOGCDuration)
+
+		log.Infof("Restoring GOGC to %d (previous GOGC: %d)\n", previousGCPercent, temporaryGOGCPercent)
+		debug.SetGCPercent(previousGCPercent)
+	}()
+
 	executable := path.Base(os.Args[0])
 	process := strings.TrimSuffix(executable, path.Ext(executable))
 
