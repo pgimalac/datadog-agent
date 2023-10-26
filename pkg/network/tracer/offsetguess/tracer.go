@@ -901,6 +901,8 @@ func getUDP6Conn(flowi6 bool) (*net.UDPConn, error) {
 			return conn, err
 		}
 	}
+
+	fmt.Printf("[MYERROR] %v\n", err)
 	return nil, err
 }
 

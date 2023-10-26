@@ -24,36 +24,6 @@
                     "dir": "amzn2-kvm-2.0-amd64-4.14.qcow2",
                     "tag": "amzn_4.14",
                     "image_source": "https://dd-agent-omnibus.s3.amazonaws.com/kernel-version-testing/rootfs/amzn2-kvm-2.0-amd64-4.14.qcow2"
-                },
-                {
-                    "dir": "amzn2-kvm-2.0-amd64-5.4.qcow2",
-                    "tag": "amzn_5.4",
-                    "image_source": "https://dd-agent-omnibus.s3.amazonaws.com/kernel-version-testing/rootfs/amzn2-kvm-2.0-amd64-5.4.qcow2"
-                },
-                {
-                    "dir": "amzn2-kvm-2.0-amd64-5.10.qcow2",
-                    "tag": "amzn_5.10",
-                    "image_source": "https://dd-agent-omnibus.s3.amazonaws.com/kernel-version-testing/rootfs/amzn2-kvm-2.0-amd64-5.10.qcow2"
-                },
-                {
-                    "dir": "Fedora-Cloud-Base-37.amd64.qcow2",
-                    "tag": "fedora_37",
-                    "image_source": "https://dd-agent-omnibus.s3.amazonaws.com/kernel-version-testing/rootfs/Fedora-Cloud-Base-37.amd64.qcow2"
-                },
-                {
-                    "dir": "Fedora-Cloud-Base-38.amd64.qcow2",
-                    "tag": "fedora_38",
-                    "image_source": "https://dd-agent-omnibus.s3.amazonaws.com/kernel-version-testing/rootfs/Fedora-Cloud-Base-38.amd64.qcow2"
-                },
-                {
-                    "dir": "debian-10-generic-amd64.qcow2",
-                    "tag": "debian_10",
-                    "image_source": "https://dd-agent-omnibus.s3.amazonaws.com/kernel-version-testing/rootfs/debian-10-generic-amd64.qcow2"
-                },
-                {
-                    "dir": "debian-11-generic-amd64.qcow2",
-                    "tag": "debian_11",
-                    "image_source": "https://dd-agent-omnibus.s3.amazonaws.com/kernel-version-testing/rootfs/debian-11-generic-amd64.qcow2"
                 }
             ],
             "vcpu": [
@@ -69,55 +39,6 @@
                     "target": "/home/kernel-version-testing/docker-amd64.qcow2",
                     "type": "default"
                 }
-            ]
-        },
-        {
-            "name": "distro_arm64",
-            "recipe": "distro-arm64",
-            "arch": "arm64",
-            "kernels": [
-                {
-                    "dir": "focal-server-cloudimg-arm64.qcow2",
-                    "tag": "ubuntu_20.04",
-                    "image_source": "https://dd-agent-omnibus.s3.amazonaws.com/kernel-version-testing/rootfs/focal-server-cloudimg-arm64.qcow2"
-                },
-                {
-                    "dir": "jammy-server-cloudimg-arm64.qcow2",
-                    "tag": "ubuntu_22.04",
-                    "image_source": "https://dd-agent-omnibus.s3.amazonaws.com/kernel-version-testing/rootfs/jammy-server-cloudimg-arm64.qcow2"
-                },
-                {
-                    "dir": "amzn2-kvm-2.0-arm64-4.14.qcow2",
-                    "tag": "amzn_4.14",
-                    "image_source": "https://dd-agent-omnibus.s3.amazonaws.com/kernel-version-testing/rootfs/amzn2-kvm-2.0-arm64-4.14.qcow2"
-                },
-                {
-                    "dir": "amzn2-kvm-2.0-arm64-5.4.qcow2",
-                    "tag": "amzn_5.4",
-                    "image_source": "https://dd-agent-omnibus.s3.amazonaws.com/kernel-version-testing/rootfs/amzn2-kvm-2.0-arm64-5.4.qcow2"
-                },
-                {
-                    "dir": "amzn2-kvm-2.0-arm64-5.10.qcow2",
-                    "tag": "amzn_5.10",
-                    "image_source": "https://dd-agent-omnibus.s3.amazonaws.com/kernel-version-testing/rootfs/amzn2-kvm-2.0-arm64-5.10.qcow2"
-                },
-                {
-                    "dir": "Fedora-Cloud-Base-37.arm64.qcow2",
-                    "tag": "fedora_37",
-                    "image_source": "https://dd-agent-omnibus.s3.amazonaws.com/kernel-version-testing/rootfs/Fedora-Cloud-Base-37.arm64.qcow2"
-                },
-                {
-                    "dir": "Fedora-Cloud-Base-38.arm64.qcow2",
-                    "tag": "fedora_38",
-                    "image_source": "https://dd-agent-omnibus.s3.amazonaws.com/kernel-version-testing/rootfs/Fedora-Cloud-Base-38.arm64.qcow2"
-                }
-            ],
-            "machine": "virt",
-            "vcpu": [
-                4
-            ],
-            "memory": [
-                8192
             ]
         }
     ]
