@@ -32,7 +32,7 @@
   variables:
     KUBERNETES_MEMORY_REQUEST: "32Gi"
     KUBERNETES_MEMORY_LIMIT: "32Gi"
-    KUBERNETES_CPU_REQUEST: 16
+    KUBERNETES_CPU_REQUEST: 8
   artifacts:
     expire_in: 2 weeks
     paths:
@@ -69,6 +69,7 @@ agent_deb-x64-a7:
     PACKAGE_ARCH: amd64
     DESTINATION_DEB: 'datadog-agent_7_amd64.deb'
     DESTINATION_DBG_DEB: 'datadog-agent-dbg_7_amd64.deb'
+    GOMAXPROCS: 8
   before_script:
     - export RELEASE_VERSION=$RELEASE_VERSION_7
 
