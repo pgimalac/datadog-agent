@@ -80,6 +80,7 @@ var (
 	CI_PROJECT_DIR = GetEnv("CI_PROJECT_DIR", "/tmp")
 	sshKeyX86      = GetEnv("LibvirtSSHKeyX86", "/tmp/libvirt_rsa-x86_64")
 	sshKeyArm      = GetEnv("LibvirtSSHKeyARM", "/tmp/libvirt_rsa-arm64")
+	DD_API_KEY     = GetEnv("DD_API_KEY", "")
 
 	stackOutputs = filepath.Join(CI_PROJECT_DIR, "stack.outputs")
 )
@@ -174,6 +175,8 @@ func NewTestEnv(name, x86InstanceType, armInstanceType string, opts *SystemProbe
 		"microvm:x86AmiID":                       auto.ConfigValue{Value: opts.X86AmiID},
 		"microvm:arm64AmiID":                     auto.ConfigValue{Value: opts.ArmAmiID},
 		"microvm:workingDir":                     auto.ConfigValue{Value: CustomAMIWorkingDir},
+		"ddagent:deploy":                         auto.ConfigValue{Value: "true"},
+		"ddagent:version":                        auto.ConfigValue{Value: "7.48"},
 	}
 	// We cannot add defaultPrivateKeyPath if the key is in ssh-agent, otherwise passphrase is needed
 	if opts.SSHKeyPath != "" {
