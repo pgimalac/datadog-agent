@@ -355,16 +355,12 @@ func LoadNfConntrackKernelModule(ns netns.NsHandle) error {
 		_ = conn.Close()
 	}()
 
-	// Create a dummy request to netlink for a tuple with 0 values except for the first element which specifies IPv4.
-	// The values are irrelevant, the objective is to trigger a netlink call that forces loading of the module.
-	dummyTupleData := []byte{0x2, 0, 0, 0, 0, 0, 0}
-
+	// Create a dummy request to netlink with an empty message and ask for acknowledgement
 	req := netlink.Message{
 		Header: netlink.Header{
 			Type:  netlink.HeaderType((unix.NFNL_SUBSYS_CTNETLINK << 8) | ipctnlMsgCtGet),
-			Flags: netlink.Request,
+			Flags: netlink.Request | netlink.Acknowledge,
 		},
-		Data: dummyTupleData,
 	}
 
 	if _, err = conn.Send(req); err != nil {
