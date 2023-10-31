@@ -7,18 +7,17 @@ package client
 
 import (
 	"fmt"
+	"github.com/DataDog/test-infra-definitions/common/utils"
 	"reflect"
 	"testing"
-
-	"github.com/pulumi/pulumi/sdk/v3/go/auto"
 )
 
-// pulumiStackInitializer defines a method which is used to initialize an object from
-// the data stored in the pulumi stack. See [CallStackInitializers] for more information.
-type pulumiStackInitializer interface {
-	// initFromPulumiStack initializes the instance from the data stored in the pulumi stack.
-	// This method is called by [CallStackInitializers] using reflection.
-	initFromPulumiStack(t *testing.T, stackResult auto.UpResult) error
+// connectionInitializer defines a method which is used to initialize an connection between
+// testing infrastructure and clients
+type connectionInitializer interface {
+	// InitFromConnection initializes the instance from ssh connection data.
+	// This method is called by [CallConnectionInitializers] using reflection.
+	initFromConnection(t *testing.T, conns map[string]*utils.Connection) error
 }
 
 // CheckEnvStructValid validates an environment struct
@@ -28,18 +27,17 @@ func CheckEnvStructValid[Env any]() error {
 	return err
 }
 
-// CallStackInitializers validates an environment struct and initialise a stack.
-// If a field of Env implements [pulumiStackInitializer], then [initFromPulumiStack] is called for this field.
-func CallStackInitializers[Env any](t *testing.T, env *Env, upResult auto.UpResult) error {
+// CallConnectionInitializers validates an environment struct and initializes a connection to the testing infrastructure.
+func CallConnectionInitializers[Env any](t *testing.T, env *Env, conns map[string]*utils.Connection) error {
 	fields, err := getFields(env)
 
 	for _, field := range fields {
-		initializer := field.stackInitializer
+		initializer := field.connInitializer
 		if reflect.TypeOf(initializer).Kind() == reflect.Ptr && reflect.ValueOf(initializer).IsNil() {
 			return fmt.Errorf("the field %v of %v is nil", field.name, reflect.TypeOf(env))
 		}
 
-		if err = initializer.initFromPulumiStack(t, upResult); err != nil {
+		if err = initializer.initFromConnection(t, conns); err != nil {
 			return err
 		}
 	}
@@ -48,8 +46,8 @@ func CallStackInitializers[Env any](t *testing.T, env *Env, upResult auto.UpResu
 }
 
 type field struct {
-	stackInitializer pulumiStackInitializer
-	name             string
+	connInitializer connectionInitializer
+	name            string
 }
 
 func getFields[Env any](env *Env) ([]field, error) {
@@ -70,11 +68,11 @@ func getFields[Env any](env *Env) ([]field, error) {
 			return nil, fmt.Errorf("the field %v in %v is not exported", fieldName, envType)
 		}
 
-		initializer, ok := envValue.Field(i).Interface().(pulumiStackInitializer)
+		initializer, ok := envValue.Field(i).Interface().(connectionInitializer)
 		if ok {
 			fields = append(fields, field{
-				stackInitializer: initializer,
-				name:             fieldName,
+				connInitializer: initializer,
+				name:            fieldName,
 			})
 		}
 	}

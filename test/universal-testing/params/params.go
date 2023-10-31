@@ -3,12 +3,12 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2016-present Datadog, Inc.
 
-// Package params implements function parameters for [e2e.Suite]
+// Package params implements function parameters for [universal_testing.Suite]
 package params
 
 // Params implements [e2e.Suite] options
 type Params struct {
-	StackName string
+	Name string
 
 	// Setting DevMode allows to skip deletion regardless of test results
 	// Unavailable in CI.
@@ -20,11 +20,11 @@ type Params struct {
 // Option is an optional function parameter type for e2e options
 type Option = func(*Params)
 
-// WithStackName overrides the default stack name.
+// WithName overrides the default name.
 // This function is useful only when using [Run].
-func WithStackName(stackName string) func(*Params) {
+func WithName(name string) func(*Params) {
 	return func(options *Params) {
-		options.StackName = stackName
+		options.Name = name
 	}
 }
 
