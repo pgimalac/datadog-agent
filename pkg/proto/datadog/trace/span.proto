@@ -44,4 +44,9 @@ message Span {
     // meta_struct is a registry of structured "other" data used by, e.g., AppSec.
     // @gotags: json:"meta_struct,omitempty" msg:"meta_struct,omitempty"
     map<string, bytes> meta_struct = 13;
+
+    // @gotags: json:"semantics_schema_url" msg:"semantics_schema_url"
+    string semantics_schema_url = 14;
+    // @gotags: json:"semantic_tags" msg:"semantic_tags"
+    map<string, uint64> semantic_tags = 15;
 }

@@ -10,8 +10,8 @@ import (
 func (z *Span) MarshalMsg(b []byte) (o []byte, err error) {
 	o = msgp.Require(b, z.Msgsize())
 	// omitempty: check for empty values
-	zb0001Len := uint32(13)
-	var zb0001Mask uint16 /* 13 bits */
+	zb0001Len := uint32(15)
+	var zb0001Mask uint16 /* 15 bits */
 	if z.Meta == nil {
 		zb0001Len--
 		zb0001Mask |= 0x200
@@ -85,6 +85,16 @@ func (z *Span) MarshalMsg(b []byte) (o []byte, err error) {
 			o = msgp.AppendString(o, za0005)
 			o = msgp.AppendBytes(o, za0006)
 		}
+	}
+	// string "semantics_schema_url"
+	o = append(o, 0xb4, 0x73, 0x65, 0x6d, 0x61, 0x6e, 0x74, 0x69, 0x63, 0x73, 0x5f, 0x73, 0x63, 0x68, 0x65, 0x6d, 0x61, 0x5f, 0x75, 0x72, 0x6c)
+	o = msgp.AppendString(o, z.SemanticsSchemaUrl)
+	// string "semantic_tags"
+	o = append(o, 0xad, 0x73, 0x65, 0x6d, 0x61, 0x6e, 0x74, 0x69, 0x63, 0x5f, 0x74, 0x61, 0x67, 0x73)
+	o = msgp.AppendMapHeader(o, uint32(len(z.SemanticTags)))
+	for za0007, za0008 := range z.SemanticTags {
+		o = msgp.AppendString(o, za0007)
+		o = msgp.AppendUint64(o, za0008)
 	}
 	return
 }
@@ -322,6 +332,42 @@ func (z *Span) UnmarshalMsg(bts []byte) (o []byte, err error) {
 				}
 				z.MetaStruct[za0005] = za0006
 			}
+		case "semantics_schema_url":
+			z.SemanticsSchemaUrl, bts, err = msgp.ReadStringBytes(bts)
+			if err != nil {
+				err = msgp.WrapError(err, "SemanticsSchemaUrl")
+				return
+			}
+		case "semantic_tags":
+			var zb0005 uint32
+			zb0005, bts, err = msgp.ReadMapHeaderBytes(bts)
+			if err != nil {
+				err = msgp.WrapError(err, "SemanticTags")
+				return
+			}
+			if z.SemanticTags == nil {
+				z.SemanticTags = make(map[string]uint64, zb0005)
+			} else if len(z.SemanticTags) > 0 {
+				for key := range z.SemanticTags {
+					delete(z.SemanticTags, key)
+				}
+			}
+			for zb0005 > 0 {
+				var za0007 string
+				var za0008 uint64
+				zb0005--
+				za0007, bts, err = msgp.ReadStringBytes(bts)
+				if err != nil {
+					err = msgp.WrapError(err, "SemanticTags")
+					return
+				}
+				za0008, bts, err = msgp.ReadUint64Bytes(bts)
+				if err != nil {
+					err = msgp.WrapError(err, "SemanticTags", za0007)
+					return
+				}
+				z.SemanticTags[za0007] = za0008
+			}
 		default:
 			bts, err = msgp.Skip(bts)
 			if err != nil {
@@ -355,6 +401,13 @@ func (z *Span) Msgsize() (s int) {
 		for za0005, za0006 := range z.MetaStruct {
 			_ = za0006
 			s += msgp.StringPrefixSize + len(za0005) + msgp.BytesPrefixSize + len(za0006)
+		}
+	}
+	s += 21 + msgp.StringPrefixSize + len(z.SemanticsSchemaUrl) + 14 + msgp.MapHeaderSize
+	if z.SemanticTags != nil {
+		for za0007, za0008 := range z.SemanticTags {
+			_ = za0008
+			s += msgp.StringPrefixSize + len(za0007) + msgp.Uint64Size
 		}
 	}
 	return

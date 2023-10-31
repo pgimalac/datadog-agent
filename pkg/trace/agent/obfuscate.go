@@ -93,6 +93,32 @@ func (a *Agent) obfuscateSpan(span *pb.Span) {
 	}
 }
 
+func (a *Agent) obfuscateSemantically(span *pb.Span) {
+	if span.Meta == nil {
+		return
+	}
+	for tagKey, semanticID := range span.SemanticTags {
+		log.Warnf("GOT A SEMANTIC TAG %s with ID %d", tagKey, semanticID)
+		value, ok := span.Meta[tagKey]
+		if !ok || value == "" {
+			log.Warnf("Failed to find matching tag '%s' but found semantic tag", tagKey)
+		}
+		switch semanticID { //TODO: define these or look them up via the semantics url
+		case 1:
+			span.Meta[tagKey] = a.obfuscator.ObfuscateURLString(value)
+		case 2:
+			oq, err := a.obfuscator.ObfuscateSQLString(value)
+			if err != nil {
+				span.Meta[tagKey] = textNonParsable
+			} else {
+				span.Meta[tagKey] = oq.Query
+			}
+		default:
+			log.Info("Unknown semantic value %d for key %s", semanticID, tagKey)
+		}
+	}
+}
+
 func (a *Agent) obfuscateStatsGroup(b *pb.ClientGroupedStats) {
 	o := a.obfuscator
 	switch b.Type {
