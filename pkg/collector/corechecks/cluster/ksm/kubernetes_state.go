@@ -947,7 +947,7 @@ func ownerTags(kind, name string) []string {
 
 	tagKey, found := kubernetes.KindToTagName[kind]
 	if !found {
-		log.Debugf("Unknown owner kind %q", kind)
+		log.Debugf("Unknown owner kind=%q, name=%q", kind, name)
 		return nil
 	}
 
