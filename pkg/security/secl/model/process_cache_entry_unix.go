@@ -50,7 +50,7 @@ func (pc *ProcessCacheEntry) HasValidLineage() (bool, error) {
 		}
 		pc = pc.Ancestor
 	}
-	return false, &ErrProcessWrongParentNode{PID: ppid}
+	return false, &ErrProcessMissingParentNode{PID: ppid}
 }
 
 // Exit a process
