@@ -7,14 +7,15 @@ package examples
 
 import (
 	"flag"
+	"os"
+	"path"
 	"testing"
 
-	"github.com/DataDog/datadog-agent/test/universal-testing/infra/localvmparams"
-	"github.com/DataDog/datadog-agent/test/universal-testing/vendor/github.com/DataDog/test-infra-definitions/scenarios/aws/vm/ec2os"
-	"github.com/DataDog/datadog-agent/test/universal-testing/vendor/github.com/DataDog/test-infra-definitions/scenarios/aws/vm/ec2params"
-	"github.com/stretchr/testify/assert"
-
 	tests "github.com/DataDog/datadog-agent/test/universal-testing"
+	"github.com/DataDog/datadog-agent/test/universal-testing/infra/localvmparams"
+	"github.com/DataDog/test-infra-definitions/scenarios/aws/vm/ec2os"
+	"github.com/DataDog/test-infra-definitions/scenarios/aws/vm/ec2params"
+	"github.com/stretchr/testify/assert"
 )
 
 var runLocally = flag.Bool("runLocally", false, "run tests on a local VM")
@@ -25,9 +26,9 @@ type vmSuiteExample struct {
 
 func TestVMSuiteEx(t *testing.T) {
 	var testEnvironment tests.InfraProvider[tests.VMEnv]
-
 	if *runLocally {
-		testEnvironment = tests.LocalVMDef(localvmparams.WithJSONFile("~/.test_config.json"))
+		homeDir, _ := os.UserHomeDir()
+		testEnvironment = tests.LocalVMDef(localvmparams.WithJSONFile(path.Join(homeDir, ".test_config.json")))
 	} else {
 		testEnvironment = tests.EC2VMStackDef(ec2params.WithOS(ec2os.WindowsOS))
 	}

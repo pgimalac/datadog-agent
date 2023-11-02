@@ -66,7 +66,7 @@ func (v *LocalVM) initFromJSONFile(jsonFile string) error {
 		Address       string `json:"ssh_address"`
 	}
 
-	file, err := os.Open("params.JSONFile")
+	file, err := os.Open(jsonFile)
 	if err != nil {
 		return fmt.Errorf("error opening %s: %s", jsonFile, err)
 	}
