@@ -515,6 +515,10 @@ func (p *Probe) onEventLost(perfMapName string, perEvent map[string]uint64) {
 
 // setProcessContext set the process context, should return false if the event shouldn't be dispatched
 func (p *Probe) setProcessContext(eventType model.EventType, event *model.Event) bool {
+	if process.IsKThread(event.ProcessContext.PPid, event.ProcessContext.Pid) {
+		return false
+	}
+
 	entry, isResolved := p.fieldHandlers.ResolveProcessCacheEntry(event)
 	if !eventWithNoProcessContext(eventType) {
 		if !isResolved {
@@ -533,10 +537,6 @@ func (p *Probe) setProcessContext(eventType model.EventType, event *model.Event)
 	event.ProcessContext = &event.ProcessCacheEntry.ProcessContext
 	if event.ProcessContext == nil {
 		panic("should always return a process context")
-	}
-
-	if process.IsKThread(event.ProcessContext.PPid, event.ProcessContext.Pid) {
-		return false
 	}
 
 	// flush exited process
