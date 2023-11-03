@@ -5,14 +5,14 @@
 
 #include "protocols/http2/defs.h"
 
-#define HTTP2_FRAMES_PER_TAIL_CALL 4
+#define HTTP2_FRAMES_PER_TAIL_CALL 3
 // Maximum number of frames to be processed in a single TCP packet. That's also the number of tail calls we'll have.
 // NOTE: we may need to revisit this const if we need to capture more connections.
-#define HTTP2_MAX_FRAMES_ITERATIONS 30
-#define HTTP2_MAX_FRAMES_TO_FILTER  100
+#define HTTP2_MAX_FRAMES_ITERATIONS 50
+#define HTTP2_MAX_FRAMES_TO_FILTER  50
 
 // A limit of max headers which we process in the request/response.
-#define HTTP2_MAX_HEADERS_COUNT_FOR_FILTERING 25
+#define HTTP2_MAX_HEADERS_COUNT_FOR_FILTERING 10
 
 // Per request or response we have fewer headers than HTTP2_MAX_HEADERS_COUNT_FOR_FILTERING that are interesting us.
 // For request - those are method, path. For response - status code.
@@ -20,7 +20,7 @@
 #define HTTP2_MAX_HEADERS_COUNT_FOR_PROCESSING 2
 
 // Maximum size for the path buffer.
-#define HTTP2_MAX_PATH_LEN 160
+#define HTTP2_MAX_PATH_LEN 100
 
 // The maximum index which may be in the static table.
 #define MAX_STATIC_TABLE_INDEX 61

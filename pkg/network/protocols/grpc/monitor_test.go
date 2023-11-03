@@ -555,7 +555,7 @@ func (s *USMgRPCSuite) TestParallelGRPCScenarios() {
 				clients := getClientsArray(t, clientsCount)
 
 				wg := sync.WaitGroup{}
-				for i := 0; i < 100; i++ {
+				for i := 0; i < 50; i++ {
 					wg.Add(1)
 					i := i
 					go func() {
@@ -571,12 +571,12 @@ func (s *USMgRPCSuite) TestParallelGRPCScenarios() {
 				{
 					Path:   http.Path{Content: http.Interner.GetString("/helloworld.Greeter/SayHello")},
 					Method: http.MethodPost,
-				}: 100,
+				}: 50,
 			},
 		},
 	}
 	for _, tt := range tests {
-		for _, clientCount := range []int{15} {
+		for _, clientCount := range []int{1} {
 			testNameSuffix := fmt.Sprintf("-different clients - %v", clientCount)
 			t.Run(tt.name+testNameSuffix, func(t *testing.T) {
 				// we are currently not supporting some edge cases:

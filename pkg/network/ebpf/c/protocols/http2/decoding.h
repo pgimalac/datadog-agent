@@ -80,19 +80,33 @@ static __always_inline bool read_var_int(struct __sk_buff *skb, skb_info_t *skb_
 }
 
 //get_dynamic_counter returns the current dynamic counter by the conn tup.
-static __always_inline __u64 *get_dynamic_counter(conn_tuple_t *tup) {
+static __always_inline __u64 *get_dynamic_counter(struct __sk_buff *skb, conn_tuple_t *tup) {
     // global counter is the counter which help us with the calc of the index in our internal hpack dynamic table
-    __u64 *counter_ptr = bpf_map_lookup_elem(&http2_dynamic_counter_table, tup);
-    if (counter_ptr != NULL) {
-        return counter_ptr;
-    }
+//    __u64 *counter_ptr = bpf_map_lookup_elem(&http2_dynamic_counter_table, tup);
+//    if (counter_ptr != NULL) {
+////        log_debug("guy existing dynamic counter ports %ld %ld; val %ld\n", tup->sport, tup->dport, *counter_ptr);
+////        log_debug("guy existing dynamic counter low addr %ld %ld\n", tup->saddr_l, tup->daddr_l);
+////        log_debug("guy existing dynamic counter high addr %ld %ld\n", tup->saddr_h, tup->daddr_h);
+//        return counter_ptr;
+//    }
+////    log_debug("guy new dynamic counter ports %ld %ld\n", tup->sport, tup->dport);
+////    log_debug("guy new dynamic counter low addr %ld %ld\n", tup->saddr_l, tup->daddr_l);
+////    log_debug("guy new dynamic counter high addr %ld %ld\n", tup->saddr_h, tup->daddr_h);
     __u64 counter = 0;
-    bpf_map_update_elem(&http2_dynamic_counter_table, tup, &counter, BPF_ANY);
+    if (bpf_map_update_elem(&http2_dynamic_counter_table, tup, &counter, BPF_NOEXIST) < 0) {
+//        log_debug("guy (skb: %p) existing dynamic counter ports %ld %ld\n", skb, tup->sport, tup->dport);
+//        log_debug("guy (skb: %p) existing dynamic counter low addr %ld %ld\n", skb, tup->saddr_l, tup->daddr_l);
+//        log_debug("guy (skb: %p) existing dynamic counter high addr %ld %ld\n", skb, tup->saddr_h, tup->daddr_h);
+    } else {
+//        log_debug("guy (skb: %p) new dynamic counter ports %ld %ld\n", skb, tup->sport, tup->dport);
+//        log_debug("guy (skb: %p) new dynamic counter low addr %ld %ld\n", skb, tup->saddr_l, tup->daddr_l);
+//        log_debug("guy (skb: %p) new dynamic counter high addr %ld %ld\n", skb, tup->saddr_h, tup->daddr_h);
+    }
     return bpf_map_lookup_elem(&http2_dynamic_counter_table, tup);
 }
 
 // parse_field_indexed is handling the case which the header frame is part of the static table.
-static __always_inline void parse_field_indexed(dynamic_table_index_t *dynamic_index, http2_header_t *headers_to_process, __u8 index, __u64 global_dynamic_counter, __u8 *interesting_headers_counter, __u32 stream_id) {
+static __always_inline void parse_field_indexed(struct __sk_buff *skb, dynamic_table_index_t *dynamic_index, http2_header_t *headers_to_process, __u8 index, __u64 global_dynamic_counter, __u8 *interesting_headers_counter, __u32 stream_id) {
     if (headers_to_process == NULL) {
         return;
     }
@@ -110,10 +124,14 @@ static __always_inline void parse_field_indexed(dynamic_table_index_t *dynamic_i
     // we change the index to fit our internal dynamic table implementation index.
     // the index is starting from 1 so we decrease 62 in order to be equal to the given index.
     dynamic_index->index = global_dynamic_counter - (index - MAX_STATIC_TABLE_INDEX);
-
+//    log_debug("guy (skb: %p; stream_id: %ld) parse_field_indexed: dynamic_index->index: %d\n", skb, stream_id, dynamic_index->index);
     if (bpf_map_lookup_elem(&http2_dynamic_table, dynamic_index) == NULL) {
+//        log_debug("guy (skb: %p; stream_id: %ld) parse_field_indexed: missing dynamic_index->index: %d\n", skb, stream_id, dynamic_index->index);
+////        log_debug("guy (skb: %p; stream_id: %ld) parse_field_indexed: global_dynamic_counter: %d\n", skb, stream_id, global_dynamic_counter);
+//        log_debug("guy (skb: %p; stream_id: %ld) parse_field_indexed: index: %d\n", skb, stream_id, index);
         return;
     }
+//    log_debug("guy (skb: %p; stream_id: %ld) parse_field_indexed: exists dynamic_index->index: %d\n", skb, stream_id, dynamic_index->index);
 
     headers_to_process->index = dynamic_index->index;
     headers_to_process->type = kExistingDynamicHeader;
@@ -150,6 +168,7 @@ static __always_inline bool parse_field_literal(struct __sk_buff *skb, conn_tupl
     }
 
     headers_to_process->index = global_dynamic_counter - 1;
+//    log_debug("guy (skb: %p; stream_id: %ld) parse_field_literal: new global_dynamic_counter - 1: %d\n", skb, stream_id, global_dynamic_counter - 1);
     headers_to_process->type = kNewDynamicHeader;
     headers_to_process->new_dynamic_value_offset = skb_info->data_off;
     headers_to_process->new_dynamic_value_size = str_len;
@@ -171,11 +190,14 @@ static __always_inline __u8 filter_relevant_headers(struct __sk_buff *skb, skb_i
     __u8 max_bits = 0;
     __u8 index = 0;
 
-    __u64 *global_dynamic_counter = get_dynamic_counter(tup);
+    __u64 *global_dynamic_counter = get_dynamic_counter(skb, tup);
     if (global_dynamic_counter == NULL) {
+//        log_debug("guy (skb: %p; stream_id: %ld) filter_relevant_headers: no global_dynamic_counter\n", skb, stream_id);
+
         return 0;
     }
 
+//    log_debug("guy (skb: %p; stream_id: %ld) filter_relevant_headers: before global_dynamic_counter: %d\n", skb, stream_id, *global_dynamic_counter);
 #pragma unroll(HTTP2_MAX_HEADERS_COUNT_FOR_FILTERING)
     for (__u8 headers_index = 0; headers_index < HTTP2_MAX_HEADERS_COUNT_FOR_FILTERING; ++headers_index) {
         if (skb_info->data_off >= end) {
@@ -209,10 +231,10 @@ static __always_inline __u8 filter_relevant_headers(struct __sk_buff *skb, skb_i
             // Indexed representation.
             // MSB bit set.
             // https://httpwg.org/specs/rfc7541.html#rfc.section.6.1
-            parse_field_indexed(dynamic_index, current_header, index, *global_dynamic_counter, &interesting_headers, stream_id);
+            parse_field_indexed(skb, dynamic_index, current_header, index, *global_dynamic_counter, &interesting_headers, stream_id);
         } else {
-            (*global_dynamic_counter)++;
-
+            __sync_fetch_and_add(global_dynamic_counter, 1);
+//            log_debug("guy (skb: %p; stream_id: %ld) filter_relevant_headers: during global_dynamic_counter: %d\n", skb, stream_id, *global_dynamic_counter);
             // 6.2.1 Literal Header Field with Incremental Indexing
             // top two bits are 11
             // https://httpwg.org/specs/rfc7541.html#rfc.section.6.2.1
@@ -221,6 +243,8 @@ static __always_inline __u8 filter_relevant_headers(struct __sk_buff *skb, skb_i
             }
         }
     }
+
+//    log_debug("guy (skb: %p; stream_id: %ld) filter_relevant_headers: after global_dynamic_counter: %d\n", skb, stream_id, *global_dynamic_counter);
 
     return interesting_headers;
 }
@@ -506,17 +530,16 @@ int socket__http2_handle_first_frame(struct __sk_buff *skb) {
 
     dispatcher_arguments_t dispatcher_args_copy;
     bpf_memset(&dispatcher_args_copy, 0, sizeof(dispatcher_arguments_t));
-    // We're not calling fetch_dispatching_arguments as, we need to modify the `data_off` field of skb_info, so
-    // the next prog will start to read from the next valid frame.
-    dispatcher_arguments_t *args = bpf_map_lookup_elem(&dispatcher_arguments, &zero);
-    if (args == NULL) {
-        return false;
+    // Exporting the conn tuple from the skb, alongside couple of relevant fields from the skb.
+    if (!read_conn_tuple_skb(skb, &dispatcher_args_copy.skb_info, &dispatcher_args_copy.tup)) {
+        return 0;
     }
-    bpf_memcpy(&dispatcher_args_copy.tup, &args->tup, sizeof(conn_tuple_t));
-    bpf_memcpy(&dispatcher_args_copy.skb_info, &args->skb_info, sizeof(skb_info_t));
+
+//    log_debug("guy (skb: %p; sport: %ld; sport: %ld) socket__http2_handle_first_frame\n", skb, dispatcher_args_copy.tup.sport, dispatcher_args_copy.tup.dport);
 
     // If we detected a tcp termination we should stop processing the packet, and clear its dynamic table by deleting the counter.
     if (is_tcp_termination(&dispatcher_args_copy.skb_info)) {
+//        log_debug("guy (skb: %p) socket__http2_handle_first_frame: tcp termination\n", skb);
         // Deleting the entry for the original tuple.
         bpf_map_delete_elem(&http2_dynamic_counter_table, &dispatcher_args_copy.tup);
         // In case of local host, the protocol will be deleted for both (client->server) and (server->client),
@@ -562,7 +585,10 @@ int socket__http2_handle_first_frame(struct __sk_buff *skb) {
     dispatcher_args_copy.skb_info.data_off += current_frame.length;
     // Overriding the data_off field of the cached skb_info. The next prog will start from the offset of the next valid
     // frame.
-    args->skb_info.data_off = dispatcher_args_copy.skb_info.data_off;
+
+    // TODO: Save into a map
+    bpf_map_update_elem(&http2_next_offset, &dispatcher_args_copy.tup, &dispatcher_args_copy.skb_info.data_off, BPF_ANY);
+//    args->skb_info.data_off = dispatcher_args_copy.skb_info.data_off;
 
     bpf_tail_call_compat(skb, &protocols_progs, PROG_HTTP2_FRAME_FILTER);
     return 0;
@@ -572,11 +598,13 @@ SEC("socket/http2_filter")
 int socket__http2_filter(struct __sk_buff *skb) {
     dispatcher_arguments_t dispatcher_args_copy;
     bpf_memset(&dispatcher_args_copy, 0, sizeof(dispatcher_arguments_t));
-    if (!fetch_dispatching_arguments(&dispatcher_args_copy.tup, &dispatcher_args_copy.skb_info)) {
+    // Exporting the conn tuple from the skb, alongside couple of relevant fields from the skb.
+    if (!read_conn_tuple_skb(skb, &dispatcher_args_copy.skb_info, &dispatcher_args_copy.tup)) {
         return 0;
     }
 
     const __u32 zero = 0;
+    __u32 *offset_ptr = bpf_map_lookup_elem(&http2_next_offset, &dispatcher_args_copy.tup);
 
     // A single packet can contain multiple HTTP/2 frames, due to instruction limitations we have divided the
     // processing into multiple tail calls, where each tail call process a single frame. We must have context when
@@ -591,6 +619,9 @@ int socket__http2_filter(struct __sk_buff *skb) {
     // Some functions might change and override fields in dispatcher_args_copy.skb_info. Since it is used as a key
     // in a map, we cannot allow it to be modified. Thus, having a local copy of skb_info.
     skb_info_t local_skb_info = dispatcher_args_copy.skb_info;
+    if (offset_ptr != NULL) {
+        local_skb_info.data_off = *offset_ptr;
+    }
 
     // The verifier cannot tell if `iteration_value->frames_count` is 0 or 1, so we have to help it. The value is
     // 1 if we have found an interesting frame in `socket__http2_handle_first_frame`, otherwise it is 0.
@@ -622,6 +653,7 @@ int socket__http2_filter(struct __sk_buff *skb) {
 
     // We have couple of interesting headers, launching tail calls to handle them.
     if (bpf_map_update_elem(&http2_iterations, &dispatcher_args_copy, iteration_value, BPF_NOEXIST) >= 0) {
+        bpf_map_delete_elem(&http2_next_offset, &dispatcher_args_copy.tup);
         // We managed to cache the iteration_value in the http2_iterations map.
         bpf_tail_call_compat(skb, &protocols_progs, PROG_HTTP2_FRAME_PARSER);
     }
@@ -633,9 +665,11 @@ SEC("socket/http2_frames_parser")
 int socket__http2_frames_parser(struct __sk_buff *skb) {
     dispatcher_arguments_t dispatcher_args_copy;
     bpf_memset(&dispatcher_args_copy, 0, sizeof(dispatcher_arguments_t));
-    if (!fetch_dispatching_arguments(&dispatcher_args_copy.tup, &dispatcher_args_copy.skb_info)) {
+    // Exporting the conn tuple from the skb, alongside couple of relevant fields from the skb.
+    if (!read_conn_tuple_skb(skb, &dispatcher_args_copy.skb_info, &dispatcher_args_copy.tup)) {
         return 0;
     }
+    // TODO: get offset from a map
 
     // Some functions might change and override data_off field in dispatcher_args_copy.skb_info. Since it is used as a key
     // in a map, we cannot allow it to be modified. Thus, storing the original value of the offset.
