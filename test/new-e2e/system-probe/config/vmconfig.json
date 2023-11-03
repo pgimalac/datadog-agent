@@ -49,12 +49,12 @@
                 {
                     "dir": "debian-10-generic-amd64.qcow2",
                     "tag": "debian_10",
-                    "image_source": "https://dd-agent-omnibus.s3.amazonaws.com/kernel-version-testing/rootfs/debian-10-generic-amd64.qcow2.xz"
+                    "image_source": "https://dd-agent-omnibus.s3.amazonaws.com/kernel-version-testing/rootfs/debian-10-generic-amd64.qcow2.xz-test-only"
                 },
                 {
                     "dir": "debian-11-generic-amd64.qcow2",
                     "tag": "debian_11",
-                    "image_source": "https://dd-agent-omnibus.s3.amazonaws.com/kernel-version-testing/rootfs/debian-11-generic-amd64.qcow2.xz"
+                    "image_source": "https://dd-agent-omnibus.s3.amazonaws.com/kernel-version-testing/rootfs/debian-11-generic-amd64.qcow2.xz-test-only"
                 }
             ],
             "vcpu": [
