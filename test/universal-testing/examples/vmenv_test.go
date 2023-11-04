@@ -37,6 +37,6 @@ func TestVMSuiteEx(t *testing.T) {
 }
 
 func (v *vmSuiteExample) TestItIsWindows() {
-	res := v.Env().VM.Execute("cat /etc/os-release")
-	assert.Contains(v.T(), res, "Ubuntu")
+	res := v.Env().VM.Execute("dir C:\\")
+	assert.Contains(v.T(), res, "Windows")
 }

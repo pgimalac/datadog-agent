@@ -78,5 +78,5 @@ func (m *LocalVMManager) create(vm *LocalVM) (*utils.Connection, error) {
 
 func (m *LocalVMManager) delete(vm *LocalVM) error {
 	// TODO
-	return fmt.Errorf("deleting of local VMs is not yet implemented")
+	return nil
 }

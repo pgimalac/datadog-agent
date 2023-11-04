@@ -60,10 +60,8 @@ func (v *LocalVM) OSType() commonos.Type {
 
 func (v *LocalVM) initFromJSONFile(jsonFile string) error {
 	type localEnvSSHConfig struct {
-		KeyFile       string `json:"ssh_key_file"`
-		KeyPassphrase string `json:"ssh_key_passphrase"`
-		User          string `json:"ssh_user"`
-		Address       string `json:"ssh_address"`
+		User    string `json:"ssh_user"`
+		Address string `json:"ssh_address"`
 	}
 
 	file, err := os.Open(jsonFile)
