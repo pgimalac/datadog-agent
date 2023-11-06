@@ -30,12 +30,12 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
-require github.com/DataDog/datadog-agent/test/new-e2e v0.49.0-rc.2.0.20231031204442-a5ef9a7795ac
+require github.com/DataDog/datadog-agent/test/new-e2e v0.49.0-rc.2.0.20231106182905-e327922a7469
 
 require (
-	github.com/DataDog/agent-payload/v5 v5.0.73 // indirect
-	github.com/docker/cli v24.0.6+incompatible // indirect
-	github.com/docker/docker v24.0.6+incompatible // indirect
+	github.com/DataDog/agent-payload/v5 v5.0.97 // indirect
+	github.com/docker/cli v24.0.7+incompatible // indirect
+	github.com/docker/docker v24.0.7+incompatible // indirect
 	github.com/pkg/sftp v1.13.6 // indirect
 )
 
