@@ -158,6 +158,12 @@ func (suite *Suite[Env]) TearDownSuite() {
 	// TODO: Implement retry on delete
 	ctx, cancel := context.WithTimeout(context.Background(), deleteTimeout)
 	defer cancel()
+
+	if suite.currentInfraDef == nil {
+		// this happens if there's an error when instantiating the env
+		return
+	}
+
 	err := suite.currentInfraDef.DeleteInfra(ctx, suite.params.Name)
 	if err != nil {
 		suite.T().Errorf("unable to delete infrastructure: err :%v", err)
