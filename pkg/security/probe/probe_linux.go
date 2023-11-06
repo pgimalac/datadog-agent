@@ -515,19 +515,7 @@ func (p *Probe) onEventLost(perfMapName string, perEvent map[string]uint64) {
 
 // setProcessContext set the process context, should return false if the event shouldn't be dispatched
 func (p *Probe) setProcessContext(eventType model.EventType, event *model.Event) bool {
-	if process.IsKThread(event.ProcessContext.PPid, event.ProcessContext.Pid) {
-		return false
-	}
-
 	entry, isResolved := p.fieldHandlers.ResolveProcessCacheEntry(event)
-	if !eventWithNoProcessContext(eventType) {
-		if !isResolved {
-			event.Error = &model.ErrNoProcessContext{Err: errors.New("process context not resolved")}
-		} else if _, err := entry.HasValidLineage(); err != nil {
-			event.Error = &model.ErrProcessBrokenLineage{PIDContext: entry.PIDContext, Err: err}
-			p.resolvers.ProcessResolver.CountBrokenLineage()
-		}
-	}
 	event.ProcessCacheEntry = entry
 	if event.ProcessCacheEntry == nil {
 		panic("should always return a process cache entry")
@@ -537,6 +525,19 @@ func (p *Probe) setProcessContext(eventType model.EventType, event *model.Event)
 	event.ProcessContext = &event.ProcessCacheEntry.ProcessContext
 	if event.ProcessContext == nil {
 		panic("should always return a process context")
+	}
+
+	if process.IsKThread(event.ProcessContext.PPid, event.ProcessContext.Pid) {
+		return false
+	}
+
+	if !eventWithNoProcessContext(eventType) {
+		if !isResolved {
+			event.Error = &model.ErrNoProcessContext{Err: errors.New("process context not resolved")}
+		} else if _, err := entry.HasValidLineage(); err != nil {
+			event.Error = &model.ErrProcessBrokenLineage{PIDContext: entry.PIDContext, Err: err}
+			p.resolvers.ProcessResolver.CountBrokenLineage()
+		}
 	}
 
 	// flush exited process
