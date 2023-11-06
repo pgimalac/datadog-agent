@@ -7,7 +7,6 @@ package clients
 
 import (
 	"fmt"
-	"net"
 	"os"
 	"path"
 	"time"
@@ -38,10 +37,9 @@ func getSSHClient(user, host string, privateKey []byte) (*ssh.Client, *ssh.Sessi
 		}
 		auth = ssh.PublicKeys(privateKeyAuth)
 	} else {
-		// Use the ssh agent
-		conn, err := net.Dial("unix", os.Getenv("SSH_AUTH_SOCK"))
+		conn, err := getSSHAgentConn()
 		if err != nil {
-			return nil, nil, fmt.Errorf("no ssh key provided and cannot connect to the ssh agent: %v", err)
+			return nil, nil, fmt.Errorf("no ssh key provided and cannot connect to the ssh agent: B - %v", err)
 		}
 		defer conn.Close()
 		sshAgent := agent.NewClient(conn)
