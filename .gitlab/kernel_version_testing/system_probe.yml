@@ -162,13 +162,13 @@ upload_dependencies_arm64:
     - !reference [.wait_for_instances]
     - !reference [.get_instance_ip_by_type]
     - !reference [.setup_ssh_config]
-    - scp $DD_AGENT_TESTING_DIR/$ARCHIVE_NAME metal_instance:/opt/kernel-version-testing/
+    - rsync -av $DD_AGENT_TESTING_DIR/$ARCHIVE_NAME metal_instance:/opt/kernel-version-testing/
     # build connector
     - pushd $CI_PROJECT_DIR/test/new-e2e
     - go build -o $CI_PROJECT_DIR/connector-${ARCH} $CI_PROJECT_DIR/test/new-e2e/system-probe/connector/main.go
     - popd
     # upload connector to metal instance
-    - scp $CI_PROJECT_DIR/connector-${ARCH} metal_instance:/home/ubuntu/connector
+    - rsync -av $CI_PROJECT_DIR/connector-${ARCH} metal_instance:/home/ubuntu/connector
   variables:
     DEPENDENCIES: $DD_AGENT_TESTING_DIR/$ARCH/tests
     EMBEDDED_BIN: opt/datadog-agent/embedded/bin
