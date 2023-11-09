@@ -522,6 +522,9 @@ int socket__http2_handle_first_frame(struct __sk_buff *skb) {
 
     // If we detected a tcp termination we should stop processing the packet, and clear its dynamic table by deleting the counter.
     if (is_tcp_termination(&dispatcher_args_copy.skb_info)) {
+        long ret = bpf_map_push_elem(&http2_terminated_conns, &dispatcher_args_copy.tup, BPF_ANY);
+        if (ret) {}
+        log_debug("http2_handle_first_frame: tcp termination detected: %d\n", ret);
         // Deleting the entry for the original tuple.
         bpf_map_delete_elem(&http2_dynamic_counter_table, &dispatcher_args_copy.tup);
         // In case of local host, the protocol will be deleted for both (client->server) and (server->client),

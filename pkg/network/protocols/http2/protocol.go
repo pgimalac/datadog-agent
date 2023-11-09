@@ -10,7 +10,9 @@ package http2
 import (
 	"errors"
 	"fmt"
+	netebpf "github.com/DataDog/datadog-agent/pkg/network/ebpf"
 	"strings"
+	"time"
 	"unsafe"
 
 	"github.com/cilium/ebpf"
@@ -184,6 +186,7 @@ func (p *protocol) PreStart(mgr *manager.Manager) (err error) {
 func (p *protocol) PostStart(mgr *manager.Manager) error {
 	// Setup map cleaner after manager start.
 	p.setupMapCleaner(mgr)
+	p.setupMapCleaner2(mgr)
 
 	return nil
 }
@@ -217,6 +220,16 @@ func (p *protocol) DumpMaps(output *strings.Builder, mapName string, currentMap 
 		var value http2DynamicTableEntry
 		for iter.Next(unsafe.Pointer(&key), unsafe.Pointer(&value)) {
 			output.WriteString(spew.Sdump(key, value))
+		}
+	} else if mapName == "http2_terminated_conns" {
+		output.WriteString("Map: '" + mapName + "', key: 'ConnTuple', value: 'httpTX'\n")
+		var value netebpf.ConnTuple
+		for {
+			if err := currentMap.LookupAndDelete(nil, unsafe.Pointer(&value)); err != nil {
+				return
+			}
+
+			output.WriteString(spew.Sdump(value))
 		}
 	}
 }
@@ -255,6 +268,66 @@ func (p *protocol) setupMapCleaner(mgr *manager.Manager) {
 	})
 
 	p.mapCleaner = mapCleaner
+}
+
+func (p *protocol) setupMapCleaner2(mgr *manager.Manager) {
+	http2TerminatedConnectionsQueue, _, err := mgr.GetMap("http2_terminated_conns")
+	if err != nil {
+		log.Errorf("error getting http2_terminated_conns map: %s", err)
+		return
+	}
+	dynamicTableMap, _, err := mgr.GetMap(dynamicTable)
+	if err != nil {
+		log.Errorf("error getting %q map: %s", dynamicTable, err)
+		return
+	}
+
+	keys := make([]http2DynamicTableIndex, dynamicTableMap.MaxEntries())
+	values := make([]http2DynamicTableEntry, dynamicTableMap.MaxEntries())
+	keysForDeletion := make([]http2DynamicTableIndex, 0, dynamicTableMap.MaxEntries())
+	go func() {
+		for {
+			// Poor people periodic
+			time.Sleep(10 * time.Second)
+
+			keys := keys[:0]
+			next := uint32(0)
+			// Pulling all keys from the map
+			n, err := dynamicTableMap.BatchLookup(nil, &next, keys, values, nil)
+			if n == 0 {
+				continue
+			}
+
+			// While queue is not empty
+			for {
+				var value netebpf.ConnTuple
+				// Pop from the queue
+				if err := http2TerminatedConnectionsQueue.LookupAndDelete(nil, unsafe.Pointer(&value)); err != nil {
+					log.Errorf("error lookup and delete: %s", err)
+					break
+				}
+
+				// Search for matching entries in the dynamic table
+				// matching entries are those that have the same connection tuple, regardless of the index value.
+				for i := 0; i < n; i++ {
+					if keys[i].Tup == value {
+						// If found, add the index to the list of keys to be deleted
+						keysForDeletion = append(keysForDeletion, keys[i])
+						// Swap the last element with the current one so we can shrink the slice and avoid re-checking
+						// the same (deleted) element again.
+						keys[i] = keys[n-1]
+						n--
+						break
+					}
+				}
+			}
+			// Delete all matching entries
+			if _, err = dynamicTableMap.BatchDelete(keysForDeletion, nil); err != nil {
+				log.Errorf("error batch delete: %s", err)
+				break
+			}
+		}
+	}()
 }
 
 // GetStats returns a map of HTTP2 stats stored in the following format:

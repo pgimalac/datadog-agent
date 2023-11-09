@@ -31,7 +31,7 @@ import (
 )
 
 const (
-	srvAddr = "127.0.0.1:5050"
+	srvAddr = "127.0.0.1:6400"
 )
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -635,6 +635,8 @@ func (s *USMgRPCSuite) TestParallelGRPCScenarios() {
 
 					return true
 				}, time.Second*5, time.Millisecond*100, "%v != %v", res, tt.expectedEndpoints)
+
+				time.Sleep(30 * time.Second)
 				o, err := monitor.DumpMaps("http2_terminated_conns")
 				if err != nil {
 					t.Logf("failed dumping http2_terminated_conns: %s", err)
