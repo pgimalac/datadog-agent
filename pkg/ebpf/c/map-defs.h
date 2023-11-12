@@ -47,10 +47,10 @@
     BPF_MAP(name, BPF_MAP_TYPE_PERCPU_ARRAY, key_type, value_type, max_entries, 0, 0)
 
 #define BPF_QUEUE(_name, _value_type, _max_entries) \
-    struct {                                                                         \
-        __uint(type, BPF_MAP_TYPE_QUEUE);                                                         \
-        __uint(max_entries, _max_entries);                                           \
-        __type(value, _value_type);                                                  \
+    struct {                                        \
+        __uint(type, BPF_MAP_TYPE_QUEUE);           \
+        __uint(max_entries, _max_entries);          \
+        __type(value, _value_type);                 \
     } _name SEC(".maps");
 
 #endif
