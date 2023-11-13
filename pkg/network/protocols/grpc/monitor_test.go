@@ -636,7 +636,7 @@ func (s *USMgRPCSuite) TestParallelGRPCScenarios() {
 					return true
 				}, time.Second*5, time.Millisecond*100, "%v != %v", res, tt.expectedEndpoints)
 
-				time.Sleep(30 * time.Second)
+				//time.Sleep(30 * time.Second)
 				o, err := monitor.DumpMaps("http2_terminated_conns")
 				if err != nil {
 					t.Logf("failed dumping http2_terminated_conns: %s", err)
@@ -651,6 +651,7 @@ func (s *USMgRPCSuite) TestParallelGRPCScenarios() {
 						t.Log(o)
 					}
 				}
+				http2.Spec.Instance.(*http2.Protocol).RunDynamicTableMapCleaner()
 				//	//o, err = monitor.DumpMaps("http2_dynamic_table")
 				//	//if err != nil {
 				//	//	t.Logf("failed dumping http2_dynamic_table: %s", err)
