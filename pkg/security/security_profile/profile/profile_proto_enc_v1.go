@@ -29,7 +29,7 @@ func SecurityProfileToProto(input *SecurityProfile) *proto.SecurityProfile {
 		Tree:            activity_tree.ToProto(input.ActivityTree),
 	}
 
-	for key, ctx := range input.profileContexts {
+	for key, ctx := range input.versionContexts {
 		outCtx := &proto.ProfileContext{
 			FirstSeen:      ctx.firstSeenNano,
 			LastSeen:       ctx.lastSeenNano,

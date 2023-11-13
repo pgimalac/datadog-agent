@@ -420,7 +420,7 @@ func (m *SecurityProfileManager) FillProfileContextFromContainerID(id string, ct
 			if instance.ID == id {
 				ctx.Name = profile.Metadata.Name
 				ctx.Status = profile.Status
-				profileContext, ok := profile.profileContexts[imageTag]
+				profileContext, ok := profile.versionContexts[imageTag]
 				if ok { // should always be the case
 					ctx.Tags = profileContext.Tags
 				}
@@ -443,7 +443,7 @@ func FillProfileContextFromProfile(ctx *model.SecurityProfileContext, profile *S
 
 	ctx.Status = profile.Status
 	ctx.AnomalyDetectionEventTypes = profile.anomalyDetectionEvents
-	profileContext, ok := profile.profileContexts[imageTag]
+	profileContext, ok := profile.versionContexts[imageTag]
 	if ok { // should always be the case
 		ctx.Tags = profileContext.Tags
 	}
@@ -570,7 +570,7 @@ func (m *SecurityProfileManager) OnNewProfileEvent(selector cgroupModel.Workload
 	// if the profile is coming from the dump manager, ignore if the existing profile already
 	// contains the image tag, otherwise merge it with the existing one
 	if selector.Tag != "*" {
-		_, tagPresent := profile.profileContexts[selector.Tag]
+		_, tagPresent := profile.versionContexts[selector.Tag]
 		if tagPresent { // profile already have the image tag, ignore
 			return
 		}
@@ -825,9 +825,9 @@ func (m *SecurityProfileManager) tryAutolearn(profile *SecurityProfile, event *m
 		m.incrementEventFilteringStat(event.GetEventType(), NoProfile, NA)
 		return NoProfile
 	} else if newEntry {
-		profile.profileContextsLock.Lock()
-		defer profile.profileContextsLock.Unlock()
-		if ctx, ok := profile.profileContexts[imageTag]; ok {
+		profile.versionContextsLock.Lock()
+		defer profile.versionContextsLock.Unlock()
+		if ctx, ok := profile.versionContexts[imageTag]; ok {
 			eventState, ok := ctx.eventTypeState[event.GetEventType()]
 			if ok { // should always be the case
 				eventState.lastAnomalyNano = event.TimestampRaw
@@ -931,9 +931,9 @@ func (m *SecurityProfileManager) FetchSilentWorkloads() map[cgroupModel.Workload
 }
 
 func (m *SecurityProfileManager) getEventTypeState(profile *SecurityProfile, event *model.Event, eventType model.EventType, imageTag string) EventFilteringProfileState {
-	profile.profileContextsLock.Lock()
-	defer profile.profileContextsLock.Unlock()
-	pctx, ok := profile.profileContexts[imageTag]
+	profile.versionContextsLock.Lock()
+	defer profile.versionContextsLock.Unlock()
+	pctx, ok := profile.versionContexts[imageTag]
 	if !ok { // should never happen
 		return UnstableEventType
 	}

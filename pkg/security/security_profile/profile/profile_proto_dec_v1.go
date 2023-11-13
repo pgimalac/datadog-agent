@@ -26,7 +26,7 @@ func ProtoToSecurityProfile(output *SecurityProfile, pathsReducer *activity_tree
 	output.Metadata = mtdt.ProtoMetadataToMetadata(input.Metadata)
 
 	for key, ctx := range input.ProfileContexts {
-		outCtx := ProfileContext{
+		outCtx := VersionContext{
 			firstSeenNano:  ctx.FirstSeen,
 			lastSeenNano:   ctx.LastSeen,
 			eventTypeState: make(map[model.EventType]*EventTypeState),
@@ -41,7 +41,7 @@ func ProtoToSecurityProfile(output *SecurityProfile, pathsReducer *activity_tree
 		}
 		copy(outCtx.Syscalls, ctx.Syscalls)
 		copy(outCtx.Tags, ctx.Tags)
-		output.profileContexts[key] = outCtx
+		output.versionContexts[key] = outCtx
 	}
 
 	output.ActivityTree = activity_tree.NewActivityTree(output, pathsReducer, "security_profile")

@@ -37,8 +37,8 @@ type EventTypeState struct {
 	state           EventFilteringProfileState
 }
 
-// ProfileContext holds the context of one version (defined by its image tag)
-type ProfileContext struct {
+// VersionContext holds the context of one version (defined by its image tag)
+type VersionContext struct {
 	firstSeenNano uint64
 	lastSeenNano  uint64
 
@@ -59,8 +59,8 @@ type SecurityProfile struct {
 	selector               cgroupModel.WorkloadSelector
 	profileCookie          uint64
 	anomalyDetectionEvents []model.EventType
-	profileContextsLock    sync.Mutex
-	profileContexts        map[string]ProfileContext
+	versionContextsLock    sync.Mutex
+	versionContexts        map[string]VersionContext
 
 	// Instances is the list of workload instances to witch the profile should apply
 	Instances []*cgroupModel.CacheEntry
@@ -85,10 +85,10 @@ func NewSecurityProfile(selector cgroupModel.WorkloadSelector, anomalyDetectionE
 	sp := &SecurityProfile{
 		selector:               selector,
 		anomalyDetectionEvents: anomalyDetectionEvents,
-		profileContexts:        make(map[string]ProfileContext),
+		versionContexts:        make(map[string]VersionContext),
 	}
 	if selector.Tag != "" {
-		sp.profileContexts[selector.Tag] = ProfileContext{
+		sp.versionContexts[selector.Tag] = VersionContext{
 			eventTypeState: make(map[model.EventType]*EventTypeState),
 		}
 	}
@@ -100,7 +100,7 @@ func (p *SecurityProfile) reset() {
 	p.loadedInKernel = false
 	p.loadedNano = 0
 	p.profileCookie = 0
-	p.profileContexts = make(map[string]ProfileContext)
+	p.versionContexts = make(map[string]VersionContext)
 	p.Instances = nil
 }
 
@@ -113,7 +113,7 @@ func (p *SecurityProfile) generateCookies() {
 
 func (p *SecurityProfile) generateSyscallsFilters() [64]byte {
 	var output [64]byte
-	for _, pCtxt := range p.profileContexts {
+	for _, pCtxt := range p.versionContexts {
 		for _, syscall := range pCtxt.Syscalls {
 			if syscall/8 < 64 && (1<<(syscall%8) < 256) {
 				output[syscall/8] |= 1 << (syscall % 8)
@@ -181,7 +181,7 @@ func (p *SecurityProfile) SendStats(client statsd.ClientInterface) error {
 func (p *SecurityProfile) ToSecurityProfileMessage(timeResolver *timeResolver.Resolver, cfg *config.RuntimeSecurityConfig) *api.SecurityProfileMessage {
 	// construct the list of image tags for this profile
 	imageTags := ""
-	for key := range p.profileContexts {
+	for key := range p.versionContexts {
 		if imageTags != "" {
 			imageTags = imageTags + ","
 		}
@@ -227,9 +227,9 @@ func (p *SecurityProfile) ToSecurityProfileMessage(timeResolver *timeResolver.Re
 
 // GetState returns the state of a profile for a given imageTag
 func (p *SecurityProfile) GetState(imageTag string) EventFilteringProfileState {
-	p.profileContextsLock.Lock()
-	defer p.profileContextsLock.Unlock()
-	pCtx, ok := p.profileContexts[imageTag]
+	p.versionContextsLock.Lock()
+	defer p.versionContextsLock.Unlock()
+	pCtx, ok := p.versionContexts[imageTag]
 	if !ok {
 		return NoProfile
 	}
@@ -247,7 +247,7 @@ func (p *SecurityProfile) GetState(imageTag string) EventFilteringProfileState {
 // GetGlobalState returns the global state of a profile: AutoLearning, StableEventType or UnstableEventType
 func (p *SecurityProfile) GetGlobalState() EventFilteringProfileState {
 	globalState := AutoLearning
-	for imageTag, _ := range p.profileContexts {
+	for imageTag, _ := range p.versionContexts {
 		state := p.GetState(imageTag)
 		if state == UnstableEventType {
 			return UnstableEventType
@@ -259,7 +259,7 @@ func (p *SecurityProfile) GetGlobalState() EventFilteringProfileState {
 }
 
 func (p *SecurityProfile) evictProfileVersion() {
-	if len(p.profileContexts) <= 0 {
+	if len(p.versionContexts) <= 0 {
 		return // should not happen
 	}
 
@@ -268,14 +268,14 @@ func (p *SecurityProfile) evictProfileVersion() {
 
 	// select the oldest image tag
 	// TODO: not 100% sure to select the first or the lastSeenNano
-	for imageTag, profileCtx := range p.profileContexts {
+	for imageTag, profileCtx := range p.versionContexts {
 		if profileCtx.lastSeenNano < oldest {
 			oldest = profileCtx.lastSeenNano
 			oldestImageTag = imageTag
 		}
 	}
 	// delete image context
-	delete(p.profileContexts, oldestImageTag)
+	delete(p.versionContexts, oldestImageTag)
 
 	// then, remove every trace of this version from the tree
 	p.ActivityTree.EvictImageTag(oldestImageTag)
@@ -283,12 +283,12 @@ func (p *SecurityProfile) evictProfileVersion() {
 
 func (p *SecurityProfile) mergeNewVersion(newVersion *SecurityProfile) {
 	newImageTag := newVersion.selector.Tag
-	_, ok := p.profileContexts[newImageTag]
+	_, ok := p.versionContexts[newImageTag]
 	if ok { // should not happen: if new tag already exists, ignore
 		return
 	}
 	// prepare new profile context to be inserted
-	newProfileCtx, ok := newVersion.profileContexts[newImageTag]
+	newProfileCtx, ok := newVersion.versionContexts[newImageTag]
 	if !ok { // should not happen neither
 		return
 	}
@@ -297,10 +297,10 @@ func (p *SecurityProfile) mergeNewVersion(newVersion *SecurityProfile) {
 
 	// add the new profile context to the list
 	// if we reached the max number of versions, we should evict one
-	if len(p.profileContexts) >= MaxProfileImageTags {
+	if len(p.versionContexts) >= MaxProfileImageTags {
 		p.evictProfileVersion()
 	}
-	p.profileContexts[newImageTag] = newProfileCtx
+	p.versionContexts[newImageTag] = newProfileCtx
 
 	// finally, merge the trees
 	p.ActivityTree.Merge(newVersion.ActivityTree)
