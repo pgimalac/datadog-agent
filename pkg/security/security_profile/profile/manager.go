@@ -98,6 +98,7 @@ func (efr EventFilteringProfileState) toProto() proto.EventProfileState {
 	return proto.EventProfileState_NO_PROFILE
 }
 
+// ProtoToState converts a proto state to a profile one
 func ProtoToState(eps proto.EventProfileState) EventFilteringProfileState {
 	switch eps {
 	case proto.EventProfileState_NO_PROFILE:
@@ -566,8 +567,8 @@ func (m *SecurityProfileManager) OnNewProfileEvent(selector cgroupModel.Workload
 		return
 	}
 
-	// if the profile is comming from the dump manager, ignore if the existing profile already
-	// contains the image tag, otherwise merge it witht the existing one
+	// if the profile is coming from the dump manager, ignore if the existing profile already
+	// contains the image tag, otherwise merge it with the existing one
 	if selector.Tag != "*" {
 		_, tagPresent := profile.profileContexts[selector.Tag]
 		if tagPresent { // profile already have the image tag, ignore
@@ -577,7 +578,7 @@ func (m *SecurityProfileManager) OnNewProfileEvent(selector cgroupModel.Workload
 		m.AddNewTagVersion(profile, newProfile, selector)
 		return
 	}
-	// TODO: else, in case we load a profile comming from the profile manager (save not implemented yet)
+	// TODO: else, in case we load a profile coming from the profile manager (save not implemented yet)
 }
 
 func (m *SecurityProfileManager) stop() {
@@ -824,9 +825,9 @@ func (m *SecurityProfileManager) tryAutolearn(profile *SecurityProfile, event *m
 		m.incrementEventFilteringStat(event.GetEventType(), NoProfile, NA)
 		return NoProfile
 	} else if newEntry {
+		profile.profileContextsLock.Lock()
+		defer profile.profileContextsLock.Unlock()
 		if ctx, ok := profile.profileContexts[imageTag]; ok {
-			ctx.eventTypeStateLock.Lock()
-			defer ctx.eventTypeStateLock.Unlock()
 			eventState, ok := ctx.eventTypeState[event.GetEventType()]
 			if ok { // should always be the case
 				eventState.lastAnomalyNano = event.TimestampRaw
@@ -930,14 +931,12 @@ func (m *SecurityProfileManager) FetchSilentWorkloads() map[cgroupModel.Workload
 }
 
 func (m *SecurityProfileManager) getEventTypeState(profile *SecurityProfile, event *model.Event, eventType model.EventType, imageTag string) EventFilteringProfileState {
-	// eventTypeStateLock already locked here
-
+	profile.profileContextsLock.Lock()
+	defer profile.profileContextsLock.Unlock()
 	pctx, ok := profile.profileContexts[imageTag]
-	if !ok { // should never happend
+	if !ok { // should never happen
 		return UnstableEventType
 	}
-	pctx.eventTypeStateLock.Lock()
-	defer pctx.eventTypeStateLock.Unlock()
 	eventState, ok := pctx.eventTypeState[event.GetEventType()]
 	if !ok {
 		eventState = &EventTypeState{

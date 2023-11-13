@@ -159,8 +159,7 @@ func (at *ActivityTree) AppendChild(node *ProcessNode) {
 }
 
 // AppendImageTag appends the given image tag
-func (at *ActivityTree) AppendImageTag(imageTag string) {
-	return
+func (at *ActivityTree) AppendImageTag(_ string) {
 }
 
 // GetParent returns nil for the ActivityTree

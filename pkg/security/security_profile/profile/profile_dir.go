@@ -218,12 +218,11 @@ func (dp *DirectoryProvider) loadProfile(profilePath string) error {
 	imageName := ""
 	if len(profile.ProfileContexts) == 0 {
 		return fmt.Errorf("couldn't load profile %s: it did not contains any version", profilePath)
-	} else {
-		for key, ctx := range profile.ProfileContexts {
-			imageTag = key
-			imageName = utils.GetTagValue("image_name", ctx.Tags)
-			break
-		}
+	}
+	for key, ctx := range profile.ProfileContexts {
+		imageTag = key
+		imageName = utils.GetTagValue("image_name", ctx.Tags)
+		break
 	}
 	if len(profile.ProfileContexts) > 1 {
 		imageTag = "*"

@@ -242,7 +242,7 @@ func (ad *ActivityDump) GetWorkloadSelector() *cgroupModel.WorkloadSelector {
 		return nil
 	}
 	ad.selector = &selector
-	// Once per workload, when tags are resolved and the firs time we successfuly get the selector, tag all the existing nodes
+	// Once per workload, when tags are resolved and the firs time we successfully get the selector, tag all the existing nodes
 	ad.ActivityTree.TagAllNodes(imageTag)
 	return ad.selector
 }

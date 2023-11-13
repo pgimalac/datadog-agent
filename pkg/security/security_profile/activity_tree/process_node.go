@@ -516,28 +516,27 @@ func (pn *ProcessNode) mergeSockets(new *ProcessNode) {
 		if !found { // if not found, append directly the whole socket
 			sockToAdd = append(sockToAdd, newSock)
 			continue
-		} else {
-			// for the same family, merge the binds
-			currentSock := pn.Sockets[index]
-			bindToAdd := []*BindNode{}
-			for _, bind := range newSock.Bind {
-				i, found := slices.BinarySearchFunc(currentSock.Bind, bind, func(current, new *BindNode) int {
-					if current.Matches(new) {
-						return 0
-					}
-					return 42
-				})
-				// if not found, append directly to the binds
-				if !found {
-					bindToAdd = append(bindToAdd, bind)
-					continue
+		}
+		// for the same family, merge the binds
+		currentSock := pn.Sockets[index]
+		bindToAdd := []*BindNode{}
+		for _, bind := range newSock.Bind {
+			i, found := slices.BinarySearchFunc(currentSock.Bind, bind, func(current, new *BindNode) int {
+				if current.Matches(new) {
+					return 0
 				}
-				// merge them otherwise
-				currentSock.Bind[i].merge(bind)
+				return 42
+			})
+			// if not found, append directly to the binds
+			if !found {
+				bindToAdd = append(bindToAdd, bind)
+				continue
 			}
-			if len(bindToAdd) > 1 {
-				currentSock.Bind = append(currentSock.Bind, bindToAdd...)
-			}
+			// merge them otherwise
+			currentSock.Bind[i].merge(bind)
+		}
+		if len(bindToAdd) > 1 {
+			currentSock.Bind = append(currentSock.Bind, bindToAdd...)
 		}
 	}
 	if len(sockToAdd) > 0 {

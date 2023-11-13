@@ -35,10 +35,12 @@ func (bn *BindNode) merge(toMerge *BindNode) {
 	bn.ImageTags = slices.Compact(bn.ImageTags)
 }
 
+// Matches returns true if BindNodes matches
 func (bn *BindNode) Matches(toMatch *BindNode) bool {
 	return bn.Port == toMatch.Port && bn.IP == toMatch.IP
 }
 
+// Matches returns true if BindNodes matches
 func (sn *SocketNode) Matches(toMatch *SocketNode) bool {
 	return sn.Family == toMatch.Family
 }
@@ -80,10 +82,10 @@ func (sn *SocketNode) evictImageTag(imageTag string) bool {
 }
 
 // InsertBindEvent inserts a bind even inside a socket node
-func (n *SocketNode) InsertBindEvent(evt *model.BindEvent, imageTag string, generationType NodeGenerationType, rules []*model.MatchedRule, dryRun bool) bool {
+func (sn *SocketNode) InsertBindEvent(evt *model.BindEvent, imageTag string, generationType NodeGenerationType, rules []*model.MatchedRule, dryRun bool) bool {
 	evtIP := evt.Addr.IPNet.IP.String()
 
-	for _, n := range n.Bind {
+	for _, n := range sn.Bind {
 		if evt.Addr.Port == n.Port && evtIP == n.IP {
 			if !dryRun {
 				n.MatchedRules = model.AppendMatchedRule(n.MatchedRules, rules)
@@ -107,7 +109,7 @@ func (n *SocketNode) InsertBindEvent(evt *model.BindEvent, imageTag string, gene
 		if imageTag != "" {
 			node.ImageTags = []string{imageTag}
 		}
-		n.Bind = append(n.Bind, node)
+		sn.Bind = append(sn.Bind, node)
 	}
 	return true
 }

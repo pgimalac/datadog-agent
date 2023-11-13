@@ -37,12 +37,12 @@ type EventTypeState struct {
 	state           EventFilteringProfileState
 }
 
+// ProfileContext holds the context of one version (defined by its image tag)
 type ProfileContext struct {
 	firstSeenNano uint64
 	lastSeenNano  uint64
 
-	eventTypeStateLock sync.Mutex
-	eventTypeState     map[model.EventType]*EventTypeState
+	eventTypeState map[model.EventType]*EventTypeState
 
 	// Syscalls is the syscalls profile
 	Syscalls []uint32
@@ -59,6 +59,7 @@ type SecurityProfile struct {
 	selector               cgroupModel.WorkloadSelector
 	profileCookie          uint64
 	anomalyDetectionEvents []model.EventType
+	profileContextsLock    sync.Mutex
 	profileContexts        map[string]ProfileContext
 
 	// Instances is the list of workload instances to witch the profile should apply
@@ -225,15 +226,15 @@ func (p *SecurityProfile) ToSecurityProfileMessage(timeResolver *timeResolver.Re
 }
 
 // GetState returns the state of a profile for a given imageTag
-func (s *SecurityProfile) GetState(imageTag string) EventFilteringProfileState {
-	pCtx, ok := s.profileContexts[imageTag]
+func (p *SecurityProfile) GetState(imageTag string) EventFilteringProfileState {
+	p.profileContextsLock.Lock()
+	defer p.profileContextsLock.Unlock()
+	pCtx, ok := p.profileContexts[imageTag]
 	if !ok {
 		return NoProfile
 	}
-	pCtx.eventTypeStateLock.Lock()
-	defer pCtx.eventTypeStateLock.Unlock()
 	state := StableEventType
-	for _, et := range s.anomalyDetectionEvents {
+	for _, et := range p.anomalyDetectionEvents {
 		if pCtx.eventTypeState[et].state == UnstableEventType {
 			return UnstableEventType
 		} else if pCtx.eventTypeState[et].state != StableEventType {
@@ -244,10 +245,10 @@ func (s *SecurityProfile) GetState(imageTag string) EventFilteringProfileState {
 }
 
 // GetGlobalState returns the global state of a profile: AutoLearning, StableEventType or UnstableEventType
-func (s *SecurityProfile) GetGlobalState() EventFilteringProfileState {
+func (p *SecurityProfile) GetGlobalState() EventFilteringProfileState {
 	globalState := AutoLearning
-	for imageTag, _ := range s.profileContexts {
-		state := s.GetState(imageTag)
+	for imageTag, _ := range p.profileContexts {
+		state := p.GetState(imageTag)
 		if state == UnstableEventType {
 			return UnstableEventType
 		} else if state == StableEventType {
@@ -257,8 +258,8 @@ func (s *SecurityProfile) GetGlobalState() EventFilteringProfileState {
 	return globalState // AutoLearning or StableEventType
 }
 
-func (s *SecurityProfile) evictProfileVersion() {
-	if len(s.profileContexts) <= 0 {
+func (p *SecurityProfile) evictProfileVersion() {
+	if len(p.profileContexts) <= 0 {
 		return // should not happen
 	}
 
@@ -267,22 +268,22 @@ func (s *SecurityProfile) evictProfileVersion() {
 
 	// select the oldest image tag
 	// TODO: not 100% sure to select the first or the lastSeenNano
-	for imageTag, profileCtx := range s.profileContexts {
+	for imageTag, profileCtx := range p.profileContexts {
 		if profileCtx.lastSeenNano < oldest {
 			oldest = profileCtx.lastSeenNano
 			oldestImageTag = imageTag
 		}
 	}
 	// delete image context
-	delete(s.profileContexts, oldestImageTag)
+	delete(p.profileContexts, oldestImageTag)
 
 	// then, remove every trace of this version from the tree
-	s.ActivityTree.EvictImageTag(oldestImageTag)
+	p.ActivityTree.EvictImageTag(oldestImageTag)
 }
 
-func (s *SecurityProfile) mergeNewVersion(newVersion *SecurityProfile) {
+func (p *SecurityProfile) mergeNewVersion(newVersion *SecurityProfile) {
 	newImageTag := newVersion.selector.Tag
-	_, ok := s.profileContexts[newImageTag]
+	_, ok := p.profileContexts[newImageTag]
 	if ok { // should not happen: if new tag already exists, ignore
 		return
 	}
@@ -296,11 +297,11 @@ func (s *SecurityProfile) mergeNewVersion(newVersion *SecurityProfile) {
 
 	// add the new profile context to the list
 	// if we reached the max number of versions, we should evict one
-	if len(s.profileContexts) >= MaxProfileImageTags {
-		s.evictProfileVersion()
+	if len(p.profileContexts) >= MaxProfileImageTags {
+		p.evictProfileVersion()
 	}
-	s.profileContexts[newImageTag] = newProfileCtx
+	p.profileContexts[newImageTag] = newProfileCtx
 
 	// finally, merge the trees
-	s.ActivityTree.Merge(newVersion.ActivityTree)
+	p.ActivityTree.Merge(newVersion.ActivityTree)
 }
