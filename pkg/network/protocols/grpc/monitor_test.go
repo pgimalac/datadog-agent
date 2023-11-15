@@ -594,75 +594,65 @@ func (s *USMgRPCSuite) TestParallelGRPCScenarios() {
 				require.NoError(t, monitor.Start())
 				defer monitor.Stop()
 
-				tt.runClients(t, clientCount)
+				for i := 0; i < 2; i++ {
+					tt.runClients(t, clientCount)
 
-				res := make(map[http.Key]int)
-				assert.Eventually(t, func() bool {
-					stats := monitor.GetProtocolStats()
-					http2Stats, ok := stats[protocols.HTTP2]
-					if !ok {
-						return false
-					}
-					http2StatsTyped := http2Stats.(map[http.Key]*http.RequestStats)
-					for key, stat := range http2StatsTyped {
-						if key.DstPort == 6400 || key.SrcPort == 6400 {
-							count := stat.Data[200].Count
-							newKey := http.Key{
-								Path:   http.Path{Content: key.Path.Content},
-								Method: key.Method,
-							}
-							if _, ok := res[newKey]; !ok {
-								res[newKey] = count
-							} else {
-								res[newKey] += count
-							}
-						}
-					}
-
-					if len(res) != len(tt.expectedEndpoints) {
-						return false
-					}
-
-					for key, count := range res {
-						val, ok := tt.expectedEndpoints[key]
+					res := make(map[http.Key]int)
+					assert.Eventually(t, func() bool {
+						stats := monitor.GetProtocolStats()
+						http2Stats, ok := stats[protocols.HTTP2]
 						if !ok {
 							return false
 						}
-						if val != count {
+						http2StatsTyped := http2Stats.(map[http.Key]*http.RequestStats)
+						for key, stat := range http2StatsTyped {
+							if key.DstPort == 6400 || key.SrcPort == 6400 {
+								count := stat.Data[200].Count
+								newKey := http.Key{
+									Path:   http.Path{Content: key.Path.Content},
+									Method: key.Method,
+								}
+								if _, ok := res[newKey]; !ok {
+									res[newKey] = count
+								} else {
+									res[newKey] += count
+								}
+							}
+						}
+
+						if len(res) != len(tt.expectedEndpoints) {
 							return false
 						}
+
+						for key, count := range res {
+							val, ok := tt.expectedEndpoints[key]
+							if !ok {
+								return false
+							}
+							if val != count {
+								return false
+							}
+						}
+
+						return true
+					}, time.Second*5, time.Millisecond*100, "%v != %v", res, tt.expectedEndpoints)
+
+					time.Sleep(15 * time.Second)
+					if t.Failed() {
+						o, err := monitor.DumpMaps("http2_in_flight")
+						if err != nil {
+							t.Logf("failed dumping http2_in_flight: %s", err)
+						} else {
+							t.Log(o)
+						}
 					}
-
-					return true
-				}, time.Second*5, time.Millisecond*100, "%v != %v", res, tt.expectedEndpoints)
-
-				//time.Sleep(30 * time.Second)
-				o, err := monitor.DumpMaps("http2_terminated_conns")
-				if err != nil {
-					t.Logf("failed dumping http2_terminated_conns: %s", err)
-				} else {
-					t.Log(o)
-				}
-				if t.Failed() {
-					o, err := monitor.DumpMaps("http2_in_flight")
+					o, err := monitor.DumpMaps("http2_dynamic_table")
 					if err != nil {
-						t.Logf("failed dumping http2_in_flight: %s", err)
+						t.Logf("failed dumping http2_dynamic_table: %s", err)
 					} else {
 						t.Log(o)
 					}
 				}
-				http2.Spec.Instance.(*http2.Protocol).RunDynamicTableMapCleaner()
-				//	//o, err = monitor.DumpMaps("http2_dynamic_table")
-				//	//if err != nil {
-				//	//	t.Logf("failed dumping http2_dynamic_table: %s", err)
-				//	//} else {
-				//	//	t.Log(o)
-				//	//}
-				//
-				//	//for _, e := range http2.Raw {
-				//	//	t.Logf("%v", e.String())
-				//	//}
-				//}
 			})
 		}
 	}
