@@ -32,7 +32,7 @@ import (
 	"github.com/DataDog/datadog-agent/pkg/util/log"
 )
 
-type Protocol struct {
+type protocol struct {
 	cfg *config.Config
 	// TODO: Do we need to duplicate?
 	telemetry *http.Telemetry
@@ -129,7 +129,7 @@ func newHTTP2Protocol(cfg *config.Config) (protocols.Protocol, error) {
 
 	telemetry := http.NewTelemetry("http2")
 
-	return &Protocol{
+	return &protocol{
 		cfg:                     cfg,
 		telemetry:               telemetry,
 		terminatedConnections:   make([]netebpf.ConnTuple, 0),
@@ -137,7 +137,7 @@ func newHTTP2Protocol(cfg *config.Config) (protocols.Protocol, error) {
 	}, nil
 }
 
-func (p *Protocol) Name() string {
+func (p *protocol) Name() string {
 	return "HTTP2"
 }
 
@@ -150,7 +150,7 @@ const (
 // - Set the `http2_in_flight` map size to the value of the `max_tracked_connection` configuration variable.
 //
 // We also configure the http2 event stream with the manager and its options.
-func (p *Protocol) ConfigureOptions(mgr *manager.Manager, opts *manager.Options) {
+func (p *protocol) ConfigureOptions(mgr *manager.Manager, opts *manager.Options) {
 	opts.MapSpecEditors[inFlightMap] = manager.MapSpecEditor{
 		MaxEntries: p.cfg.MaxUSMConcurrentRequests,
 		EditorFlag: manager.EditMaxEntries,
@@ -175,7 +175,7 @@ func (p *Protocol) ConfigureOptions(mgr *manager.Manager, opts *manager.Options)
 	events.Configure(terminatedConnectionsEventStream, mgr, opts)
 }
 
-func (p *Protocol) PreStart(mgr *manager.Manager) (err error) {
+func (p *protocol) PreStart(mgr *manager.Manager) (err error) {
 	p.mgr = mgr
 	p.eventsConsumer, err = events.NewConsumer(
 		eventStream,
@@ -206,7 +206,7 @@ func (p *Protocol) PreStart(mgr *manager.Manager) (err error) {
 	return
 }
 
-func (p *Protocol) PostStart(mgr *manager.Manager) error {
+func (p *protocol) PostStart(mgr *manager.Manager) error {
 	// Setup map cleaner after manager start.
 	p.setupHTTP2InFlightMapCleaner(mgr)
 	p.RunDynamicTableMapCleaner()
@@ -214,7 +214,7 @@ func (p *Protocol) PostStart(mgr *manager.Manager) error {
 	return nil
 }
 
-func (p *Protocol) Stop(_ *manager.Manager) {
+func (p *protocol) Stop(_ *manager.Manager) {
 	// http2InFlightMapCleaner handles nil pointer receivers
 	p.http2InFlightMapCleaner.Stop()
 
@@ -231,7 +231,7 @@ func (p *Protocol) Stop(_ *manager.Manager) {
 	}
 }
 
-func (p *Protocol) DumpMaps(output *strings.Builder, mapName string, currentMap *ebpf.Map) {
+func (p *protocol) DumpMaps(output *strings.Builder, mapName string, currentMap *ebpf.Map) {
 	if mapName == inFlightMap { // maps/http2_in_flight (BPF_MAP_TYPE_HASH), key ConnTuple, value httpTX
 		output.WriteString("Map: '" + mapName + "', key: 'ConnTuple', value: 'httpTX'\n")
 		iter := currentMap.Iterate()
@@ -251,20 +251,20 @@ func (p *Protocol) DumpMaps(output *strings.Builder, mapName string, currentMap 
 	}
 }
 
-func (p *Protocol) processHTTP2(data []byte) {
+func (p *protocol) processHTTP2(data []byte) {
 	tx := (*EbpfTx)(unsafe.Pointer(&data[0]))
 	p.telemetry.Count(tx)
 	p.statkeeper.Process(tx)
 }
 
-func (p *Protocol) processTerminatedConnections(data []byte) {
+func (p *protocol) processTerminatedConnections(data []byte) {
 	conn := (*netebpf.ConnTuple)(unsafe.Pointer(&data[0]))
 	p.terminatedConnectionMux.Lock()
 	defer p.terminatedConnectionMux.Unlock()
 	p.terminatedConnections = append(p.terminatedConnections, *conn)
 }
 
-func (p *Protocol) setupHTTP2InFlightMapCleaner(mgr *manager.Manager) {
+func (p *protocol) setupHTTP2InFlightMapCleaner(mgr *manager.Manager) {
 	http2Map, _, err := mgr.GetMap(inFlightMap)
 	if err != nil {
 		log.Errorf("error getting %q map: %s", inFlightMap, err)
@@ -294,7 +294,7 @@ func (p *Protocol) setupHTTP2InFlightMapCleaner(mgr *manager.Manager) {
 	p.http2InFlightMapCleaner = mapCleaner
 }
 
-func (p *Protocol) RunDynamicTableMapCleaner() {
+func (p *protocol) RunDynamicTableMapCleaner() {
 	dynamicTableMap, _, err := p.mgr.GetMap(dynamicTable)
 	if err != nil {
 		log.Errorf("error getting %q map: %s", dynamicTable, err)
@@ -358,7 +358,7 @@ func (p *Protocol) RunDynamicTableMapCleaner() {
 
 // GetStats returns a map of HTTP2 stats stored in the following format:
 // [source, dest tuple, request path] -> RequestStats object
-func (p *Protocol) GetStats() *protocols.ProtocolStats {
+func (p *protocol) GetStats() *protocols.ProtocolStats {
 	p.eventsConsumer.Sync()
 	p.telemetry.Log()
 	return &protocols.ProtocolStats{
@@ -426,7 +426,7 @@ var (
 )
 
 // createStaticTable creates a static table for http2 monitor.
-func (p *Protocol) createStaticTable(mgr *manager.Manager) error {
+func (p *protocol) createStaticTable(mgr *manager.Manager) error {
 	staticTable, _, _ := mgr.GetMap(probes.StaticTableMap)
 	if staticTable == nil {
 		return errors.New("http2 static table is null")
@@ -443,6 +443,6 @@ func (p *Protocol) createStaticTable(mgr *manager.Manager) error {
 }
 
 // IsBuildModeSupported returns always true, as http2 module is supported by all modes.
-func (*Protocol) IsBuildModeSupported(buildmode.Type) bool {
+func (*protocol) IsBuildModeSupported(buildmode.Type) bool {
 	return true
 }
