@@ -64,7 +64,7 @@ func NewMapCleaner(emap *cebpf.Map, key, val interface{}) (*MapCleaner, error) {
 
 // Clean eBPF map
 // `interval` determines how often the eBPF map is scanned;
-// `shouldClean` is a predicate method that determines whether a certain
+// `shouldClean` is a predicate method that determines whether or not a certain
 // map entry should be deleted. the callback argument `nowTS` can be directly
 // compared to timestamps generated using the `bpf_ktime_get_ns()` helper;
 func (mc *MapCleaner) Clean(interval time.Duration, shouldClean func(nowTS int64, k, v interface{}) bool) {
@@ -126,7 +126,7 @@ func (mc *MapCleaner) clean(nowTS int64, shouldClean func(nowTS int64, k, v inte
 			continue
 		}
 
-		// we accumulate all keys to delete because it isn't safe to delete map
+		// we accumulate alll keys to delete because it isn't safe to delete map
 		// entries during the traversal. the main downside of doing so is that all
 		// fields from the key type must be exported in order to be marshaled (unless
 		// the key type implements the `encoding.BinaryMarshaler` interface)
