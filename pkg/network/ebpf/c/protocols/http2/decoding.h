@@ -475,9 +475,9 @@ static __always_inline bool get_first_frame(struct __sk_buff *skb, skb_info_t *s
     return false;
 }
 
-static __always_inline __u8 find_relevant_headers(struct __sk_buff *skb, skb_info_t *skb_info, http2_frame_with_offset *frames_array, __u8 original_index, http2_telemetry_t *http2_tel) {
+static __always_inline __u8 find_relevant_headers(struct __sk_buff *skb, skb_info_t *skb_info, http2_frame_with_offset *frames_array, __u8 original_index) {
     bool is_headers_or_rst_frame, is_data_end_of_stream;
-    bool passed_max_interesting_frames = false;
+//    __u64 interesting_counter = 0;
     __u8 interesting_frame_index = 0;
     struct http2_frame current_frame = {};
     if (original_index == 1) {
@@ -487,11 +487,13 @@ static __always_inline __u8 find_relevant_headers(struct __sk_buff *skb, skb_inf
 #pragma unroll(HTTP2_MAX_FRAMES_TO_FILTER)
     for (__u32 iteration = 0; iteration < HTTP2_MAX_FRAMES_TO_FILTER; ++iteration) {
         // Checking we can read HTTP2_FRAME_HEADER_SIZE from the skb.
-        if (skb_info->data_off + HTTP2_FRAME_HEADER_SIZE > skb_info->data_end) {
+//        if (skb_info->data_off + HTTP2_FRAME_HEADER_SIZE > skb_info->data_end) {
+//            break;
+//        }
+//
+        if (bpf_skb_load_bytes(skb, skb_info->data_off, (char *)&current_frame, HTTP2_FRAME_HEADER_SIZE) < 0) {
             break;
         }
-
-        bpf_skb_load_bytes(skb, skb_info->data_off, (char *)&current_frame, HTTP2_FRAME_HEADER_SIZE);
         skb_info->data_off += HTTP2_FRAME_HEADER_SIZE;
         if (!format_http2_frame_header(&current_frame)) {
             break;
@@ -506,15 +508,14 @@ static __always_inline __u8 find_relevant_headers(struct __sk_buff *skb, skb_inf
             frames_array[interesting_frame_index].frame = current_frame;
             frames_array[interesting_frame_index].offset = skb_info->data_off;
             interesting_frame_index++;
-        } else {
-            passed_max_interesting_frames |= is_headers_or_rst_frame || is_data_end_of_stream;
         }
+//        interesting_counter += is_headers_or_rst_frame || is_data_end_of_stream;
         skb_info->data_off += current_frame.length;
     }
 
     // Checking we can read HTTP2_FRAME_HEADER_SIZE from the skb - if we can, update telemetry to indicate we have
-    __sync_fetch_and_add(&http2_tel->max_frames_to_filter, skb_info->data_off + HTTP2_FRAME_HEADER_SIZE <= skb_info->data_end);
-    __sync_fetch_and_add(&http2_tel->max_interesting_frames, passed_max_interesting_frames);
+//    __sync_fetch_and_add(&http2_tel->max_frames_to_filter, skb_info->data_off + HTTP2_FRAME_HEADER_SIZE <= skb_info->data_end);
+//    __sync_fetch_and_add(&http2_tel->max_interesting_frames, interesting_counter > HTTP2_MAX_FRAMES_ITERATIONS);
 
     return interesting_frame_index;
 }
@@ -613,10 +614,10 @@ int socket__http2_filter(struct __sk_buff *skb) {
         return 0;
     }
 
-    http2_telemetry_t *http2_tel = bpf_map_lookup_elem(&http2_telemetry, &zero);
-    if (http2_tel == NULL) {
-        return 0;
-    }
+//    http2_telemetry_t *http2_tel = bpf_map_lookup_elem(&http2_telemetry, &zero);
+//    if (http2_tel == NULL) {
+//        return 0;
+//    }
 
     // Some functions might change and override fields in dispatcher_args_copy.skb_info. Since it is used as a key
     // in a map, we cannot allow it to be modified. Thus, having a local copy of skb_info.
@@ -625,7 +626,7 @@ int socket__http2_filter(struct __sk_buff *skb) {
     // The verifier cannot tell if `iteration_value->frames_count` is 0 or 1, so we have to help it. The value is
     // 1 if we have found an interesting frame in `socket__http2_handle_first_frame`, otherwise it is 0.
     // filter frames
-    iteration_value->frames_count = find_relevant_headers(skb, &local_skb_info, iteration_value->frames_array, iteration_value->frames_count, http2_tel);
+    iteration_value->frames_count = find_relevant_headers(skb, &local_skb_info, iteration_value->frames_array, iteration_value->frames_count);
 
     frame_header_remainder_t new_frame_state = {0};
     if (local_skb_info.data_off > local_skb_info.data_end) {
