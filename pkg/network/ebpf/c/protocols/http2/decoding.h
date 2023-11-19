@@ -527,8 +527,9 @@ static __always_inline __u8 find_relevant_headers(struct __sk_buff *skb, skb_inf
         interesting_frame_index = 1;
     }
 
+    __u32 iteration = 0;
 #pragma unroll(HTTP2_MAX_FRAMES_TO_FILTER)
-    for (__u32 iteration = 0; iteration < HTTP2_MAX_FRAMES_TO_FILTER; ++iteration) {
+    for (; iteration < HTTP2_MAX_FRAMES_TO_FILTER; ++iteration) {
         // Checking we can read HTTP2_FRAME_HEADER_SIZE from the skb.
         if (skb_info->data_off + HTTP2_FRAME_HEADER_SIZE > skb_info->data_end) {
             break;
@@ -555,7 +556,7 @@ static __always_inline __u8 find_relevant_headers(struct __sk_buff *skb, skb_inf
     }
 
     // Checking we can read HTTP2_FRAME_HEADER_SIZE from the skb - if we can, update telemetry to indicate we have
-    if (skb_info->data_off + HTTP2_FRAME_HEADER_SIZE <= skb_info->data_end) {
+    if ((iteration == HTTP2_MAX_FRAMES_TO_FILTER) && (skb_info->data_off + HTTP2_FRAME_HEADER_SIZE <= skb_info->data_end)) {
         __sync_fetch_and_add(&http2_tel->max_frames_to_filter, 1);
     }
 
