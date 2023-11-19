@@ -135,7 +135,7 @@ static __always_inline bool parse_field_literal(struct __sk_buff *skb, skb_info_
         goto end;
     }
 
-    if ((str_len > HTTP2_MAX_PATH_LEN) || index != kIndexPath || headers_to_process == NULL) {
+    if (str_len > HTTP2_MAX_PATH_LEN || index != kIndexPath || headers_to_process == NULL) {
         goto end;
     }
 
