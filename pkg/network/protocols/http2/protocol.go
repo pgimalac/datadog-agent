@@ -304,7 +304,6 @@ func (p *protocol) UpdateKernelTelemetry(mgr *manager.Manager) {
 		p.http2Telemetry.endOfStreamEOS.Set(int64(http2Telemetry.End_of_stream_eos))
 		p.http2Telemetry.endOfStreamRST.Set(int64(http2Telemetry.End_of_stream_rst))
 		p.http2Telemetry.strLenExceedsFrame.Set(int64(http2Telemetry.Str_len_exceeds_frame))
-		p.http2Telemetry.frameRemainder.Set(int64(http2Telemetry.Frame_remainder))
 		p.http2Telemetry.pathSizeBucket0.Set(int64(http2Telemetry.Path_size_bucket0))
 		p.http2Telemetry.pathSizeBucket1.Set(int64(http2Telemetry.Path_size_bucket1))
 		p.http2Telemetry.pathSizeBucket2.Set(int64(http2Telemetry.Path_size_bucket2))

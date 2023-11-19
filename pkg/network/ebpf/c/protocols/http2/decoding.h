@@ -117,42 +117,35 @@ static __always_inline void parse_field_indexed(dynamic_table_index_t *dynamic_i
 
 READ_INTO_BUFFER(path, HTTP2_MAX_PATH_LEN, BLK_SIZE)
 
-
-static __always_inline __u32 get_bucket_index(__u32 size) {
-    if (size < HTTP2_MAX_PATH_LEN) {
-        return 0;
-    }
-    __s32 bucket_idx = (size - HTTP2_MAX_PATH_LEN) / 10;
-    bucket_idx = bucket_idx > 6 ? 6 : bucket_idx;
-    bucket_idx = bucket_idx < 0 ? 0 : bucket_idx;
-    return bucket_idx;
-}
-
-static __always_inline void update_path_size_telemetry(http2_telemetry_t *http2_tel, __u32 bucket_idx) {
-    switch (bucket_idx) {
-        case 0:
-            __sync_fetch_and_add(&http2_tel->path_size_bucket0, 1);
-            break;
-        case 1:
-            __sync_fetch_and_add(&http2_tel->path_size_bucket1, 1);
-            break;
-        case 2:
-            __sync_fetch_and_add(&http2_tel->path_size_bucket2, 1);
-            break;
-        case 3:
-            __sync_fetch_and_add(&http2_tel->path_size_bucket3, 1);
-            break;
-        case 4:
-            __sync_fetch_and_add(&http2_tel->path_size_bucket4, 1);
-            break;
-        case 5:
-            __sync_fetch_and_add(&http2_tel->path_size_bucket5, 1);
-            break;
-        case 6:
-            __sync_fetch_and_add(&http2_tel->path_size_bucket6, 1);
-            break;
-        }
-}
+//static __always_inline void update_path_size_telemetry(http2_telemetry_t *http2_tel, __u32 size) {
+//    __s32 bucket_idx = (size - HTTP2_MAX_PATH_LEN) / 10;
+//    bucket_idx = bucket_idx > 6 ? 6 : bucket_idx;
+//    bucket_idx = bucket_idx < 0 ? 0 : bucket_idx;
+//
+//    switch (bucket_idx) {
+//        case 0:
+//            __sync_fetch_and_add(&http2_tel->path_size_bucket0, 1);
+//            break;
+//        case 1:
+//            __sync_fetch_and_add(&http2_tel->path_size_bucket1, 1);
+//            break;
+//        case 2:
+//            __sync_fetch_and_add(&http2_tel->path_size_bucket2, 1);
+//            break;
+//        case 3:
+//            __sync_fetch_and_add(&http2_tel->path_size_bucket3, 1);
+//            break;
+//        case 4:
+//            __sync_fetch_and_add(&http2_tel->path_size_bucket4, 1);
+//            break;
+//        case 5:
+//            __sync_fetch_and_add(&http2_tel->path_size_bucket5, 1);
+//            break;
+//        case 6:
+//            __sync_fetch_and_add(&http2_tel->path_size_bucket6, 1);
+//            break;
+//        }
+//}
 
 // parse_field_literal handling the case when the key is part of the static table and the value is a dynamic string
 // which will be stored in the dynamic table.
@@ -172,10 +165,11 @@ static __always_inline bool parse_field_literal(struct __sk_buff *skb, skb_info_
         goto end;
     }
 
-    if (index == kIndexPath) {
-        __u32 bucket_idx = get_bucket_index(str_len);
-        update_path_size_telemetry(http2_tel, bucket_idx);
-    }
+//    if (index == kIndexPath) {
+//        update_path_size_telemetry(http2_tel, str_len);
+//    } else {
+//        goto end;
+//    }
 
     if ((str_len > HTTP2_MAX_PATH_LEN) || index != kIndexPath || headers_to_process == NULL) {
         goto end;
@@ -367,11 +361,10 @@ static __always_inline void parse_frame(struct __sk_buff *skb, skb_info_t *skb_i
         return;
     }
 
-    if (current_frame->type == kRSTStreamFrame) {
-        __sync_fetch_and_add(&http2_tel->end_of_stream_rst, 1);
-        handle_end_of_stream(current_stream, &http2_ctx->http2_stream_key, http2_tel);
-    } else if ((current_frame->flags & HTTP2_END_OF_STREAM) == HTTP2_END_OF_STREAM) {
-        __sync_fetch_and_add(&http2_tel->end_of_stream_eos, 1);
+    __sync_fetch_and_add(&http2_tel->end_of_stream_rst, is_rst);
+    __sync_fetch_and_add(&http2_tel->end_of_stream_eos, (current_frame->flags & HTTP2_END_OF_STREAM) == HTTP2_END_OF_STREAM);
+
+if (is_rst || ((current_frame->flags & HTTP2_END_OF_STREAM) == HTTP2_END_OF_STREAM)) {
         handle_end_of_stream(current_stream, &http2_ctx->http2_stream_key, http2_tel);
     }
 
@@ -549,19 +542,15 @@ static __always_inline __u8 find_relevant_headers(struct __sk_buff *skb, skb_inf
             frames_array[interesting_frame_index].frame = current_frame;
             frames_array[interesting_frame_index].offset = skb_info->data_off;
             interesting_frame_index++;
+        } else {
+            passed_max_interesting_frames |= is_headers_or_rst_frame || is_data_end_of_stream;
         }
-        passed_max_interesting_frames |= ((is_headers_or_rst_frame || is_data_end_of_stream) && interesting_frame_index >= HTTP2_MAX_FRAMES_ITERATIONS);
         skb_info->data_off += current_frame.length;
     }
 
     // Checking we can read HTTP2_FRAME_HEADER_SIZE from the skb - if we can, update telemetry to indicate we have
-    if (skb_info->data_off + HTTP2_FRAME_HEADER_SIZE <= skb_info->data_end) {
-        __sync_fetch_and_add(&http2_tel->max_frames_to_filter, 1);
-    }
-
-    if (passed_max_interesting_frames) {
-        __sync_fetch_and_add(&http2_tel->max_interesting_frames, 1);
-    }
+    __sync_fetch_and_add(&http2_tel->max_frames_to_filter, skb_info->data_off + HTTP2_FRAME_HEADER_SIZE <= skb_info->data_end);
+    __sync_fetch_and_add(&http2_tel->max_interesting_frames, passed_max_interesting_frames);
 
     return interesting_frame_index;
 }
@@ -678,7 +667,6 @@ int socket__http2_filter(struct __sk_buff *skb) {
     if (local_skb_info.data_off > local_skb_info.data_end) {
         // We have a remainder
         new_frame_state.remainder = local_skb_info.data_off - local_skb_info.data_end;
-        __sync_fetch_and_add(&http2_tel->frame_remainder, 1);
         bpf_map_update_elem(&http2_remainder, &dispatcher_args_copy.tup, &new_frame_state, BPF_ANY);
     }
 
@@ -691,7 +679,6 @@ int socket__http2_filter(struct __sk_buff *skb) {
             bpf_skb_load_bytes(skb, local_skb_info.data_off + iteration, new_frame_state.buf + iteration, 1);
         }
         new_frame_state.header_length = HTTP2_FRAME_HEADER_SIZE - new_frame_state.remainder;
-        __sync_fetch_and_add(&http2_tel->frame_remainder, 1);
         bpf_map_update_elem(&http2_remainder, &dispatcher_args_copy.tup, &new_frame_state, BPF_ANY);
     }
 

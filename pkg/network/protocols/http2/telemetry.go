@@ -48,7 +48,6 @@ type kernelTelemetry struct {
 	pathSizeBucket5      *libtelemetry.Gauge
 	pathSizeBucket6      *libtelemetry.Gauge
 	strLenExceedsFrame   *libtelemetry.Gauge
-	frameRemainder       *libtelemetry.Gauge
 	maxInterestingFrames *libtelemetry.Gauge
 	maxFramesToFilter    *libtelemetry.Gauge
 }
@@ -72,7 +71,6 @@ func newHTTP2KernelTelemetry(protocol string) *kernelTelemetry {
 		pathSizeBucket4:      metricGroup.NewGauge("path_size_bucket_4", libtelemetry.OptStatsd),
 		pathSizeBucket5:      metricGroup.NewGauge("path_size_bucket_5", libtelemetry.OptStatsd),
 		pathSizeBucket6:      metricGroup.NewGauge("path_size_bucket_6", libtelemetry.OptStatsd),
-		frameRemainder:       metricGroup.NewGauge("frame_remainder", libtelemetry.OptStatsd),
 		maxInterestingFrames: metricGroup.NewGauge("max_interesting_frames", libtelemetry.OptStatsd),
 		maxFramesToFilter:    metricGroup.NewGauge("max_frames_to_filter", libtelemetry.OptStatsd)}
 }

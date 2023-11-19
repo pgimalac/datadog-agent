@@ -4,7 +4,7 @@
 package http2
 
 const (
-	maxHTTP2Path = 0x78
+	maxHTTP2Path = 0x64
 )
 
 type connTuple = struct {
@@ -23,9 +23,9 @@ type http2DynamicTableIndex struct {
 	Tup   connTuple
 }
 type http2DynamicTableEntry struct {
-	Buffer    [120]int8
+	Buffer    [100]int8
 	Len       uint8
-	Pad_cgo_0 [7]byte
+	Pad_cgo_0 [3]byte
 }
 type http2StreamKey struct {
 	Tup       connTuple
@@ -41,7 +41,8 @@ type EbpfTx struct {
 	Path_size             uint8
 	Request_end_of_stream bool
 	Pad_cgo_0             [3]byte
-	Request_path          [120]uint8
+	Request_path          [100]uint8
+	Pad_cgo_1             [4]byte
 }
 type HTTP2Telemetry struct {
 	End_of_stream_eos      uint64
@@ -56,7 +57,6 @@ type HTTP2Telemetry struct {
 	Path_size_bucket6      uint64
 	Request_seen           uint64
 	Response_seen          uint64
-	Frame_remainder        uint64
 	Max_interesting_frames uint64
 	Max_frames_to_filter   uint64
 }
