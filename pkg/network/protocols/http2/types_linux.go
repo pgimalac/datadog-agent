@@ -42,6 +42,10 @@ type http2Stream struct {
 	Pad_cgo_0             [3]byte
 	Request_path          [120]uint8
 }
+type EbpfTx struct {
+	Tuple  connTuple
+	Stream http2Stream
+}
 type HTTP2Telemetry struct {
 	End_of_stream_eos      uint64
 	End_of_stream_rst      uint64
@@ -58,10 +62,6 @@ type HTTP2Telemetry struct {
 	Frame_remainder        uint64
 	Max_interesting_frames uint64
 	Max_frames_to_filter   uint64
-}
-type EbpfTx struct {
-	Tuple  connTuple
-	Stream http2Stream
 }
 
 type StaticTableEnumValue = uint8
