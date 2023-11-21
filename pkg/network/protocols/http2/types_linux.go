@@ -32,8 +32,7 @@ type http2StreamKey struct {
 	Id        uint32
 	Pad_cgo_0 [4]byte
 }
-type EbpfTx struct {
-	Tup                   connTuple
+type http2Stream struct {
 	Response_last_seen    uint64
 	Request_started       uint64
 	Response_status_code  uint16
@@ -59,6 +58,10 @@ type HTTP2Telemetry struct {
 	Frame_remainder        uint64
 	Max_interesting_frames uint64
 	Max_frames_to_filter   uint64
+}
+type EbpfTx struct {
+	Tuple  connTuple
+	Stream http2Stream
 }
 
 type StaticTableEnumValue = uint8
