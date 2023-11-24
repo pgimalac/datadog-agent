@@ -23,6 +23,7 @@ import (
 	"github.com/DataDog/datadog-agent/comp/aggregator/demultiplexer"
 	"github.com/DataDog/datadog-agent/comp/api/api/apiimpl/internal/agent"
 	"github.com/DataDog/datadog-agent/comp/api/api/apiimpl/internal/check"
+	cfgcomp "github.com/DataDog/datadog-agent/comp/core/config"
 	"github.com/DataDog/datadog-agent/comp/core/flare"
 	"github.com/DataDog/datadog-agent/comp/core/secrets"
 	"github.com/DataDog/datadog-agent/comp/core/workloadmeta"
@@ -54,6 +55,7 @@ func startCMDServer(
 	tlsConfig *tls.Config,
 	tlsCertPool *x509.CertPool,
 	configService *remoteconfig.Service,
+	cfg cfgcomp.Component,
 	flare flare.Component,
 	dogstatsdServer dogstatsdServer.Component,
 	capture replay.Component,
@@ -130,6 +132,7 @@ func startCMDServer(
 		http.StripPrefix("/agent",
 			agent.SetupHandlers(
 				agentMux,
+				cfg,
 				flare,
 				dogstatsdServer,
 				serverDebug,
