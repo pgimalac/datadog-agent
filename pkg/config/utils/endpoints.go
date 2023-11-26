@@ -17,7 +17,8 @@ import (
 )
 
 const (
-	infraURLPrefix = "https://app."
+	// InfraURLPrefix is the default infra URL prefix for datadog
+	InfraURLPrefix = "https://app."
 )
 
 func getResolvedDDUrl(c config.Reader, urlKey string) string {
@@ -96,7 +97,21 @@ func GetMultipleEndpoints(c config.Reader) (map[string][]string, error) {
 	}
 
 	additionalEndpoints := c.GetStringMapStringSlice("additional_endpoints")
+
+	// populate with HA endpoints too
+	if c.GetBool("ha.enabled") {
+		site := c.GetString("ha.site")
+		if site != "" {
+			url := BuildURLWithPrefix(InfraURLPrefix, site)
+			additionalEndpoints[url] = []string{c.GetString("ha.api_key")}
+		}
+	}
 	return mergeAdditionalEndpoints(keysPerDomain, additionalEndpoints)
+}
+
+// BuildURLWithPrefix will return an HTTP(s) URL for a site given a certain prefix
+func BuildURLWithPrefix(prefix, site string) string {
+	return prefix + strings.TrimSpace(site)
 }
 
 // GetMainEndpoint returns the main DD URL defined in the config, based on `site` and the prefix, or ddURLKey
@@ -105,14 +120,14 @@ func GetMainEndpoint(c config.Reader, prefix string, ddURLKey string) string {
 	if c.IsSet(ddURLKey) && c.GetString(ddURLKey) != "" {
 		return getResolvedDDUrl(c, ddURLKey)
 	} else if c.GetString("site") != "" {
-		return prefix + strings.TrimSpace(c.GetString("site"))
+		return BuildURLWithPrefix(prefix, c.GetString("site"))
 	}
-	return prefix + config.DefaultSite
+	return BuildURLWithPrefix(prefix, config.DefaultSite)
 }
 
 // GetInfraEndpoint returns the main DD Infra URL defined in config, based on the value of `site` and `dd_url`
 func GetInfraEndpoint(c config.Reader) string {
-	return GetMainEndpoint(c, infraURLPrefix, "dd_url")
+	return GetMainEndpoint(c, InfraURLPrefix, "dd_url")
 }
 
 // ddURLRegexp determines if an URL belongs to Datadog or not. If the URL belongs to Datadog it's prefixed with the Agent
