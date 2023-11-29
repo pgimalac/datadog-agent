@@ -9,6 +9,7 @@ package probe
 import (
 	"time"
 
+	"github.com/DataDog/datadog-agent/pkg/security/config"
 	"github.com/DataDog/datadog-agent/pkg/security/resolvers"
 	"github.com/DataDog/datadog-agent/pkg/security/secl/model"
 )
@@ -19,6 +20,7 @@ type FieldHandlers struct {
 	// keeping it can be dangerous as it can hide non implemented handlers
 	model.DefaultFieldHandlers
 
+	config    *config.Config
 	resolvers *resolvers.Resolvers
 }
 
@@ -67,6 +69,15 @@ func (fh *FieldHandlers) ResolveProcessCacheEntry(ev *model.Event) (*model.Proce
 	}
 
 	return ev.ProcessCacheEntry, true
+}
+
+// ResolveService returns the service tag based on the process context
+func (fh *FieldHandlers) ResolveService(ev *model.Event, _ *model.BaseEvent) string {
+	entry, _ := fh.ResolveProcessCacheEntry(ev)
+	if entry == nil {
+		return ""
+	}
+	return getProcessService(fh.config, entry)
 }
 
 // GetProcessService returns the service tag based on the process context

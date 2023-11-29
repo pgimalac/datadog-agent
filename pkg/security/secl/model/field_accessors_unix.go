@@ -603,6 +603,11 @@ func (ev *Event) GetEventAsync() bool {
 	return ev.FieldHandlers.ResolveAsync(ev)
 }
 
+// GetEventService returns the value of the field, resolving if necessary
+func (ev *Event) GetEventService() string {
+	return ev.FieldHandlers.ResolveService(ev, &ev.BaseEvent)
+}
+
 // GetEventTimestamp returns the value of the field, resolving if necessary
 func (ev *Event) GetEventTimestamp() int {
 	return ev.FieldHandlers.ResolveEventTimestamp(ev, &ev.BaseEvent)
@@ -859,7 +864,7 @@ func (ev *Event) GetExecFileChangeTime() uint64 {
 		return uint64(0)
 	}
 	if !ev.Exec.Process.IsNotKworker() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.Exec.Process.FileEvent.FileFields.CTime
 }
@@ -873,7 +878,7 @@ func (ev *Event) GetExecFileFilesystem() string {
 		return ""
 	}
 	if !ev.Exec.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFilesystem(ev, &ev.Exec.Process.FileEvent)
 }
@@ -887,7 +892,7 @@ func (ev *Event) GetExecFileGid() uint32 {
 		return uint32(0)
 	}
 	if !ev.Exec.Process.IsNotKworker() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.Exec.Process.FileEvent.FileFields.GID
 }
@@ -901,7 +906,7 @@ func (ev *Event) GetExecFileGroup() string {
 		return ""
 	}
 	if !ev.Exec.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsGroup(ev, &ev.Exec.Process.FileEvent.FileFields)
 }
@@ -915,7 +920,7 @@ func (ev *Event) GetExecFileHashes() []string {
 		return []string{}
 	}
 	if !ev.Exec.Process.IsNotKworker() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveHashesFromEvent(ev, &ev.Exec.Process.FileEvent)
 }
@@ -929,7 +934,7 @@ func (ev *Event) GetExecFileInUpperLayer() bool {
 		return false
 	}
 	if !ev.Exec.Process.IsNotKworker() {
-		return false
+		return false // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsInUpperLayer(ev, &ev.Exec.Process.FileEvent.FileFields)
 }
@@ -943,7 +948,7 @@ func (ev *Event) GetExecFileInode() uint64 {
 		return uint64(0)
 	}
 	if !ev.Exec.Process.IsNotKworker() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.Exec.Process.FileEvent.FileFields.PathKey.Inode
 }
@@ -957,7 +962,7 @@ func (ev *Event) GetExecFileMode() uint16 {
 		return uint16(0)
 	}
 	if !ev.Exec.Process.IsNotKworker() {
-		return uint16(0)
+		return uint16(0) // ici
 	}
 	return ev.Exec.Process.FileEvent.FileFields.Mode
 }
@@ -971,7 +976,7 @@ func (ev *Event) GetExecFileModificationTime() uint64 {
 		return uint64(0)
 	}
 	if !ev.Exec.Process.IsNotKworker() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.Exec.Process.FileEvent.FileFields.MTime
 }
@@ -985,7 +990,7 @@ func (ev *Event) GetExecFileMountId() uint32 {
 		return uint32(0)
 	}
 	if !ev.Exec.Process.IsNotKworker() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.Exec.Process.FileEvent.FileFields.PathKey.MountID
 }
@@ -999,7 +1004,7 @@ func (ev *Event) GetExecFileName() string {
 		return ""
 	}
 	if !ev.Exec.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileBasename(ev, &ev.Exec.Process.FileEvent)
 }
@@ -1024,7 +1029,7 @@ func (ev *Event) GetExecFilePackageName() string {
 		return ""
 	}
 	if !ev.Exec.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageName(ev, &ev.Exec.Process.FileEvent)
 }
@@ -1038,7 +1043,7 @@ func (ev *Event) GetExecFilePackageSourceVersion() string {
 		return ""
 	}
 	if !ev.Exec.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageSourceVersion(ev, &ev.Exec.Process.FileEvent)
 }
@@ -1052,7 +1057,7 @@ func (ev *Event) GetExecFilePackageVersion() string {
 		return ""
 	}
 	if !ev.Exec.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageVersion(ev, &ev.Exec.Process.FileEvent)
 }
@@ -1066,7 +1071,7 @@ func (ev *Event) GetExecFilePath() string {
 		return ""
 	}
 	if !ev.Exec.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFilePath(ev, &ev.Exec.Process.FileEvent)
 }
@@ -1091,7 +1096,7 @@ func (ev *Event) GetExecFileRights() int {
 		return 0
 	}
 	if !ev.Exec.Process.IsNotKworker() {
-		return 0
+		return 0 // ici
 	}
 	return ev.FieldHandlers.ResolveRights(ev, &ev.Exec.Process.FileEvent.FileFields)
 }
@@ -1105,7 +1110,7 @@ func (ev *Event) GetExecFileUid() uint32 {
 		return uint32(0)
 	}
 	if !ev.Exec.Process.IsNotKworker() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.Exec.Process.FileEvent.FileFields.UID
 }
@@ -1119,7 +1124,7 @@ func (ev *Event) GetExecFileUser() string {
 		return ""
 	}
 	if !ev.Exec.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsUser(ev, &ev.Exec.Process.FileEvent.FileFields)
 }
@@ -1210,7 +1215,7 @@ func (ev *Event) GetExecInterpreterFileChangeTime() uint64 {
 		return uint64(0)
 	}
 	if !ev.Exec.Process.HasInterpreter() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.Exec.Process.LinuxBinprm.FileEvent.FileFields.CTime
 }
@@ -1224,7 +1229,7 @@ func (ev *Event) GetExecInterpreterFileFilesystem() string {
 		return ""
 	}
 	if !ev.Exec.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFilesystem(ev, &ev.Exec.Process.LinuxBinprm.FileEvent)
 }
@@ -1238,7 +1243,7 @@ func (ev *Event) GetExecInterpreterFileGid() uint32 {
 		return uint32(0)
 	}
 	if !ev.Exec.Process.HasInterpreter() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.Exec.Process.LinuxBinprm.FileEvent.FileFields.GID
 }
@@ -1252,7 +1257,7 @@ func (ev *Event) GetExecInterpreterFileGroup() string {
 		return ""
 	}
 	if !ev.Exec.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsGroup(ev, &ev.Exec.Process.LinuxBinprm.FileEvent.FileFields)
 }
@@ -1266,7 +1271,7 @@ func (ev *Event) GetExecInterpreterFileHashes() []string {
 		return []string{}
 	}
 	if !ev.Exec.Process.HasInterpreter() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveHashesFromEvent(ev, &ev.Exec.Process.LinuxBinprm.FileEvent)
 }
@@ -1280,7 +1285,7 @@ func (ev *Event) GetExecInterpreterFileInUpperLayer() bool {
 		return false
 	}
 	if !ev.Exec.Process.HasInterpreter() {
-		return false
+		return false // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsInUpperLayer(ev, &ev.Exec.Process.LinuxBinprm.FileEvent.FileFields)
 }
@@ -1294,7 +1299,7 @@ func (ev *Event) GetExecInterpreterFileInode() uint64 {
 		return uint64(0)
 	}
 	if !ev.Exec.Process.HasInterpreter() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.Exec.Process.LinuxBinprm.FileEvent.FileFields.PathKey.Inode
 }
@@ -1308,7 +1313,7 @@ func (ev *Event) GetExecInterpreterFileMode() uint16 {
 		return uint16(0)
 	}
 	if !ev.Exec.Process.HasInterpreter() {
-		return uint16(0)
+		return uint16(0) // ici
 	}
 	return ev.Exec.Process.LinuxBinprm.FileEvent.FileFields.Mode
 }
@@ -1322,7 +1327,7 @@ func (ev *Event) GetExecInterpreterFileModificationTime() uint64 {
 		return uint64(0)
 	}
 	if !ev.Exec.Process.HasInterpreter() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.Exec.Process.LinuxBinprm.FileEvent.FileFields.MTime
 }
@@ -1336,7 +1341,7 @@ func (ev *Event) GetExecInterpreterFileMountId() uint32 {
 		return uint32(0)
 	}
 	if !ev.Exec.Process.HasInterpreter() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.Exec.Process.LinuxBinprm.FileEvent.FileFields.PathKey.MountID
 }
@@ -1350,7 +1355,7 @@ func (ev *Event) GetExecInterpreterFileName() string {
 		return ""
 	}
 	if !ev.Exec.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileBasename(ev, &ev.Exec.Process.LinuxBinprm.FileEvent)
 }
@@ -1375,7 +1380,7 @@ func (ev *Event) GetExecInterpreterFilePackageName() string {
 		return ""
 	}
 	if !ev.Exec.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageName(ev, &ev.Exec.Process.LinuxBinprm.FileEvent)
 }
@@ -1389,7 +1394,7 @@ func (ev *Event) GetExecInterpreterFilePackageSourceVersion() string {
 		return ""
 	}
 	if !ev.Exec.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageSourceVersion(ev, &ev.Exec.Process.LinuxBinprm.FileEvent)
 }
@@ -1403,7 +1408,7 @@ func (ev *Event) GetExecInterpreterFilePackageVersion() string {
 		return ""
 	}
 	if !ev.Exec.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageVersion(ev, &ev.Exec.Process.LinuxBinprm.FileEvent)
 }
@@ -1417,7 +1422,7 @@ func (ev *Event) GetExecInterpreterFilePath() string {
 		return ""
 	}
 	if !ev.Exec.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFilePath(ev, &ev.Exec.Process.LinuxBinprm.FileEvent)
 }
@@ -1442,7 +1447,7 @@ func (ev *Event) GetExecInterpreterFileRights() int {
 		return 0
 	}
 	if !ev.Exec.Process.HasInterpreter() {
-		return 0
+		return 0 // ici
 	}
 	return ev.FieldHandlers.ResolveRights(ev, &ev.Exec.Process.LinuxBinprm.FileEvent.FileFields)
 }
@@ -1456,7 +1461,7 @@ func (ev *Event) GetExecInterpreterFileUid() uint32 {
 		return uint32(0)
 	}
 	if !ev.Exec.Process.HasInterpreter() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.Exec.Process.LinuxBinprm.FileEvent.FileFields.UID
 }
@@ -1470,7 +1475,7 @@ func (ev *Event) GetExecInterpreterFileUser() string {
 		return ""
 	}
 	if !ev.Exec.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsUser(ev, &ev.Exec.Process.LinuxBinprm.FileEvent.FileFields)
 }
@@ -1863,7 +1868,7 @@ func (ev *Event) GetExitFileChangeTime() uint64 {
 		return uint64(0)
 	}
 	if !ev.Exit.Process.IsNotKworker() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.Exit.Process.FileEvent.FileFields.CTime
 }
@@ -1877,7 +1882,7 @@ func (ev *Event) GetExitFileFilesystem() string {
 		return ""
 	}
 	if !ev.Exit.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFilesystem(ev, &ev.Exit.Process.FileEvent)
 }
@@ -1891,7 +1896,7 @@ func (ev *Event) GetExitFileGid() uint32 {
 		return uint32(0)
 	}
 	if !ev.Exit.Process.IsNotKworker() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.Exit.Process.FileEvent.FileFields.GID
 }
@@ -1905,7 +1910,7 @@ func (ev *Event) GetExitFileGroup() string {
 		return ""
 	}
 	if !ev.Exit.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsGroup(ev, &ev.Exit.Process.FileEvent.FileFields)
 }
@@ -1919,7 +1924,7 @@ func (ev *Event) GetExitFileHashes() []string {
 		return []string{}
 	}
 	if !ev.Exit.Process.IsNotKworker() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveHashesFromEvent(ev, &ev.Exit.Process.FileEvent)
 }
@@ -1933,7 +1938,7 @@ func (ev *Event) GetExitFileInUpperLayer() bool {
 		return false
 	}
 	if !ev.Exit.Process.IsNotKworker() {
-		return false
+		return false // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsInUpperLayer(ev, &ev.Exit.Process.FileEvent.FileFields)
 }
@@ -1947,7 +1952,7 @@ func (ev *Event) GetExitFileInode() uint64 {
 		return uint64(0)
 	}
 	if !ev.Exit.Process.IsNotKworker() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.Exit.Process.FileEvent.FileFields.PathKey.Inode
 }
@@ -1961,7 +1966,7 @@ func (ev *Event) GetExitFileMode() uint16 {
 		return uint16(0)
 	}
 	if !ev.Exit.Process.IsNotKworker() {
-		return uint16(0)
+		return uint16(0) // ici
 	}
 	return ev.Exit.Process.FileEvent.FileFields.Mode
 }
@@ -1975,7 +1980,7 @@ func (ev *Event) GetExitFileModificationTime() uint64 {
 		return uint64(0)
 	}
 	if !ev.Exit.Process.IsNotKworker() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.Exit.Process.FileEvent.FileFields.MTime
 }
@@ -1989,7 +1994,7 @@ func (ev *Event) GetExitFileMountId() uint32 {
 		return uint32(0)
 	}
 	if !ev.Exit.Process.IsNotKworker() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.Exit.Process.FileEvent.FileFields.PathKey.MountID
 }
@@ -2003,7 +2008,7 @@ func (ev *Event) GetExitFileName() string {
 		return ""
 	}
 	if !ev.Exit.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileBasename(ev, &ev.Exit.Process.FileEvent)
 }
@@ -2028,7 +2033,7 @@ func (ev *Event) GetExitFilePackageName() string {
 		return ""
 	}
 	if !ev.Exit.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageName(ev, &ev.Exit.Process.FileEvent)
 }
@@ -2042,7 +2047,7 @@ func (ev *Event) GetExitFilePackageSourceVersion() string {
 		return ""
 	}
 	if !ev.Exit.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageSourceVersion(ev, &ev.Exit.Process.FileEvent)
 }
@@ -2056,7 +2061,7 @@ func (ev *Event) GetExitFilePackageVersion() string {
 		return ""
 	}
 	if !ev.Exit.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageVersion(ev, &ev.Exit.Process.FileEvent)
 }
@@ -2070,7 +2075,7 @@ func (ev *Event) GetExitFilePath() string {
 		return ""
 	}
 	if !ev.Exit.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFilePath(ev, &ev.Exit.Process.FileEvent)
 }
@@ -2095,7 +2100,7 @@ func (ev *Event) GetExitFileRights() int {
 		return 0
 	}
 	if !ev.Exit.Process.IsNotKworker() {
-		return 0
+		return 0 // ici
 	}
 	return ev.FieldHandlers.ResolveRights(ev, &ev.Exit.Process.FileEvent.FileFields)
 }
@@ -2109,7 +2114,7 @@ func (ev *Event) GetExitFileUid() uint32 {
 		return uint32(0)
 	}
 	if !ev.Exit.Process.IsNotKworker() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.Exit.Process.FileEvent.FileFields.UID
 }
@@ -2123,7 +2128,7 @@ func (ev *Event) GetExitFileUser() string {
 		return ""
 	}
 	if !ev.Exit.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsUser(ev, &ev.Exit.Process.FileEvent.FileFields)
 }
@@ -2214,7 +2219,7 @@ func (ev *Event) GetExitInterpreterFileChangeTime() uint64 {
 		return uint64(0)
 	}
 	if !ev.Exit.Process.HasInterpreter() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.Exit.Process.LinuxBinprm.FileEvent.FileFields.CTime
 }
@@ -2228,7 +2233,7 @@ func (ev *Event) GetExitInterpreterFileFilesystem() string {
 		return ""
 	}
 	if !ev.Exit.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFilesystem(ev, &ev.Exit.Process.LinuxBinprm.FileEvent)
 }
@@ -2242,7 +2247,7 @@ func (ev *Event) GetExitInterpreterFileGid() uint32 {
 		return uint32(0)
 	}
 	if !ev.Exit.Process.HasInterpreter() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.Exit.Process.LinuxBinprm.FileEvent.FileFields.GID
 }
@@ -2256,7 +2261,7 @@ func (ev *Event) GetExitInterpreterFileGroup() string {
 		return ""
 	}
 	if !ev.Exit.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsGroup(ev, &ev.Exit.Process.LinuxBinprm.FileEvent.FileFields)
 }
@@ -2270,7 +2275,7 @@ func (ev *Event) GetExitInterpreterFileHashes() []string {
 		return []string{}
 	}
 	if !ev.Exit.Process.HasInterpreter() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveHashesFromEvent(ev, &ev.Exit.Process.LinuxBinprm.FileEvent)
 }
@@ -2284,7 +2289,7 @@ func (ev *Event) GetExitInterpreterFileInUpperLayer() bool {
 		return false
 	}
 	if !ev.Exit.Process.HasInterpreter() {
-		return false
+		return false // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsInUpperLayer(ev, &ev.Exit.Process.LinuxBinprm.FileEvent.FileFields)
 }
@@ -2298,7 +2303,7 @@ func (ev *Event) GetExitInterpreterFileInode() uint64 {
 		return uint64(0)
 	}
 	if !ev.Exit.Process.HasInterpreter() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.Exit.Process.LinuxBinprm.FileEvent.FileFields.PathKey.Inode
 }
@@ -2312,7 +2317,7 @@ func (ev *Event) GetExitInterpreterFileMode() uint16 {
 		return uint16(0)
 	}
 	if !ev.Exit.Process.HasInterpreter() {
-		return uint16(0)
+		return uint16(0) // ici
 	}
 	return ev.Exit.Process.LinuxBinprm.FileEvent.FileFields.Mode
 }
@@ -2326,7 +2331,7 @@ func (ev *Event) GetExitInterpreterFileModificationTime() uint64 {
 		return uint64(0)
 	}
 	if !ev.Exit.Process.HasInterpreter() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.Exit.Process.LinuxBinprm.FileEvent.FileFields.MTime
 }
@@ -2340,7 +2345,7 @@ func (ev *Event) GetExitInterpreterFileMountId() uint32 {
 		return uint32(0)
 	}
 	if !ev.Exit.Process.HasInterpreter() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.Exit.Process.LinuxBinprm.FileEvent.FileFields.PathKey.MountID
 }
@@ -2354,7 +2359,7 @@ func (ev *Event) GetExitInterpreterFileName() string {
 		return ""
 	}
 	if !ev.Exit.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileBasename(ev, &ev.Exit.Process.LinuxBinprm.FileEvent)
 }
@@ -2379,7 +2384,7 @@ func (ev *Event) GetExitInterpreterFilePackageName() string {
 		return ""
 	}
 	if !ev.Exit.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageName(ev, &ev.Exit.Process.LinuxBinprm.FileEvent)
 }
@@ -2393,7 +2398,7 @@ func (ev *Event) GetExitInterpreterFilePackageSourceVersion() string {
 		return ""
 	}
 	if !ev.Exit.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageSourceVersion(ev, &ev.Exit.Process.LinuxBinprm.FileEvent)
 }
@@ -2407,7 +2412,7 @@ func (ev *Event) GetExitInterpreterFilePackageVersion() string {
 		return ""
 	}
 	if !ev.Exit.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageVersion(ev, &ev.Exit.Process.LinuxBinprm.FileEvent)
 }
@@ -2421,7 +2426,7 @@ func (ev *Event) GetExitInterpreterFilePath() string {
 		return ""
 	}
 	if !ev.Exit.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFilePath(ev, &ev.Exit.Process.LinuxBinprm.FileEvent)
 }
@@ -2446,7 +2451,7 @@ func (ev *Event) GetExitInterpreterFileRights() int {
 		return 0
 	}
 	if !ev.Exit.Process.HasInterpreter() {
-		return 0
+		return 0 // ici
 	}
 	return ev.FieldHandlers.ResolveRights(ev, &ev.Exit.Process.LinuxBinprm.FileEvent.FileFields)
 }
@@ -2460,7 +2465,7 @@ func (ev *Event) GetExitInterpreterFileUid() uint32 {
 		return uint32(0)
 	}
 	if !ev.Exit.Process.HasInterpreter() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.Exit.Process.LinuxBinprm.FileEvent.FileFields.UID
 }
@@ -2474,7 +2479,7 @@ func (ev *Event) GetExitInterpreterFileUser() string {
 		return ""
 	}
 	if !ev.Exit.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsUser(ev, &ev.Exit.Process.LinuxBinprm.FileEvent.FileFields)
 }
@@ -5623,7 +5628,7 @@ func (ev *Event) GetProcessFileChangeTime() uint64 {
 		return uint64(0)
 	}
 	if !ev.BaseEvent.ProcessContext.Process.IsNotKworker() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Process.FileEvent.FileFields.CTime
 }
@@ -5634,7 +5639,7 @@ func (ev *Event) GetProcessFileFilesystem() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFilesystem(ev, &ev.BaseEvent.ProcessContext.Process.FileEvent)
 }
@@ -5645,7 +5650,7 @@ func (ev *Event) GetProcessFileGid() uint32 {
 		return uint32(0)
 	}
 	if !ev.BaseEvent.ProcessContext.Process.IsNotKworker() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Process.FileEvent.FileFields.GID
 }
@@ -5656,7 +5661,7 @@ func (ev *Event) GetProcessFileGroup() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsGroup(ev, &ev.BaseEvent.ProcessContext.Process.FileEvent.FileFields)
 }
@@ -5667,7 +5672,7 @@ func (ev *Event) GetProcessFileHashes() []string {
 		return []string{}
 	}
 	if !ev.BaseEvent.ProcessContext.Process.IsNotKworker() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveHashesFromEvent(ev, &ev.BaseEvent.ProcessContext.Process.FileEvent)
 }
@@ -5678,7 +5683,7 @@ func (ev *Event) GetProcessFileInUpperLayer() bool {
 		return false
 	}
 	if !ev.BaseEvent.ProcessContext.Process.IsNotKworker() {
-		return false
+		return false // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsInUpperLayer(ev, &ev.BaseEvent.ProcessContext.Process.FileEvent.FileFields)
 }
@@ -5689,7 +5694,7 @@ func (ev *Event) GetProcessFileInode() uint64 {
 		return uint64(0)
 	}
 	if !ev.BaseEvent.ProcessContext.Process.IsNotKworker() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Process.FileEvent.FileFields.PathKey.Inode
 }
@@ -5700,7 +5705,7 @@ func (ev *Event) GetProcessFileMode() uint16 {
 		return uint16(0)
 	}
 	if !ev.BaseEvent.ProcessContext.Process.IsNotKworker() {
-		return uint16(0)
+		return uint16(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Process.FileEvent.FileFields.Mode
 }
@@ -5711,7 +5716,7 @@ func (ev *Event) GetProcessFileModificationTime() uint64 {
 		return uint64(0)
 	}
 	if !ev.BaseEvent.ProcessContext.Process.IsNotKworker() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Process.FileEvent.FileFields.MTime
 }
@@ -5722,7 +5727,7 @@ func (ev *Event) GetProcessFileMountId() uint32 {
 		return uint32(0)
 	}
 	if !ev.BaseEvent.ProcessContext.Process.IsNotKworker() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Process.FileEvent.FileFields.PathKey.MountID
 }
@@ -5733,7 +5738,7 @@ func (ev *Event) GetProcessFileName() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileBasename(ev, &ev.BaseEvent.ProcessContext.Process.FileEvent)
 }
@@ -5752,7 +5757,7 @@ func (ev *Event) GetProcessFilePackageName() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageName(ev, &ev.BaseEvent.ProcessContext.Process.FileEvent)
 }
@@ -5763,7 +5768,7 @@ func (ev *Event) GetProcessFilePackageSourceVersion() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageSourceVersion(ev, &ev.BaseEvent.ProcessContext.Process.FileEvent)
 }
@@ -5774,7 +5779,7 @@ func (ev *Event) GetProcessFilePackageVersion() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageVersion(ev, &ev.BaseEvent.ProcessContext.Process.FileEvent)
 }
@@ -5785,7 +5790,7 @@ func (ev *Event) GetProcessFilePath() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFilePath(ev, &ev.BaseEvent.ProcessContext.Process.FileEvent)
 }
@@ -5804,7 +5809,7 @@ func (ev *Event) GetProcessFileRights() int {
 		return 0
 	}
 	if !ev.BaseEvent.ProcessContext.Process.IsNotKworker() {
-		return 0
+		return 0 // ici
 	}
 	return ev.FieldHandlers.ResolveRights(ev, &ev.BaseEvent.ProcessContext.Process.FileEvent.FileFields)
 }
@@ -5815,7 +5820,7 @@ func (ev *Event) GetProcessFileUid() uint32 {
 		return uint32(0)
 	}
 	if !ev.BaseEvent.ProcessContext.Process.IsNotKworker() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Process.FileEvent.FileFields.UID
 }
@@ -5826,7 +5831,7 @@ func (ev *Event) GetProcessFileUser() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsUser(ev, &ev.BaseEvent.ProcessContext.Process.FileEvent.FileFields)
 }
@@ -5893,7 +5898,7 @@ func (ev *Event) GetProcessInterpreterFileChangeTime() uint64 {
 		return uint64(0)
 	}
 	if !ev.BaseEvent.ProcessContext.Process.HasInterpreter() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Process.LinuxBinprm.FileEvent.FileFields.CTime
 }
@@ -5904,7 +5909,7 @@ func (ev *Event) GetProcessInterpreterFileFilesystem() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFilesystem(ev, &ev.BaseEvent.ProcessContext.Process.LinuxBinprm.FileEvent)
 }
@@ -5915,7 +5920,7 @@ func (ev *Event) GetProcessInterpreterFileGid() uint32 {
 		return uint32(0)
 	}
 	if !ev.BaseEvent.ProcessContext.Process.HasInterpreter() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Process.LinuxBinprm.FileEvent.FileFields.GID
 }
@@ -5926,7 +5931,7 @@ func (ev *Event) GetProcessInterpreterFileGroup() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsGroup(ev, &ev.BaseEvent.ProcessContext.Process.LinuxBinprm.FileEvent.FileFields)
 }
@@ -5937,7 +5942,7 @@ func (ev *Event) GetProcessInterpreterFileHashes() []string {
 		return []string{}
 	}
 	if !ev.BaseEvent.ProcessContext.Process.HasInterpreter() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveHashesFromEvent(ev, &ev.BaseEvent.ProcessContext.Process.LinuxBinprm.FileEvent)
 }
@@ -5948,7 +5953,7 @@ func (ev *Event) GetProcessInterpreterFileInUpperLayer() bool {
 		return false
 	}
 	if !ev.BaseEvent.ProcessContext.Process.HasInterpreter() {
-		return false
+		return false // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsInUpperLayer(ev, &ev.BaseEvent.ProcessContext.Process.LinuxBinprm.FileEvent.FileFields)
 }
@@ -5959,7 +5964,7 @@ func (ev *Event) GetProcessInterpreterFileInode() uint64 {
 		return uint64(0)
 	}
 	if !ev.BaseEvent.ProcessContext.Process.HasInterpreter() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Process.LinuxBinprm.FileEvent.FileFields.PathKey.Inode
 }
@@ -5970,7 +5975,7 @@ func (ev *Event) GetProcessInterpreterFileMode() uint16 {
 		return uint16(0)
 	}
 	if !ev.BaseEvent.ProcessContext.Process.HasInterpreter() {
-		return uint16(0)
+		return uint16(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Process.LinuxBinprm.FileEvent.FileFields.Mode
 }
@@ -5981,7 +5986,7 @@ func (ev *Event) GetProcessInterpreterFileModificationTime() uint64 {
 		return uint64(0)
 	}
 	if !ev.BaseEvent.ProcessContext.Process.HasInterpreter() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Process.LinuxBinprm.FileEvent.FileFields.MTime
 }
@@ -5992,7 +5997,7 @@ func (ev *Event) GetProcessInterpreterFileMountId() uint32 {
 		return uint32(0)
 	}
 	if !ev.BaseEvent.ProcessContext.Process.HasInterpreter() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Process.LinuxBinprm.FileEvent.FileFields.PathKey.MountID
 }
@@ -6003,7 +6008,7 @@ func (ev *Event) GetProcessInterpreterFileName() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileBasename(ev, &ev.BaseEvent.ProcessContext.Process.LinuxBinprm.FileEvent)
 }
@@ -6022,7 +6027,7 @@ func (ev *Event) GetProcessInterpreterFilePackageName() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageName(ev, &ev.BaseEvent.ProcessContext.Process.LinuxBinprm.FileEvent)
 }
@@ -6033,7 +6038,7 @@ func (ev *Event) GetProcessInterpreterFilePackageSourceVersion() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageSourceVersion(ev, &ev.BaseEvent.ProcessContext.Process.LinuxBinprm.FileEvent)
 }
@@ -6044,7 +6049,7 @@ func (ev *Event) GetProcessInterpreterFilePackageVersion() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageVersion(ev, &ev.BaseEvent.ProcessContext.Process.LinuxBinprm.FileEvent)
 }
@@ -6055,7 +6060,7 @@ func (ev *Event) GetProcessInterpreterFilePath() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFilePath(ev, &ev.BaseEvent.ProcessContext.Process.LinuxBinprm.FileEvent)
 }
@@ -6074,7 +6079,7 @@ func (ev *Event) GetProcessInterpreterFileRights() int {
 		return 0
 	}
 	if !ev.BaseEvent.ProcessContext.Process.HasInterpreter() {
-		return 0
+		return 0 // ici
 	}
 	return ev.FieldHandlers.ResolveRights(ev, &ev.BaseEvent.ProcessContext.Process.LinuxBinprm.FileEvent.FileFields)
 }
@@ -6085,7 +6090,7 @@ func (ev *Event) GetProcessInterpreterFileUid() uint32 {
 		return uint32(0)
 	}
 	if !ev.BaseEvent.ProcessContext.Process.HasInterpreter() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Process.LinuxBinprm.FileEvent.FileFields.UID
 }
@@ -6096,7 +6101,7 @@ func (ev *Event) GetProcessInterpreterFileUser() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsUser(ev, &ev.BaseEvent.ProcessContext.Process.LinuxBinprm.FileEvent.FileFields)
 }
@@ -6126,7 +6131,7 @@ func (ev *Event) GetProcessParentArgs() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveProcessArgs(ev, ev.BaseEvent.ProcessContext.Parent)
 }
@@ -6140,7 +6145,7 @@ func (ev *Event) GetProcessParentArgsFlags() []string {
 		return []string{}
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveProcessArgsFlags(ev, ev.BaseEvent.ProcessContext.Parent)
 }
@@ -6154,7 +6159,7 @@ func (ev *Event) GetProcessParentArgsOptions() []string {
 		return []string{}
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveProcessArgsOptions(ev, ev.BaseEvent.ProcessContext.Parent)
 }
@@ -6168,7 +6173,7 @@ func (ev *Event) GetProcessParentArgsScrubbed() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveProcessArgsScrubbed(ev, ev.BaseEvent.ProcessContext.Parent)
 }
@@ -6182,7 +6187,7 @@ func (ev *Event) GetProcessParentArgsTruncated() bool {
 		return false
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return false
+		return false // ici
 	}
 	return ev.FieldHandlers.ResolveProcessArgsTruncated(ev, ev.BaseEvent.ProcessContext.Parent)
 }
@@ -6196,7 +6201,7 @@ func (ev *Event) GetProcessParentArgv() []string {
 		return []string{}
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveProcessArgv(ev, ev.BaseEvent.ProcessContext.Parent)
 }
@@ -6210,7 +6215,7 @@ func (ev *Event) GetProcessParentArgv0() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveProcessArgv0(ev, ev.BaseEvent.ProcessContext.Parent)
 }
@@ -6224,7 +6229,7 @@ func (ev *Event) GetProcessParentArgvScrubbed() []string {
 		return []string{}
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveProcessArgvScrubbed(ev, ev.BaseEvent.ProcessContext.Parent)
 }
@@ -6238,7 +6243,7 @@ func (ev *Event) GetProcessParentCapEffective() uint64 {
 		return uint64(0)
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.Credentials.CapEffective
 }
@@ -6252,7 +6257,7 @@ func (ev *Event) GetProcessParentCapPermitted() uint64 {
 		return uint64(0)
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.Credentials.CapPermitted
 }
@@ -6266,7 +6271,7 @@ func (ev *Event) GetProcessParentComm() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.Comm
 }
@@ -6280,7 +6285,7 @@ func (ev *Event) GetProcessParentContainerId() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.ContainerID
 }
@@ -6294,7 +6299,7 @@ func (ev *Event) GetProcessParentCreatedAt() int {
 		return 0
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return 0
+		return 0 // ici
 	}
 	return ev.FieldHandlers.ResolveProcessCreatedAt(ev, ev.BaseEvent.ProcessContext.Parent)
 }
@@ -6308,7 +6313,7 @@ func (ev *Event) GetProcessParentEgid() uint32 {
 		return uint32(0)
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.Credentials.EGID
 }
@@ -6322,7 +6327,7 @@ func (ev *Event) GetProcessParentEgroup() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.Credentials.EGroup
 }
@@ -6336,7 +6341,7 @@ func (ev *Event) GetProcessParentEnvp() []string {
 		return []string{}
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveProcessEnvp(ev, ev.BaseEvent.ProcessContext.Parent)
 }
@@ -6350,7 +6355,7 @@ func (ev *Event) GetProcessParentEnvs() []string {
 		return []string{}
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveProcessEnvs(ev, ev.BaseEvent.ProcessContext.Parent)
 }
@@ -6364,7 +6369,7 @@ func (ev *Event) GetProcessParentEnvsTruncated() bool {
 		return false
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return false
+		return false // ici
 	}
 	return ev.FieldHandlers.ResolveProcessEnvsTruncated(ev, ev.BaseEvent.ProcessContext.Parent)
 }
@@ -6378,7 +6383,7 @@ func (ev *Event) GetProcessParentEuid() uint32 {
 		return uint32(0)
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.Credentials.EUID
 }
@@ -6392,7 +6397,7 @@ func (ev *Event) GetProcessParentEuser() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.Credentials.EUser
 }
@@ -6406,10 +6411,10 @@ func (ev *Event) GetProcessParentFileChangeTime() uint64 {
 		return uint64(0)
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.IsNotKworker() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.FileEvent.FileFields.CTime
 }
@@ -6423,10 +6428,10 @@ func (ev *Event) GetProcessParentFileFilesystem() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFilesystem(ev, &ev.BaseEvent.ProcessContext.Parent.FileEvent)
 }
@@ -6440,10 +6445,10 @@ func (ev *Event) GetProcessParentFileGid() uint32 {
 		return uint32(0)
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.IsNotKworker() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.FileEvent.FileFields.GID
 }
@@ -6457,10 +6462,10 @@ func (ev *Event) GetProcessParentFileGroup() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsGroup(ev, &ev.BaseEvent.ProcessContext.Parent.FileEvent.FileFields)
 }
@@ -6474,10 +6479,10 @@ func (ev *Event) GetProcessParentFileHashes() []string {
 		return []string{}
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return []string{}
+		return []string{} // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.IsNotKworker() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveHashesFromEvent(ev, &ev.BaseEvent.ProcessContext.Parent.FileEvent)
 }
@@ -6491,10 +6496,10 @@ func (ev *Event) GetProcessParentFileInUpperLayer() bool {
 		return false
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return false
+		return false // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.IsNotKworker() {
-		return false
+		return false // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsInUpperLayer(ev, &ev.BaseEvent.ProcessContext.Parent.FileEvent.FileFields)
 }
@@ -6508,10 +6513,10 @@ func (ev *Event) GetProcessParentFileInode() uint64 {
 		return uint64(0)
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.IsNotKworker() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.FileEvent.FileFields.PathKey.Inode
 }
@@ -6525,10 +6530,10 @@ func (ev *Event) GetProcessParentFileMode() uint16 {
 		return uint16(0)
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return uint16(0)
+		return uint16(0) // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.IsNotKworker() {
-		return uint16(0)
+		return uint16(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.FileEvent.FileFields.Mode
 }
@@ -6542,10 +6547,10 @@ func (ev *Event) GetProcessParentFileModificationTime() uint64 {
 		return uint64(0)
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.IsNotKworker() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.FileEvent.FileFields.MTime
 }
@@ -6559,10 +6564,10 @@ func (ev *Event) GetProcessParentFileMountId() uint32 {
 		return uint32(0)
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.IsNotKworker() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.FileEvent.FileFields.PathKey.MountID
 }
@@ -6576,10 +6581,10 @@ func (ev *Event) GetProcessParentFileName() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileBasename(ev, &ev.BaseEvent.ProcessContext.Parent.FileEvent)
 }
@@ -6604,10 +6609,10 @@ func (ev *Event) GetProcessParentFilePackageName() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageName(ev, &ev.BaseEvent.ProcessContext.Parent.FileEvent)
 }
@@ -6621,10 +6626,10 @@ func (ev *Event) GetProcessParentFilePackageSourceVersion() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageSourceVersion(ev, &ev.BaseEvent.ProcessContext.Parent.FileEvent)
 }
@@ -6638,10 +6643,10 @@ func (ev *Event) GetProcessParentFilePackageVersion() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageVersion(ev, &ev.BaseEvent.ProcessContext.Parent.FileEvent)
 }
@@ -6655,10 +6660,10 @@ func (ev *Event) GetProcessParentFilePath() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFilePath(ev, &ev.BaseEvent.ProcessContext.Parent.FileEvent)
 }
@@ -6683,10 +6688,10 @@ func (ev *Event) GetProcessParentFileRights() int {
 		return 0
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return 0
+		return 0 // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.IsNotKworker() {
-		return 0
+		return 0 // ici
 	}
 	return ev.FieldHandlers.ResolveRights(ev, &ev.BaseEvent.ProcessContext.Parent.FileEvent.FileFields)
 }
@@ -6700,10 +6705,10 @@ func (ev *Event) GetProcessParentFileUid() uint32 {
 		return uint32(0)
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.IsNotKworker() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.FileEvent.FileFields.UID
 }
@@ -6717,10 +6722,10 @@ func (ev *Event) GetProcessParentFileUser() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsUser(ev, &ev.BaseEvent.ProcessContext.Parent.FileEvent.FileFields)
 }
@@ -6734,7 +6739,7 @@ func (ev *Event) GetProcessParentFsgid() uint32 {
 		return uint32(0)
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.Credentials.FSGID
 }
@@ -6748,7 +6753,7 @@ func (ev *Event) GetProcessParentFsgroup() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.Credentials.FSGroup
 }
@@ -6762,7 +6767,7 @@ func (ev *Event) GetProcessParentFsuid() uint32 {
 		return uint32(0)
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.Credentials.FSUID
 }
@@ -6776,7 +6781,7 @@ func (ev *Event) GetProcessParentFsuser() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.Credentials.FSUser
 }
@@ -6790,7 +6795,7 @@ func (ev *Event) GetProcessParentGid() uint32 {
 		return uint32(0)
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.Credentials.GID
 }
@@ -6804,7 +6809,7 @@ func (ev *Event) GetProcessParentGroup() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.Credentials.Group
 }
@@ -6818,10 +6823,10 @@ func (ev *Event) GetProcessParentInterpreterFileChangeTime() uint64 {
 		return uint64(0)
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.HasInterpreter() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.LinuxBinprm.FileEvent.FileFields.CTime
 }
@@ -6835,10 +6840,10 @@ func (ev *Event) GetProcessParentInterpreterFileFilesystem() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFilesystem(ev, &ev.BaseEvent.ProcessContext.Parent.LinuxBinprm.FileEvent)
 }
@@ -6852,10 +6857,10 @@ func (ev *Event) GetProcessParentInterpreterFileGid() uint32 {
 		return uint32(0)
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.HasInterpreter() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.LinuxBinprm.FileEvent.FileFields.GID
 }
@@ -6869,10 +6874,10 @@ func (ev *Event) GetProcessParentInterpreterFileGroup() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsGroup(ev, &ev.BaseEvent.ProcessContext.Parent.LinuxBinprm.FileEvent.FileFields)
 }
@@ -6886,10 +6891,10 @@ func (ev *Event) GetProcessParentInterpreterFileHashes() []string {
 		return []string{}
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return []string{}
+		return []string{} // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.HasInterpreter() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveHashesFromEvent(ev, &ev.BaseEvent.ProcessContext.Parent.LinuxBinprm.FileEvent)
 }
@@ -6903,10 +6908,10 @@ func (ev *Event) GetProcessParentInterpreterFileInUpperLayer() bool {
 		return false
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return false
+		return false // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.HasInterpreter() {
-		return false
+		return false // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsInUpperLayer(ev, &ev.BaseEvent.ProcessContext.Parent.LinuxBinprm.FileEvent.FileFields)
 }
@@ -6920,10 +6925,10 @@ func (ev *Event) GetProcessParentInterpreterFileInode() uint64 {
 		return uint64(0)
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.HasInterpreter() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.LinuxBinprm.FileEvent.FileFields.PathKey.Inode
 }
@@ -6937,10 +6942,10 @@ func (ev *Event) GetProcessParentInterpreterFileMode() uint16 {
 		return uint16(0)
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return uint16(0)
+		return uint16(0) // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.HasInterpreter() {
-		return uint16(0)
+		return uint16(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.LinuxBinprm.FileEvent.FileFields.Mode
 }
@@ -6954,10 +6959,10 @@ func (ev *Event) GetProcessParentInterpreterFileModificationTime() uint64 {
 		return uint64(0)
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.HasInterpreter() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.LinuxBinprm.FileEvent.FileFields.MTime
 }
@@ -6971,10 +6976,10 @@ func (ev *Event) GetProcessParentInterpreterFileMountId() uint32 {
 		return uint32(0)
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.HasInterpreter() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.LinuxBinprm.FileEvent.FileFields.PathKey.MountID
 }
@@ -6988,10 +6993,10 @@ func (ev *Event) GetProcessParentInterpreterFileName() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileBasename(ev, &ev.BaseEvent.ProcessContext.Parent.LinuxBinprm.FileEvent)
 }
@@ -7016,10 +7021,10 @@ func (ev *Event) GetProcessParentInterpreterFilePackageName() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageName(ev, &ev.BaseEvent.ProcessContext.Parent.LinuxBinprm.FileEvent)
 }
@@ -7033,10 +7038,10 @@ func (ev *Event) GetProcessParentInterpreterFilePackageSourceVersion() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageSourceVersion(ev, &ev.BaseEvent.ProcessContext.Parent.LinuxBinprm.FileEvent)
 }
@@ -7050,10 +7055,10 @@ func (ev *Event) GetProcessParentInterpreterFilePackageVersion() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageVersion(ev, &ev.BaseEvent.ProcessContext.Parent.LinuxBinprm.FileEvent)
 }
@@ -7067,10 +7072,10 @@ func (ev *Event) GetProcessParentInterpreterFilePath() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFilePath(ev, &ev.BaseEvent.ProcessContext.Parent.LinuxBinprm.FileEvent)
 }
@@ -7095,10 +7100,10 @@ func (ev *Event) GetProcessParentInterpreterFileRights() int {
 		return 0
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return 0
+		return 0 // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.HasInterpreter() {
-		return 0
+		return 0 // ici
 	}
 	return ev.FieldHandlers.ResolveRights(ev, &ev.BaseEvent.ProcessContext.Parent.LinuxBinprm.FileEvent.FileFields)
 }
@@ -7112,10 +7117,10 @@ func (ev *Event) GetProcessParentInterpreterFileUid() uint32 {
 		return uint32(0)
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.HasInterpreter() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.LinuxBinprm.FileEvent.FileFields.UID
 }
@@ -7129,10 +7134,10 @@ func (ev *Event) GetProcessParentInterpreterFileUser() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.BaseEvent.ProcessContext.Parent.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsUser(ev, &ev.BaseEvent.ProcessContext.Parent.LinuxBinprm.FileEvent.FileFields)
 }
@@ -7146,7 +7151,7 @@ func (ev *Event) GetProcessParentIsKworker() bool {
 		return false
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return false
+		return false // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.PIDContext.IsKworker
 }
@@ -7160,7 +7165,7 @@ func (ev *Event) GetProcessParentIsThread() bool {
 		return false
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return false
+		return false // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.IsThread
 }
@@ -7174,7 +7179,7 @@ func (ev *Event) GetProcessParentPid() uint32 {
 		return uint32(0)
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.PIDContext.Pid
 }
@@ -7188,7 +7193,7 @@ func (ev *Event) GetProcessParentPpid() uint32 {
 		return uint32(0)
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.PPid
 }
@@ -7202,7 +7207,7 @@ func (ev *Event) GetProcessParentTid() uint32 {
 		return uint32(0)
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.PIDContext.Tid
 }
@@ -7216,7 +7221,7 @@ func (ev *Event) GetProcessParentTtyName() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.TTYName
 }
@@ -7230,7 +7235,7 @@ func (ev *Event) GetProcessParentUid() uint32 {
 		return uint32(0)
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.Credentials.UID
 }
@@ -7244,7 +7249,7 @@ func (ev *Event) GetProcessParentUser() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.Credentials.User
 }
@@ -7258,7 +7263,7 @@ func (ev *Event) GetProcessParentUserSessionK8sGroups() []string {
 		return []string{}
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveK8SGroups(ev, &ev.BaseEvent.ProcessContext.Parent.UserSession)
 }
@@ -7272,7 +7277,7 @@ func (ev *Event) GetProcessParentUserSessionK8sUid() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveK8SUID(ev, &ev.BaseEvent.ProcessContext.Parent.UserSession)
 }
@@ -7286,7 +7291,7 @@ func (ev *Event) GetProcessParentUserSessionK8sUsername() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveK8SUsername(ev, &ev.BaseEvent.ProcessContext.Parent.UserSession)
 }
@@ -9478,7 +9483,7 @@ func (ev *Event) GetPtraceTraceeFileChangeTime() uint64 {
 		return uint64(0)
 	}
 	if !ev.PTrace.Tracee.Process.IsNotKworker() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.PTrace.Tracee.Process.FileEvent.FileFields.CTime
 }
@@ -9492,7 +9497,7 @@ func (ev *Event) GetPtraceTraceeFileFilesystem() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFilesystem(ev, &ev.PTrace.Tracee.Process.FileEvent)
 }
@@ -9506,7 +9511,7 @@ func (ev *Event) GetPtraceTraceeFileGid() uint32 {
 		return uint32(0)
 	}
 	if !ev.PTrace.Tracee.Process.IsNotKworker() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.PTrace.Tracee.Process.FileEvent.FileFields.GID
 }
@@ -9520,7 +9525,7 @@ func (ev *Event) GetPtraceTraceeFileGroup() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsGroup(ev, &ev.PTrace.Tracee.Process.FileEvent.FileFields)
 }
@@ -9534,7 +9539,7 @@ func (ev *Event) GetPtraceTraceeFileHashes() []string {
 		return []string{}
 	}
 	if !ev.PTrace.Tracee.Process.IsNotKworker() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveHashesFromEvent(ev, &ev.PTrace.Tracee.Process.FileEvent)
 }
@@ -9548,7 +9553,7 @@ func (ev *Event) GetPtraceTraceeFileInUpperLayer() bool {
 		return false
 	}
 	if !ev.PTrace.Tracee.Process.IsNotKworker() {
-		return false
+		return false // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsInUpperLayer(ev, &ev.PTrace.Tracee.Process.FileEvent.FileFields)
 }
@@ -9562,7 +9567,7 @@ func (ev *Event) GetPtraceTraceeFileInode() uint64 {
 		return uint64(0)
 	}
 	if !ev.PTrace.Tracee.Process.IsNotKworker() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.PTrace.Tracee.Process.FileEvent.FileFields.PathKey.Inode
 }
@@ -9576,7 +9581,7 @@ func (ev *Event) GetPtraceTraceeFileMode() uint16 {
 		return uint16(0)
 	}
 	if !ev.PTrace.Tracee.Process.IsNotKworker() {
-		return uint16(0)
+		return uint16(0) // ici
 	}
 	return ev.PTrace.Tracee.Process.FileEvent.FileFields.Mode
 }
@@ -9590,7 +9595,7 @@ func (ev *Event) GetPtraceTraceeFileModificationTime() uint64 {
 		return uint64(0)
 	}
 	if !ev.PTrace.Tracee.Process.IsNotKworker() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.PTrace.Tracee.Process.FileEvent.FileFields.MTime
 }
@@ -9604,7 +9609,7 @@ func (ev *Event) GetPtraceTraceeFileMountId() uint32 {
 		return uint32(0)
 	}
 	if !ev.PTrace.Tracee.Process.IsNotKworker() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.PTrace.Tracee.Process.FileEvent.FileFields.PathKey.MountID
 }
@@ -9618,7 +9623,7 @@ func (ev *Event) GetPtraceTraceeFileName() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileBasename(ev, &ev.PTrace.Tracee.Process.FileEvent)
 }
@@ -9643,7 +9648,7 @@ func (ev *Event) GetPtraceTraceeFilePackageName() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageName(ev, &ev.PTrace.Tracee.Process.FileEvent)
 }
@@ -9657,7 +9662,7 @@ func (ev *Event) GetPtraceTraceeFilePackageSourceVersion() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageSourceVersion(ev, &ev.PTrace.Tracee.Process.FileEvent)
 }
@@ -9671,7 +9676,7 @@ func (ev *Event) GetPtraceTraceeFilePackageVersion() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageVersion(ev, &ev.PTrace.Tracee.Process.FileEvent)
 }
@@ -9685,7 +9690,7 @@ func (ev *Event) GetPtraceTraceeFilePath() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFilePath(ev, &ev.PTrace.Tracee.Process.FileEvent)
 }
@@ -9710,7 +9715,7 @@ func (ev *Event) GetPtraceTraceeFileRights() int {
 		return 0
 	}
 	if !ev.PTrace.Tracee.Process.IsNotKworker() {
-		return 0
+		return 0 // ici
 	}
 	return ev.FieldHandlers.ResolveRights(ev, &ev.PTrace.Tracee.Process.FileEvent.FileFields)
 }
@@ -9724,7 +9729,7 @@ func (ev *Event) GetPtraceTraceeFileUid() uint32 {
 		return uint32(0)
 	}
 	if !ev.PTrace.Tracee.Process.IsNotKworker() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.PTrace.Tracee.Process.FileEvent.FileFields.UID
 }
@@ -9738,7 +9743,7 @@ func (ev *Event) GetPtraceTraceeFileUser() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsUser(ev, &ev.PTrace.Tracee.Process.FileEvent.FileFields)
 }
@@ -9829,7 +9834,7 @@ func (ev *Event) GetPtraceTraceeInterpreterFileChangeTime() uint64 {
 		return uint64(0)
 	}
 	if !ev.PTrace.Tracee.Process.HasInterpreter() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.PTrace.Tracee.Process.LinuxBinprm.FileEvent.FileFields.CTime
 }
@@ -9843,7 +9848,7 @@ func (ev *Event) GetPtraceTraceeInterpreterFileFilesystem() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFilesystem(ev, &ev.PTrace.Tracee.Process.LinuxBinprm.FileEvent)
 }
@@ -9857,7 +9862,7 @@ func (ev *Event) GetPtraceTraceeInterpreterFileGid() uint32 {
 		return uint32(0)
 	}
 	if !ev.PTrace.Tracee.Process.HasInterpreter() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.PTrace.Tracee.Process.LinuxBinprm.FileEvent.FileFields.GID
 }
@@ -9871,7 +9876,7 @@ func (ev *Event) GetPtraceTraceeInterpreterFileGroup() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsGroup(ev, &ev.PTrace.Tracee.Process.LinuxBinprm.FileEvent.FileFields)
 }
@@ -9885,7 +9890,7 @@ func (ev *Event) GetPtraceTraceeInterpreterFileHashes() []string {
 		return []string{}
 	}
 	if !ev.PTrace.Tracee.Process.HasInterpreter() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveHashesFromEvent(ev, &ev.PTrace.Tracee.Process.LinuxBinprm.FileEvent)
 }
@@ -9899,7 +9904,7 @@ func (ev *Event) GetPtraceTraceeInterpreterFileInUpperLayer() bool {
 		return false
 	}
 	if !ev.PTrace.Tracee.Process.HasInterpreter() {
-		return false
+		return false // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsInUpperLayer(ev, &ev.PTrace.Tracee.Process.LinuxBinprm.FileEvent.FileFields)
 }
@@ -9913,7 +9918,7 @@ func (ev *Event) GetPtraceTraceeInterpreterFileInode() uint64 {
 		return uint64(0)
 	}
 	if !ev.PTrace.Tracee.Process.HasInterpreter() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.PTrace.Tracee.Process.LinuxBinprm.FileEvent.FileFields.PathKey.Inode
 }
@@ -9927,7 +9932,7 @@ func (ev *Event) GetPtraceTraceeInterpreterFileMode() uint16 {
 		return uint16(0)
 	}
 	if !ev.PTrace.Tracee.Process.HasInterpreter() {
-		return uint16(0)
+		return uint16(0) // ici
 	}
 	return ev.PTrace.Tracee.Process.LinuxBinprm.FileEvent.FileFields.Mode
 }
@@ -9941,7 +9946,7 @@ func (ev *Event) GetPtraceTraceeInterpreterFileModificationTime() uint64 {
 		return uint64(0)
 	}
 	if !ev.PTrace.Tracee.Process.HasInterpreter() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.PTrace.Tracee.Process.LinuxBinprm.FileEvent.FileFields.MTime
 }
@@ -9955,7 +9960,7 @@ func (ev *Event) GetPtraceTraceeInterpreterFileMountId() uint32 {
 		return uint32(0)
 	}
 	if !ev.PTrace.Tracee.Process.HasInterpreter() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.PTrace.Tracee.Process.LinuxBinprm.FileEvent.FileFields.PathKey.MountID
 }
@@ -9969,7 +9974,7 @@ func (ev *Event) GetPtraceTraceeInterpreterFileName() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileBasename(ev, &ev.PTrace.Tracee.Process.LinuxBinprm.FileEvent)
 }
@@ -9994,7 +9999,7 @@ func (ev *Event) GetPtraceTraceeInterpreterFilePackageName() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageName(ev, &ev.PTrace.Tracee.Process.LinuxBinprm.FileEvent)
 }
@@ -10008,7 +10013,7 @@ func (ev *Event) GetPtraceTraceeInterpreterFilePackageSourceVersion() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageSourceVersion(ev, &ev.PTrace.Tracee.Process.LinuxBinprm.FileEvent)
 }
@@ -10022,7 +10027,7 @@ func (ev *Event) GetPtraceTraceeInterpreterFilePackageVersion() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageVersion(ev, &ev.PTrace.Tracee.Process.LinuxBinprm.FileEvent)
 }
@@ -10036,7 +10041,7 @@ func (ev *Event) GetPtraceTraceeInterpreterFilePath() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFilePath(ev, &ev.PTrace.Tracee.Process.LinuxBinprm.FileEvent)
 }
@@ -10061,7 +10066,7 @@ func (ev *Event) GetPtraceTraceeInterpreterFileRights() int {
 		return 0
 	}
 	if !ev.PTrace.Tracee.Process.HasInterpreter() {
-		return 0
+		return 0 // ici
 	}
 	return ev.FieldHandlers.ResolveRights(ev, &ev.PTrace.Tracee.Process.LinuxBinprm.FileEvent.FileFields)
 }
@@ -10075,7 +10080,7 @@ func (ev *Event) GetPtraceTraceeInterpreterFileUid() uint32 {
 		return uint32(0)
 	}
 	if !ev.PTrace.Tracee.Process.HasInterpreter() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.PTrace.Tracee.Process.LinuxBinprm.FileEvent.FileFields.UID
 }
@@ -10089,7 +10094,7 @@ func (ev *Event) GetPtraceTraceeInterpreterFileUser() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsUser(ev, &ev.PTrace.Tracee.Process.LinuxBinprm.FileEvent.FileFields)
 }
@@ -10128,7 +10133,7 @@ func (ev *Event) GetPtraceTraceeParentArgs() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveProcessArgs(ev, ev.PTrace.Tracee.Parent)
 }
@@ -10145,7 +10150,7 @@ func (ev *Event) GetPtraceTraceeParentArgsFlags() []string {
 		return []string{}
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveProcessArgsFlags(ev, ev.PTrace.Tracee.Parent)
 }
@@ -10162,7 +10167,7 @@ func (ev *Event) GetPtraceTraceeParentArgsOptions() []string {
 		return []string{}
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveProcessArgsOptions(ev, ev.PTrace.Tracee.Parent)
 }
@@ -10179,7 +10184,7 @@ func (ev *Event) GetPtraceTraceeParentArgsScrubbed() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveProcessArgsScrubbed(ev, ev.PTrace.Tracee.Parent)
 }
@@ -10196,7 +10201,7 @@ func (ev *Event) GetPtraceTraceeParentArgsTruncated() bool {
 		return false
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return false
+		return false // ici
 	}
 	return ev.FieldHandlers.ResolveProcessArgsTruncated(ev, ev.PTrace.Tracee.Parent)
 }
@@ -10213,7 +10218,7 @@ func (ev *Event) GetPtraceTraceeParentArgv() []string {
 		return []string{}
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveProcessArgv(ev, ev.PTrace.Tracee.Parent)
 }
@@ -10230,7 +10235,7 @@ func (ev *Event) GetPtraceTraceeParentArgv0() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveProcessArgv0(ev, ev.PTrace.Tracee.Parent)
 }
@@ -10247,7 +10252,7 @@ func (ev *Event) GetPtraceTraceeParentArgvScrubbed() []string {
 		return []string{}
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveProcessArgvScrubbed(ev, ev.PTrace.Tracee.Parent)
 }
@@ -10264,7 +10269,7 @@ func (ev *Event) GetPtraceTraceeParentCapEffective() uint64 {
 		return uint64(0)
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.PTrace.Tracee.Parent.Credentials.CapEffective
 }
@@ -10281,7 +10286,7 @@ func (ev *Event) GetPtraceTraceeParentCapPermitted() uint64 {
 		return uint64(0)
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.PTrace.Tracee.Parent.Credentials.CapPermitted
 }
@@ -10298,7 +10303,7 @@ func (ev *Event) GetPtraceTraceeParentComm() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.PTrace.Tracee.Parent.Comm
 }
@@ -10315,7 +10320,7 @@ func (ev *Event) GetPtraceTraceeParentContainerId() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.PTrace.Tracee.Parent.ContainerID
 }
@@ -10332,7 +10337,7 @@ func (ev *Event) GetPtraceTraceeParentCreatedAt() int {
 		return 0
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return 0
+		return 0 // ici
 	}
 	return ev.FieldHandlers.ResolveProcessCreatedAt(ev, ev.PTrace.Tracee.Parent)
 }
@@ -10349,7 +10354,7 @@ func (ev *Event) GetPtraceTraceeParentEgid() uint32 {
 		return uint32(0)
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.PTrace.Tracee.Parent.Credentials.EGID
 }
@@ -10366,7 +10371,7 @@ func (ev *Event) GetPtraceTraceeParentEgroup() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.PTrace.Tracee.Parent.Credentials.EGroup
 }
@@ -10383,7 +10388,7 @@ func (ev *Event) GetPtraceTraceeParentEnvp() []string {
 		return []string{}
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveProcessEnvp(ev, ev.PTrace.Tracee.Parent)
 }
@@ -10400,7 +10405,7 @@ func (ev *Event) GetPtraceTraceeParentEnvs() []string {
 		return []string{}
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveProcessEnvs(ev, ev.PTrace.Tracee.Parent)
 }
@@ -10417,7 +10422,7 @@ func (ev *Event) GetPtraceTraceeParentEnvsTruncated() bool {
 		return false
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return false
+		return false // ici
 	}
 	return ev.FieldHandlers.ResolveProcessEnvsTruncated(ev, ev.PTrace.Tracee.Parent)
 }
@@ -10434,7 +10439,7 @@ func (ev *Event) GetPtraceTraceeParentEuid() uint32 {
 		return uint32(0)
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.PTrace.Tracee.Parent.Credentials.EUID
 }
@@ -10451,7 +10456,7 @@ func (ev *Event) GetPtraceTraceeParentEuser() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.PTrace.Tracee.Parent.Credentials.EUser
 }
@@ -10468,10 +10473,10 @@ func (ev *Event) GetPtraceTraceeParentFileChangeTime() uint64 {
 		return uint64(0)
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	if !ev.PTrace.Tracee.Parent.IsNotKworker() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.PTrace.Tracee.Parent.FileEvent.FileFields.CTime
 }
@@ -10488,10 +10493,10 @@ func (ev *Event) GetPtraceTraceeParentFileFilesystem() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.PTrace.Tracee.Parent.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFilesystem(ev, &ev.PTrace.Tracee.Parent.FileEvent)
 }
@@ -10508,10 +10513,10 @@ func (ev *Event) GetPtraceTraceeParentFileGid() uint32 {
 		return uint32(0)
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	if !ev.PTrace.Tracee.Parent.IsNotKworker() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.PTrace.Tracee.Parent.FileEvent.FileFields.GID
 }
@@ -10528,10 +10533,10 @@ func (ev *Event) GetPtraceTraceeParentFileGroup() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.PTrace.Tracee.Parent.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsGroup(ev, &ev.PTrace.Tracee.Parent.FileEvent.FileFields)
 }
@@ -10548,10 +10553,10 @@ func (ev *Event) GetPtraceTraceeParentFileHashes() []string {
 		return []string{}
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return []string{}
+		return []string{} // ici
 	}
 	if !ev.PTrace.Tracee.Parent.IsNotKworker() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveHashesFromEvent(ev, &ev.PTrace.Tracee.Parent.FileEvent)
 }
@@ -10568,10 +10573,10 @@ func (ev *Event) GetPtraceTraceeParentFileInUpperLayer() bool {
 		return false
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return false
+		return false // ici
 	}
 	if !ev.PTrace.Tracee.Parent.IsNotKworker() {
-		return false
+		return false // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsInUpperLayer(ev, &ev.PTrace.Tracee.Parent.FileEvent.FileFields)
 }
@@ -10588,10 +10593,10 @@ func (ev *Event) GetPtraceTraceeParentFileInode() uint64 {
 		return uint64(0)
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	if !ev.PTrace.Tracee.Parent.IsNotKworker() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.PTrace.Tracee.Parent.FileEvent.FileFields.PathKey.Inode
 }
@@ -10608,10 +10613,10 @@ func (ev *Event) GetPtraceTraceeParentFileMode() uint16 {
 		return uint16(0)
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return uint16(0)
+		return uint16(0) // ici
 	}
 	if !ev.PTrace.Tracee.Parent.IsNotKworker() {
-		return uint16(0)
+		return uint16(0) // ici
 	}
 	return ev.PTrace.Tracee.Parent.FileEvent.FileFields.Mode
 }
@@ -10628,10 +10633,10 @@ func (ev *Event) GetPtraceTraceeParentFileModificationTime() uint64 {
 		return uint64(0)
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	if !ev.PTrace.Tracee.Parent.IsNotKworker() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.PTrace.Tracee.Parent.FileEvent.FileFields.MTime
 }
@@ -10648,10 +10653,10 @@ func (ev *Event) GetPtraceTraceeParentFileMountId() uint32 {
 		return uint32(0)
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	if !ev.PTrace.Tracee.Parent.IsNotKworker() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.PTrace.Tracee.Parent.FileEvent.FileFields.PathKey.MountID
 }
@@ -10668,10 +10673,10 @@ func (ev *Event) GetPtraceTraceeParentFileName() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.PTrace.Tracee.Parent.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileBasename(ev, &ev.PTrace.Tracee.Parent.FileEvent)
 }
@@ -10702,10 +10707,10 @@ func (ev *Event) GetPtraceTraceeParentFilePackageName() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.PTrace.Tracee.Parent.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageName(ev, &ev.PTrace.Tracee.Parent.FileEvent)
 }
@@ -10722,10 +10727,10 @@ func (ev *Event) GetPtraceTraceeParentFilePackageSourceVersion() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.PTrace.Tracee.Parent.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageSourceVersion(ev, &ev.PTrace.Tracee.Parent.FileEvent)
 }
@@ -10742,10 +10747,10 @@ func (ev *Event) GetPtraceTraceeParentFilePackageVersion() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.PTrace.Tracee.Parent.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageVersion(ev, &ev.PTrace.Tracee.Parent.FileEvent)
 }
@@ -10762,10 +10767,10 @@ func (ev *Event) GetPtraceTraceeParentFilePath() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.PTrace.Tracee.Parent.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFilePath(ev, &ev.PTrace.Tracee.Parent.FileEvent)
 }
@@ -10796,10 +10801,10 @@ func (ev *Event) GetPtraceTraceeParentFileRights() int {
 		return 0
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return 0
+		return 0 // ici
 	}
 	if !ev.PTrace.Tracee.Parent.IsNotKworker() {
-		return 0
+		return 0 // ici
 	}
 	return ev.FieldHandlers.ResolveRights(ev, &ev.PTrace.Tracee.Parent.FileEvent.FileFields)
 }
@@ -10816,10 +10821,10 @@ func (ev *Event) GetPtraceTraceeParentFileUid() uint32 {
 		return uint32(0)
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	if !ev.PTrace.Tracee.Parent.IsNotKworker() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.PTrace.Tracee.Parent.FileEvent.FileFields.UID
 }
@@ -10836,10 +10841,10 @@ func (ev *Event) GetPtraceTraceeParentFileUser() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.PTrace.Tracee.Parent.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsUser(ev, &ev.PTrace.Tracee.Parent.FileEvent.FileFields)
 }
@@ -10856,7 +10861,7 @@ func (ev *Event) GetPtraceTraceeParentFsgid() uint32 {
 		return uint32(0)
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.PTrace.Tracee.Parent.Credentials.FSGID
 }
@@ -10873,7 +10878,7 @@ func (ev *Event) GetPtraceTraceeParentFsgroup() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.PTrace.Tracee.Parent.Credentials.FSGroup
 }
@@ -10890,7 +10895,7 @@ func (ev *Event) GetPtraceTraceeParentFsuid() uint32 {
 		return uint32(0)
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.PTrace.Tracee.Parent.Credentials.FSUID
 }
@@ -10907,7 +10912,7 @@ func (ev *Event) GetPtraceTraceeParentFsuser() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.PTrace.Tracee.Parent.Credentials.FSUser
 }
@@ -10924,7 +10929,7 @@ func (ev *Event) GetPtraceTraceeParentGid() uint32 {
 		return uint32(0)
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.PTrace.Tracee.Parent.Credentials.GID
 }
@@ -10941,7 +10946,7 @@ func (ev *Event) GetPtraceTraceeParentGroup() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.PTrace.Tracee.Parent.Credentials.Group
 }
@@ -10958,10 +10963,10 @@ func (ev *Event) GetPtraceTraceeParentInterpreterFileChangeTime() uint64 {
 		return uint64(0)
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	if !ev.PTrace.Tracee.Parent.HasInterpreter() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.PTrace.Tracee.Parent.LinuxBinprm.FileEvent.FileFields.CTime
 }
@@ -10978,10 +10983,10 @@ func (ev *Event) GetPtraceTraceeParentInterpreterFileFilesystem() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.PTrace.Tracee.Parent.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFilesystem(ev, &ev.PTrace.Tracee.Parent.LinuxBinprm.FileEvent)
 }
@@ -10998,10 +11003,10 @@ func (ev *Event) GetPtraceTraceeParentInterpreterFileGid() uint32 {
 		return uint32(0)
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	if !ev.PTrace.Tracee.Parent.HasInterpreter() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.PTrace.Tracee.Parent.LinuxBinprm.FileEvent.FileFields.GID
 }
@@ -11018,10 +11023,10 @@ func (ev *Event) GetPtraceTraceeParentInterpreterFileGroup() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.PTrace.Tracee.Parent.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsGroup(ev, &ev.PTrace.Tracee.Parent.LinuxBinprm.FileEvent.FileFields)
 }
@@ -11038,10 +11043,10 @@ func (ev *Event) GetPtraceTraceeParentInterpreterFileHashes() []string {
 		return []string{}
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return []string{}
+		return []string{} // ici
 	}
 	if !ev.PTrace.Tracee.Parent.HasInterpreter() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveHashesFromEvent(ev, &ev.PTrace.Tracee.Parent.LinuxBinprm.FileEvent)
 }
@@ -11058,10 +11063,10 @@ func (ev *Event) GetPtraceTraceeParentInterpreterFileInUpperLayer() bool {
 		return false
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return false
+		return false // ici
 	}
 	if !ev.PTrace.Tracee.Parent.HasInterpreter() {
-		return false
+		return false // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsInUpperLayer(ev, &ev.PTrace.Tracee.Parent.LinuxBinprm.FileEvent.FileFields)
 }
@@ -11078,10 +11083,10 @@ func (ev *Event) GetPtraceTraceeParentInterpreterFileInode() uint64 {
 		return uint64(0)
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	if !ev.PTrace.Tracee.Parent.HasInterpreter() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.PTrace.Tracee.Parent.LinuxBinprm.FileEvent.FileFields.PathKey.Inode
 }
@@ -11098,10 +11103,10 @@ func (ev *Event) GetPtraceTraceeParentInterpreterFileMode() uint16 {
 		return uint16(0)
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return uint16(0)
+		return uint16(0) // ici
 	}
 	if !ev.PTrace.Tracee.Parent.HasInterpreter() {
-		return uint16(0)
+		return uint16(0) // ici
 	}
 	return ev.PTrace.Tracee.Parent.LinuxBinprm.FileEvent.FileFields.Mode
 }
@@ -11118,10 +11123,10 @@ func (ev *Event) GetPtraceTraceeParentInterpreterFileModificationTime() uint64 {
 		return uint64(0)
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	if !ev.PTrace.Tracee.Parent.HasInterpreter() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.PTrace.Tracee.Parent.LinuxBinprm.FileEvent.FileFields.MTime
 }
@@ -11138,10 +11143,10 @@ func (ev *Event) GetPtraceTraceeParentInterpreterFileMountId() uint32 {
 		return uint32(0)
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	if !ev.PTrace.Tracee.Parent.HasInterpreter() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.PTrace.Tracee.Parent.LinuxBinprm.FileEvent.FileFields.PathKey.MountID
 }
@@ -11158,10 +11163,10 @@ func (ev *Event) GetPtraceTraceeParentInterpreterFileName() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.PTrace.Tracee.Parent.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileBasename(ev, &ev.PTrace.Tracee.Parent.LinuxBinprm.FileEvent)
 }
@@ -11192,10 +11197,10 @@ func (ev *Event) GetPtraceTraceeParentInterpreterFilePackageName() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.PTrace.Tracee.Parent.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageName(ev, &ev.PTrace.Tracee.Parent.LinuxBinprm.FileEvent)
 }
@@ -11212,10 +11217,10 @@ func (ev *Event) GetPtraceTraceeParentInterpreterFilePackageSourceVersion() stri
 		return ""
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.PTrace.Tracee.Parent.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageSourceVersion(ev, &ev.PTrace.Tracee.Parent.LinuxBinprm.FileEvent)
 }
@@ -11232,10 +11237,10 @@ func (ev *Event) GetPtraceTraceeParentInterpreterFilePackageVersion() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.PTrace.Tracee.Parent.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageVersion(ev, &ev.PTrace.Tracee.Parent.LinuxBinprm.FileEvent)
 }
@@ -11252,10 +11257,10 @@ func (ev *Event) GetPtraceTraceeParentInterpreterFilePath() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.PTrace.Tracee.Parent.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFilePath(ev, &ev.PTrace.Tracee.Parent.LinuxBinprm.FileEvent)
 }
@@ -11286,10 +11291,10 @@ func (ev *Event) GetPtraceTraceeParentInterpreterFileRights() int {
 		return 0
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return 0
+		return 0 // ici
 	}
 	if !ev.PTrace.Tracee.Parent.HasInterpreter() {
-		return 0
+		return 0 // ici
 	}
 	return ev.FieldHandlers.ResolveRights(ev, &ev.PTrace.Tracee.Parent.LinuxBinprm.FileEvent.FileFields)
 }
@@ -11306,10 +11311,10 @@ func (ev *Event) GetPtraceTraceeParentInterpreterFileUid() uint32 {
 		return uint32(0)
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	if !ev.PTrace.Tracee.Parent.HasInterpreter() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.PTrace.Tracee.Parent.LinuxBinprm.FileEvent.FileFields.UID
 }
@@ -11326,10 +11331,10 @@ func (ev *Event) GetPtraceTraceeParentInterpreterFileUser() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.PTrace.Tracee.Parent.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsUser(ev, &ev.PTrace.Tracee.Parent.LinuxBinprm.FileEvent.FileFields)
 }
@@ -11346,7 +11351,7 @@ func (ev *Event) GetPtraceTraceeParentIsKworker() bool {
 		return false
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return false
+		return false // ici
 	}
 	return ev.PTrace.Tracee.Parent.PIDContext.IsKworker
 }
@@ -11363,7 +11368,7 @@ func (ev *Event) GetPtraceTraceeParentIsThread() bool {
 		return false
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return false
+		return false // ici
 	}
 	return ev.PTrace.Tracee.Parent.IsThread
 }
@@ -11380,7 +11385,7 @@ func (ev *Event) GetPtraceTraceeParentPid() uint32 {
 		return uint32(0)
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.PTrace.Tracee.Parent.PIDContext.Pid
 }
@@ -11397,7 +11402,7 @@ func (ev *Event) GetPtraceTraceeParentPpid() uint32 {
 		return uint32(0)
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.PTrace.Tracee.Parent.PPid
 }
@@ -11414,7 +11419,7 @@ func (ev *Event) GetPtraceTraceeParentTid() uint32 {
 		return uint32(0)
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.PTrace.Tracee.Parent.PIDContext.Tid
 }
@@ -11431,7 +11436,7 @@ func (ev *Event) GetPtraceTraceeParentTtyName() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.PTrace.Tracee.Parent.TTYName
 }
@@ -11448,7 +11453,7 @@ func (ev *Event) GetPtraceTraceeParentUid() uint32 {
 		return uint32(0)
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.PTrace.Tracee.Parent.Credentials.UID
 }
@@ -11465,7 +11470,7 @@ func (ev *Event) GetPtraceTraceeParentUser() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.PTrace.Tracee.Parent.Credentials.User
 }
@@ -11482,7 +11487,7 @@ func (ev *Event) GetPtraceTraceeParentUserSessionK8sGroups() []string {
 		return []string{}
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveK8SGroups(ev, &ev.PTrace.Tracee.Parent.UserSession)
 }
@@ -11499,7 +11504,7 @@ func (ev *Event) GetPtraceTraceeParentUserSessionK8sUid() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveK8SUID(ev, &ev.PTrace.Tracee.Parent.UserSession)
 }
@@ -11516,7 +11521,7 @@ func (ev *Event) GetPtraceTraceeParentUserSessionK8sUsername() string {
 		return ""
 	}
 	if !ev.PTrace.Tracee.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveK8SUsername(ev, &ev.PTrace.Tracee.Parent.UserSession)
 }
@@ -14727,7 +14732,7 @@ func (ev *Event) GetSignalTargetFileChangeTime() uint64 {
 		return uint64(0)
 	}
 	if !ev.Signal.Target.Process.IsNotKworker() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.Signal.Target.Process.FileEvent.FileFields.CTime
 }
@@ -14741,7 +14746,7 @@ func (ev *Event) GetSignalTargetFileFilesystem() string {
 		return ""
 	}
 	if !ev.Signal.Target.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFilesystem(ev, &ev.Signal.Target.Process.FileEvent)
 }
@@ -14755,7 +14760,7 @@ func (ev *Event) GetSignalTargetFileGid() uint32 {
 		return uint32(0)
 	}
 	if !ev.Signal.Target.Process.IsNotKworker() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.Signal.Target.Process.FileEvent.FileFields.GID
 }
@@ -14769,7 +14774,7 @@ func (ev *Event) GetSignalTargetFileGroup() string {
 		return ""
 	}
 	if !ev.Signal.Target.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsGroup(ev, &ev.Signal.Target.Process.FileEvent.FileFields)
 }
@@ -14783,7 +14788,7 @@ func (ev *Event) GetSignalTargetFileHashes() []string {
 		return []string{}
 	}
 	if !ev.Signal.Target.Process.IsNotKworker() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveHashesFromEvent(ev, &ev.Signal.Target.Process.FileEvent)
 }
@@ -14797,7 +14802,7 @@ func (ev *Event) GetSignalTargetFileInUpperLayer() bool {
 		return false
 	}
 	if !ev.Signal.Target.Process.IsNotKworker() {
-		return false
+		return false // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsInUpperLayer(ev, &ev.Signal.Target.Process.FileEvent.FileFields)
 }
@@ -14811,7 +14816,7 @@ func (ev *Event) GetSignalTargetFileInode() uint64 {
 		return uint64(0)
 	}
 	if !ev.Signal.Target.Process.IsNotKworker() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.Signal.Target.Process.FileEvent.FileFields.PathKey.Inode
 }
@@ -14825,7 +14830,7 @@ func (ev *Event) GetSignalTargetFileMode() uint16 {
 		return uint16(0)
 	}
 	if !ev.Signal.Target.Process.IsNotKworker() {
-		return uint16(0)
+		return uint16(0) // ici
 	}
 	return ev.Signal.Target.Process.FileEvent.FileFields.Mode
 }
@@ -14839,7 +14844,7 @@ func (ev *Event) GetSignalTargetFileModificationTime() uint64 {
 		return uint64(0)
 	}
 	if !ev.Signal.Target.Process.IsNotKworker() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.Signal.Target.Process.FileEvent.FileFields.MTime
 }
@@ -14853,7 +14858,7 @@ func (ev *Event) GetSignalTargetFileMountId() uint32 {
 		return uint32(0)
 	}
 	if !ev.Signal.Target.Process.IsNotKworker() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.Signal.Target.Process.FileEvent.FileFields.PathKey.MountID
 }
@@ -14867,7 +14872,7 @@ func (ev *Event) GetSignalTargetFileName() string {
 		return ""
 	}
 	if !ev.Signal.Target.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileBasename(ev, &ev.Signal.Target.Process.FileEvent)
 }
@@ -14892,7 +14897,7 @@ func (ev *Event) GetSignalTargetFilePackageName() string {
 		return ""
 	}
 	if !ev.Signal.Target.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageName(ev, &ev.Signal.Target.Process.FileEvent)
 }
@@ -14906,7 +14911,7 @@ func (ev *Event) GetSignalTargetFilePackageSourceVersion() string {
 		return ""
 	}
 	if !ev.Signal.Target.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageSourceVersion(ev, &ev.Signal.Target.Process.FileEvent)
 }
@@ -14920,7 +14925,7 @@ func (ev *Event) GetSignalTargetFilePackageVersion() string {
 		return ""
 	}
 	if !ev.Signal.Target.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageVersion(ev, &ev.Signal.Target.Process.FileEvent)
 }
@@ -14934,7 +14939,7 @@ func (ev *Event) GetSignalTargetFilePath() string {
 		return ""
 	}
 	if !ev.Signal.Target.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFilePath(ev, &ev.Signal.Target.Process.FileEvent)
 }
@@ -14959,7 +14964,7 @@ func (ev *Event) GetSignalTargetFileRights() int {
 		return 0
 	}
 	if !ev.Signal.Target.Process.IsNotKworker() {
-		return 0
+		return 0 // ici
 	}
 	return ev.FieldHandlers.ResolveRights(ev, &ev.Signal.Target.Process.FileEvent.FileFields)
 }
@@ -14973,7 +14978,7 @@ func (ev *Event) GetSignalTargetFileUid() uint32 {
 		return uint32(0)
 	}
 	if !ev.Signal.Target.Process.IsNotKworker() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.Signal.Target.Process.FileEvent.FileFields.UID
 }
@@ -14987,7 +14992,7 @@ func (ev *Event) GetSignalTargetFileUser() string {
 		return ""
 	}
 	if !ev.Signal.Target.Process.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsUser(ev, &ev.Signal.Target.Process.FileEvent.FileFields)
 }
@@ -15078,7 +15083,7 @@ func (ev *Event) GetSignalTargetInterpreterFileChangeTime() uint64 {
 		return uint64(0)
 	}
 	if !ev.Signal.Target.Process.HasInterpreter() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.Signal.Target.Process.LinuxBinprm.FileEvent.FileFields.CTime
 }
@@ -15092,7 +15097,7 @@ func (ev *Event) GetSignalTargetInterpreterFileFilesystem() string {
 		return ""
 	}
 	if !ev.Signal.Target.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFilesystem(ev, &ev.Signal.Target.Process.LinuxBinprm.FileEvent)
 }
@@ -15106,7 +15111,7 @@ func (ev *Event) GetSignalTargetInterpreterFileGid() uint32 {
 		return uint32(0)
 	}
 	if !ev.Signal.Target.Process.HasInterpreter() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.Signal.Target.Process.LinuxBinprm.FileEvent.FileFields.GID
 }
@@ -15120,7 +15125,7 @@ func (ev *Event) GetSignalTargetInterpreterFileGroup() string {
 		return ""
 	}
 	if !ev.Signal.Target.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsGroup(ev, &ev.Signal.Target.Process.LinuxBinprm.FileEvent.FileFields)
 }
@@ -15134,7 +15139,7 @@ func (ev *Event) GetSignalTargetInterpreterFileHashes() []string {
 		return []string{}
 	}
 	if !ev.Signal.Target.Process.HasInterpreter() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveHashesFromEvent(ev, &ev.Signal.Target.Process.LinuxBinprm.FileEvent)
 }
@@ -15148,7 +15153,7 @@ func (ev *Event) GetSignalTargetInterpreterFileInUpperLayer() bool {
 		return false
 	}
 	if !ev.Signal.Target.Process.HasInterpreter() {
-		return false
+		return false // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsInUpperLayer(ev, &ev.Signal.Target.Process.LinuxBinprm.FileEvent.FileFields)
 }
@@ -15162,7 +15167,7 @@ func (ev *Event) GetSignalTargetInterpreterFileInode() uint64 {
 		return uint64(0)
 	}
 	if !ev.Signal.Target.Process.HasInterpreter() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.Signal.Target.Process.LinuxBinprm.FileEvent.FileFields.PathKey.Inode
 }
@@ -15176,7 +15181,7 @@ func (ev *Event) GetSignalTargetInterpreterFileMode() uint16 {
 		return uint16(0)
 	}
 	if !ev.Signal.Target.Process.HasInterpreter() {
-		return uint16(0)
+		return uint16(0) // ici
 	}
 	return ev.Signal.Target.Process.LinuxBinprm.FileEvent.FileFields.Mode
 }
@@ -15190,7 +15195,7 @@ func (ev *Event) GetSignalTargetInterpreterFileModificationTime() uint64 {
 		return uint64(0)
 	}
 	if !ev.Signal.Target.Process.HasInterpreter() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.Signal.Target.Process.LinuxBinprm.FileEvent.FileFields.MTime
 }
@@ -15204,7 +15209,7 @@ func (ev *Event) GetSignalTargetInterpreterFileMountId() uint32 {
 		return uint32(0)
 	}
 	if !ev.Signal.Target.Process.HasInterpreter() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.Signal.Target.Process.LinuxBinprm.FileEvent.FileFields.PathKey.MountID
 }
@@ -15218,7 +15223,7 @@ func (ev *Event) GetSignalTargetInterpreterFileName() string {
 		return ""
 	}
 	if !ev.Signal.Target.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileBasename(ev, &ev.Signal.Target.Process.LinuxBinprm.FileEvent)
 }
@@ -15243,7 +15248,7 @@ func (ev *Event) GetSignalTargetInterpreterFilePackageName() string {
 		return ""
 	}
 	if !ev.Signal.Target.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageName(ev, &ev.Signal.Target.Process.LinuxBinprm.FileEvent)
 }
@@ -15257,7 +15262,7 @@ func (ev *Event) GetSignalTargetInterpreterFilePackageSourceVersion() string {
 		return ""
 	}
 	if !ev.Signal.Target.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageSourceVersion(ev, &ev.Signal.Target.Process.LinuxBinprm.FileEvent)
 }
@@ -15271,7 +15276,7 @@ func (ev *Event) GetSignalTargetInterpreterFilePackageVersion() string {
 		return ""
 	}
 	if !ev.Signal.Target.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageVersion(ev, &ev.Signal.Target.Process.LinuxBinprm.FileEvent)
 }
@@ -15285,7 +15290,7 @@ func (ev *Event) GetSignalTargetInterpreterFilePath() string {
 		return ""
 	}
 	if !ev.Signal.Target.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFilePath(ev, &ev.Signal.Target.Process.LinuxBinprm.FileEvent)
 }
@@ -15310,7 +15315,7 @@ func (ev *Event) GetSignalTargetInterpreterFileRights() int {
 		return 0
 	}
 	if !ev.Signal.Target.Process.HasInterpreter() {
-		return 0
+		return 0 // ici
 	}
 	return ev.FieldHandlers.ResolveRights(ev, &ev.Signal.Target.Process.LinuxBinprm.FileEvent.FileFields)
 }
@@ -15324,7 +15329,7 @@ func (ev *Event) GetSignalTargetInterpreterFileUid() uint32 {
 		return uint32(0)
 	}
 	if !ev.Signal.Target.Process.HasInterpreter() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.Signal.Target.Process.LinuxBinprm.FileEvent.FileFields.UID
 }
@@ -15338,7 +15343,7 @@ func (ev *Event) GetSignalTargetInterpreterFileUser() string {
 		return ""
 	}
 	if !ev.Signal.Target.Process.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsUser(ev, &ev.Signal.Target.Process.LinuxBinprm.FileEvent.FileFields)
 }
@@ -15377,7 +15382,7 @@ func (ev *Event) GetSignalTargetParentArgs() string {
 		return ""
 	}
 	if !ev.Signal.Target.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveProcessArgs(ev, ev.Signal.Target.Parent)
 }
@@ -15394,7 +15399,7 @@ func (ev *Event) GetSignalTargetParentArgsFlags() []string {
 		return []string{}
 	}
 	if !ev.Signal.Target.HasParent() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveProcessArgsFlags(ev, ev.Signal.Target.Parent)
 }
@@ -15411,7 +15416,7 @@ func (ev *Event) GetSignalTargetParentArgsOptions() []string {
 		return []string{}
 	}
 	if !ev.Signal.Target.HasParent() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveProcessArgsOptions(ev, ev.Signal.Target.Parent)
 }
@@ -15428,7 +15433,7 @@ func (ev *Event) GetSignalTargetParentArgsScrubbed() string {
 		return ""
 	}
 	if !ev.Signal.Target.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveProcessArgsScrubbed(ev, ev.Signal.Target.Parent)
 }
@@ -15445,7 +15450,7 @@ func (ev *Event) GetSignalTargetParentArgsTruncated() bool {
 		return false
 	}
 	if !ev.Signal.Target.HasParent() {
-		return false
+		return false // ici
 	}
 	return ev.FieldHandlers.ResolveProcessArgsTruncated(ev, ev.Signal.Target.Parent)
 }
@@ -15462,7 +15467,7 @@ func (ev *Event) GetSignalTargetParentArgv() []string {
 		return []string{}
 	}
 	if !ev.Signal.Target.HasParent() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveProcessArgv(ev, ev.Signal.Target.Parent)
 }
@@ -15479,7 +15484,7 @@ func (ev *Event) GetSignalTargetParentArgv0() string {
 		return ""
 	}
 	if !ev.Signal.Target.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveProcessArgv0(ev, ev.Signal.Target.Parent)
 }
@@ -15496,7 +15501,7 @@ func (ev *Event) GetSignalTargetParentArgvScrubbed() []string {
 		return []string{}
 	}
 	if !ev.Signal.Target.HasParent() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveProcessArgvScrubbed(ev, ev.Signal.Target.Parent)
 }
@@ -15513,7 +15518,7 @@ func (ev *Event) GetSignalTargetParentCapEffective() uint64 {
 		return uint64(0)
 	}
 	if !ev.Signal.Target.HasParent() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.Signal.Target.Parent.Credentials.CapEffective
 }
@@ -15530,7 +15535,7 @@ func (ev *Event) GetSignalTargetParentCapPermitted() uint64 {
 		return uint64(0)
 	}
 	if !ev.Signal.Target.HasParent() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.Signal.Target.Parent.Credentials.CapPermitted
 }
@@ -15547,7 +15552,7 @@ func (ev *Event) GetSignalTargetParentComm() string {
 		return ""
 	}
 	if !ev.Signal.Target.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.Signal.Target.Parent.Comm
 }
@@ -15564,7 +15569,7 @@ func (ev *Event) GetSignalTargetParentContainerId() string {
 		return ""
 	}
 	if !ev.Signal.Target.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.Signal.Target.Parent.ContainerID
 }
@@ -15581,7 +15586,7 @@ func (ev *Event) GetSignalTargetParentCreatedAt() int {
 		return 0
 	}
 	if !ev.Signal.Target.HasParent() {
-		return 0
+		return 0 // ici
 	}
 	return ev.FieldHandlers.ResolveProcessCreatedAt(ev, ev.Signal.Target.Parent)
 }
@@ -15598,7 +15603,7 @@ func (ev *Event) GetSignalTargetParentEgid() uint32 {
 		return uint32(0)
 	}
 	if !ev.Signal.Target.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.Signal.Target.Parent.Credentials.EGID
 }
@@ -15615,7 +15620,7 @@ func (ev *Event) GetSignalTargetParentEgroup() string {
 		return ""
 	}
 	if !ev.Signal.Target.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.Signal.Target.Parent.Credentials.EGroup
 }
@@ -15632,7 +15637,7 @@ func (ev *Event) GetSignalTargetParentEnvp() []string {
 		return []string{}
 	}
 	if !ev.Signal.Target.HasParent() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveProcessEnvp(ev, ev.Signal.Target.Parent)
 }
@@ -15649,7 +15654,7 @@ func (ev *Event) GetSignalTargetParentEnvs() []string {
 		return []string{}
 	}
 	if !ev.Signal.Target.HasParent() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveProcessEnvs(ev, ev.Signal.Target.Parent)
 }
@@ -15666,7 +15671,7 @@ func (ev *Event) GetSignalTargetParentEnvsTruncated() bool {
 		return false
 	}
 	if !ev.Signal.Target.HasParent() {
-		return false
+		return false // ici
 	}
 	return ev.FieldHandlers.ResolveProcessEnvsTruncated(ev, ev.Signal.Target.Parent)
 }
@@ -15683,7 +15688,7 @@ func (ev *Event) GetSignalTargetParentEuid() uint32 {
 		return uint32(0)
 	}
 	if !ev.Signal.Target.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.Signal.Target.Parent.Credentials.EUID
 }
@@ -15700,7 +15705,7 @@ func (ev *Event) GetSignalTargetParentEuser() string {
 		return ""
 	}
 	if !ev.Signal.Target.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.Signal.Target.Parent.Credentials.EUser
 }
@@ -15717,10 +15722,10 @@ func (ev *Event) GetSignalTargetParentFileChangeTime() uint64 {
 		return uint64(0)
 	}
 	if !ev.Signal.Target.HasParent() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	if !ev.Signal.Target.Parent.IsNotKworker() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.Signal.Target.Parent.FileEvent.FileFields.CTime
 }
@@ -15737,10 +15742,10 @@ func (ev *Event) GetSignalTargetParentFileFilesystem() string {
 		return ""
 	}
 	if !ev.Signal.Target.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.Signal.Target.Parent.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFilesystem(ev, &ev.Signal.Target.Parent.FileEvent)
 }
@@ -15757,10 +15762,10 @@ func (ev *Event) GetSignalTargetParentFileGid() uint32 {
 		return uint32(0)
 	}
 	if !ev.Signal.Target.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	if !ev.Signal.Target.Parent.IsNotKworker() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.Signal.Target.Parent.FileEvent.FileFields.GID
 }
@@ -15777,10 +15782,10 @@ func (ev *Event) GetSignalTargetParentFileGroup() string {
 		return ""
 	}
 	if !ev.Signal.Target.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.Signal.Target.Parent.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsGroup(ev, &ev.Signal.Target.Parent.FileEvent.FileFields)
 }
@@ -15797,10 +15802,10 @@ func (ev *Event) GetSignalTargetParentFileHashes() []string {
 		return []string{}
 	}
 	if !ev.Signal.Target.HasParent() {
-		return []string{}
+		return []string{} // ici
 	}
 	if !ev.Signal.Target.Parent.IsNotKworker() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveHashesFromEvent(ev, &ev.Signal.Target.Parent.FileEvent)
 }
@@ -15817,10 +15822,10 @@ func (ev *Event) GetSignalTargetParentFileInUpperLayer() bool {
 		return false
 	}
 	if !ev.Signal.Target.HasParent() {
-		return false
+		return false // ici
 	}
 	if !ev.Signal.Target.Parent.IsNotKworker() {
-		return false
+		return false // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsInUpperLayer(ev, &ev.Signal.Target.Parent.FileEvent.FileFields)
 }
@@ -15837,10 +15842,10 @@ func (ev *Event) GetSignalTargetParentFileInode() uint64 {
 		return uint64(0)
 	}
 	if !ev.Signal.Target.HasParent() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	if !ev.Signal.Target.Parent.IsNotKworker() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.Signal.Target.Parent.FileEvent.FileFields.PathKey.Inode
 }
@@ -15857,10 +15862,10 @@ func (ev *Event) GetSignalTargetParentFileMode() uint16 {
 		return uint16(0)
 	}
 	if !ev.Signal.Target.HasParent() {
-		return uint16(0)
+		return uint16(0) // ici
 	}
 	if !ev.Signal.Target.Parent.IsNotKworker() {
-		return uint16(0)
+		return uint16(0) // ici
 	}
 	return ev.Signal.Target.Parent.FileEvent.FileFields.Mode
 }
@@ -15877,10 +15882,10 @@ func (ev *Event) GetSignalTargetParentFileModificationTime() uint64 {
 		return uint64(0)
 	}
 	if !ev.Signal.Target.HasParent() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	if !ev.Signal.Target.Parent.IsNotKworker() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.Signal.Target.Parent.FileEvent.FileFields.MTime
 }
@@ -15897,10 +15902,10 @@ func (ev *Event) GetSignalTargetParentFileMountId() uint32 {
 		return uint32(0)
 	}
 	if !ev.Signal.Target.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	if !ev.Signal.Target.Parent.IsNotKworker() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.Signal.Target.Parent.FileEvent.FileFields.PathKey.MountID
 }
@@ -15917,10 +15922,10 @@ func (ev *Event) GetSignalTargetParentFileName() string {
 		return ""
 	}
 	if !ev.Signal.Target.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.Signal.Target.Parent.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileBasename(ev, &ev.Signal.Target.Parent.FileEvent)
 }
@@ -15951,10 +15956,10 @@ func (ev *Event) GetSignalTargetParentFilePackageName() string {
 		return ""
 	}
 	if !ev.Signal.Target.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.Signal.Target.Parent.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageName(ev, &ev.Signal.Target.Parent.FileEvent)
 }
@@ -15971,10 +15976,10 @@ func (ev *Event) GetSignalTargetParentFilePackageSourceVersion() string {
 		return ""
 	}
 	if !ev.Signal.Target.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.Signal.Target.Parent.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageSourceVersion(ev, &ev.Signal.Target.Parent.FileEvent)
 }
@@ -15991,10 +15996,10 @@ func (ev *Event) GetSignalTargetParentFilePackageVersion() string {
 		return ""
 	}
 	if !ev.Signal.Target.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.Signal.Target.Parent.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageVersion(ev, &ev.Signal.Target.Parent.FileEvent)
 }
@@ -16011,10 +16016,10 @@ func (ev *Event) GetSignalTargetParentFilePath() string {
 		return ""
 	}
 	if !ev.Signal.Target.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.Signal.Target.Parent.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFilePath(ev, &ev.Signal.Target.Parent.FileEvent)
 }
@@ -16045,10 +16050,10 @@ func (ev *Event) GetSignalTargetParentFileRights() int {
 		return 0
 	}
 	if !ev.Signal.Target.HasParent() {
-		return 0
+		return 0 // ici
 	}
 	if !ev.Signal.Target.Parent.IsNotKworker() {
-		return 0
+		return 0 // ici
 	}
 	return ev.FieldHandlers.ResolveRights(ev, &ev.Signal.Target.Parent.FileEvent.FileFields)
 }
@@ -16065,10 +16070,10 @@ func (ev *Event) GetSignalTargetParentFileUid() uint32 {
 		return uint32(0)
 	}
 	if !ev.Signal.Target.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	if !ev.Signal.Target.Parent.IsNotKworker() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.Signal.Target.Parent.FileEvent.FileFields.UID
 }
@@ -16085,10 +16090,10 @@ func (ev *Event) GetSignalTargetParentFileUser() string {
 		return ""
 	}
 	if !ev.Signal.Target.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.Signal.Target.Parent.IsNotKworker() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsUser(ev, &ev.Signal.Target.Parent.FileEvent.FileFields)
 }
@@ -16105,7 +16110,7 @@ func (ev *Event) GetSignalTargetParentFsgid() uint32 {
 		return uint32(0)
 	}
 	if !ev.Signal.Target.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.Signal.Target.Parent.Credentials.FSGID
 }
@@ -16122,7 +16127,7 @@ func (ev *Event) GetSignalTargetParentFsgroup() string {
 		return ""
 	}
 	if !ev.Signal.Target.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.Signal.Target.Parent.Credentials.FSGroup
 }
@@ -16139,7 +16144,7 @@ func (ev *Event) GetSignalTargetParentFsuid() uint32 {
 		return uint32(0)
 	}
 	if !ev.Signal.Target.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.Signal.Target.Parent.Credentials.FSUID
 }
@@ -16156,7 +16161,7 @@ func (ev *Event) GetSignalTargetParentFsuser() string {
 		return ""
 	}
 	if !ev.Signal.Target.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.Signal.Target.Parent.Credentials.FSUser
 }
@@ -16173,7 +16178,7 @@ func (ev *Event) GetSignalTargetParentGid() uint32 {
 		return uint32(0)
 	}
 	if !ev.Signal.Target.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.Signal.Target.Parent.Credentials.GID
 }
@@ -16190,7 +16195,7 @@ func (ev *Event) GetSignalTargetParentGroup() string {
 		return ""
 	}
 	if !ev.Signal.Target.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.Signal.Target.Parent.Credentials.Group
 }
@@ -16207,10 +16212,10 @@ func (ev *Event) GetSignalTargetParentInterpreterFileChangeTime() uint64 {
 		return uint64(0)
 	}
 	if !ev.Signal.Target.HasParent() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	if !ev.Signal.Target.Parent.HasInterpreter() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.Signal.Target.Parent.LinuxBinprm.FileEvent.FileFields.CTime
 }
@@ -16227,10 +16232,10 @@ func (ev *Event) GetSignalTargetParentInterpreterFileFilesystem() string {
 		return ""
 	}
 	if !ev.Signal.Target.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.Signal.Target.Parent.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFilesystem(ev, &ev.Signal.Target.Parent.LinuxBinprm.FileEvent)
 }
@@ -16247,10 +16252,10 @@ func (ev *Event) GetSignalTargetParentInterpreterFileGid() uint32 {
 		return uint32(0)
 	}
 	if !ev.Signal.Target.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	if !ev.Signal.Target.Parent.HasInterpreter() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.Signal.Target.Parent.LinuxBinprm.FileEvent.FileFields.GID
 }
@@ -16267,10 +16272,10 @@ func (ev *Event) GetSignalTargetParentInterpreterFileGroup() string {
 		return ""
 	}
 	if !ev.Signal.Target.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.Signal.Target.Parent.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsGroup(ev, &ev.Signal.Target.Parent.LinuxBinprm.FileEvent.FileFields)
 }
@@ -16287,10 +16292,10 @@ func (ev *Event) GetSignalTargetParentInterpreterFileHashes() []string {
 		return []string{}
 	}
 	if !ev.Signal.Target.HasParent() {
-		return []string{}
+		return []string{} // ici
 	}
 	if !ev.Signal.Target.Parent.HasInterpreter() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveHashesFromEvent(ev, &ev.Signal.Target.Parent.LinuxBinprm.FileEvent)
 }
@@ -16307,10 +16312,10 @@ func (ev *Event) GetSignalTargetParentInterpreterFileInUpperLayer() bool {
 		return false
 	}
 	if !ev.Signal.Target.HasParent() {
-		return false
+		return false // ici
 	}
 	if !ev.Signal.Target.Parent.HasInterpreter() {
-		return false
+		return false // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsInUpperLayer(ev, &ev.Signal.Target.Parent.LinuxBinprm.FileEvent.FileFields)
 }
@@ -16327,10 +16332,10 @@ func (ev *Event) GetSignalTargetParentInterpreterFileInode() uint64 {
 		return uint64(0)
 	}
 	if !ev.Signal.Target.HasParent() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	if !ev.Signal.Target.Parent.HasInterpreter() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.Signal.Target.Parent.LinuxBinprm.FileEvent.FileFields.PathKey.Inode
 }
@@ -16347,10 +16352,10 @@ func (ev *Event) GetSignalTargetParentInterpreterFileMode() uint16 {
 		return uint16(0)
 	}
 	if !ev.Signal.Target.HasParent() {
-		return uint16(0)
+		return uint16(0) // ici
 	}
 	if !ev.Signal.Target.Parent.HasInterpreter() {
-		return uint16(0)
+		return uint16(0) // ici
 	}
 	return ev.Signal.Target.Parent.LinuxBinprm.FileEvent.FileFields.Mode
 }
@@ -16367,10 +16372,10 @@ func (ev *Event) GetSignalTargetParentInterpreterFileModificationTime() uint64 {
 		return uint64(0)
 	}
 	if !ev.Signal.Target.HasParent() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	if !ev.Signal.Target.Parent.HasInterpreter() {
-		return uint64(0)
+		return uint64(0) // ici
 	}
 	return ev.Signal.Target.Parent.LinuxBinprm.FileEvent.FileFields.MTime
 }
@@ -16387,10 +16392,10 @@ func (ev *Event) GetSignalTargetParentInterpreterFileMountId() uint32 {
 		return uint32(0)
 	}
 	if !ev.Signal.Target.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	if !ev.Signal.Target.Parent.HasInterpreter() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.Signal.Target.Parent.LinuxBinprm.FileEvent.FileFields.PathKey.MountID
 }
@@ -16407,10 +16412,10 @@ func (ev *Event) GetSignalTargetParentInterpreterFileName() string {
 		return ""
 	}
 	if !ev.Signal.Target.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.Signal.Target.Parent.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileBasename(ev, &ev.Signal.Target.Parent.LinuxBinprm.FileEvent)
 }
@@ -16441,10 +16446,10 @@ func (ev *Event) GetSignalTargetParentInterpreterFilePackageName() string {
 		return ""
 	}
 	if !ev.Signal.Target.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.Signal.Target.Parent.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageName(ev, &ev.Signal.Target.Parent.LinuxBinprm.FileEvent)
 }
@@ -16461,10 +16466,10 @@ func (ev *Event) GetSignalTargetParentInterpreterFilePackageSourceVersion() stri
 		return ""
 	}
 	if !ev.Signal.Target.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.Signal.Target.Parent.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageSourceVersion(ev, &ev.Signal.Target.Parent.LinuxBinprm.FileEvent)
 }
@@ -16481,10 +16486,10 @@ func (ev *Event) GetSignalTargetParentInterpreterFilePackageVersion() string {
 		return ""
 	}
 	if !ev.Signal.Target.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.Signal.Target.Parent.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolvePackageVersion(ev, &ev.Signal.Target.Parent.LinuxBinprm.FileEvent)
 }
@@ -16501,10 +16506,10 @@ func (ev *Event) GetSignalTargetParentInterpreterFilePath() string {
 		return ""
 	}
 	if !ev.Signal.Target.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.Signal.Target.Parent.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFilePath(ev, &ev.Signal.Target.Parent.LinuxBinprm.FileEvent)
 }
@@ -16535,10 +16540,10 @@ func (ev *Event) GetSignalTargetParentInterpreterFileRights() int {
 		return 0
 	}
 	if !ev.Signal.Target.HasParent() {
-		return 0
+		return 0 // ici
 	}
 	if !ev.Signal.Target.Parent.HasInterpreter() {
-		return 0
+		return 0 // ici
 	}
 	return ev.FieldHandlers.ResolveRights(ev, &ev.Signal.Target.Parent.LinuxBinprm.FileEvent.FileFields)
 }
@@ -16555,10 +16560,10 @@ func (ev *Event) GetSignalTargetParentInterpreterFileUid() uint32 {
 		return uint32(0)
 	}
 	if !ev.Signal.Target.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	if !ev.Signal.Target.Parent.HasInterpreter() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.Signal.Target.Parent.LinuxBinprm.FileEvent.FileFields.UID
 }
@@ -16575,10 +16580,10 @@ func (ev *Event) GetSignalTargetParentInterpreterFileUser() string {
 		return ""
 	}
 	if !ev.Signal.Target.HasParent() {
-		return ""
+		return "" // ici
 	}
 	if !ev.Signal.Target.Parent.HasInterpreter() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileFieldsUser(ev, &ev.Signal.Target.Parent.LinuxBinprm.FileEvent.FileFields)
 }
@@ -16595,7 +16600,7 @@ func (ev *Event) GetSignalTargetParentIsKworker() bool {
 		return false
 	}
 	if !ev.Signal.Target.HasParent() {
-		return false
+		return false // ici
 	}
 	return ev.Signal.Target.Parent.PIDContext.IsKworker
 }
@@ -16612,7 +16617,7 @@ func (ev *Event) GetSignalTargetParentIsThread() bool {
 		return false
 	}
 	if !ev.Signal.Target.HasParent() {
-		return false
+		return false // ici
 	}
 	return ev.Signal.Target.Parent.IsThread
 }
@@ -16629,7 +16634,7 @@ func (ev *Event) GetSignalTargetParentPid() uint32 {
 		return uint32(0)
 	}
 	if !ev.Signal.Target.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.Signal.Target.Parent.PIDContext.Pid
 }
@@ -16646,7 +16651,7 @@ func (ev *Event) GetSignalTargetParentPpid() uint32 {
 		return uint32(0)
 	}
 	if !ev.Signal.Target.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.Signal.Target.Parent.PPid
 }
@@ -16663,7 +16668,7 @@ func (ev *Event) GetSignalTargetParentTid() uint32 {
 		return uint32(0)
 	}
 	if !ev.Signal.Target.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.Signal.Target.Parent.PIDContext.Tid
 }
@@ -16680,7 +16685,7 @@ func (ev *Event) GetSignalTargetParentTtyName() string {
 		return ""
 	}
 	if !ev.Signal.Target.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.Signal.Target.Parent.TTYName
 }
@@ -16697,7 +16702,7 @@ func (ev *Event) GetSignalTargetParentUid() uint32 {
 		return uint32(0)
 	}
 	if !ev.Signal.Target.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.Signal.Target.Parent.Credentials.UID
 }
@@ -16714,7 +16719,7 @@ func (ev *Event) GetSignalTargetParentUser() string {
 		return ""
 	}
 	if !ev.Signal.Target.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.Signal.Target.Parent.Credentials.User
 }
@@ -16731,7 +16736,7 @@ func (ev *Event) GetSignalTargetParentUserSessionK8sGroups() []string {
 		return []string{}
 	}
 	if !ev.Signal.Target.HasParent() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveK8SGroups(ev, &ev.Signal.Target.Parent.UserSession)
 }
@@ -16748,7 +16753,7 @@ func (ev *Event) GetSignalTargetParentUserSessionK8sUid() string {
 		return ""
 	}
 	if !ev.Signal.Target.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveK8SUID(ev, &ev.Signal.Target.Parent.UserSession)
 }
@@ -16765,7 +16770,7 @@ func (ev *Event) GetSignalTargetParentUserSessionK8sUsername() string {
 		return ""
 	}
 	if !ev.Signal.Target.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveK8SUsername(ev, &ev.Signal.Target.Parent.UserSession)
 }

@@ -37,6 +37,11 @@ func (ev *Event) GetContainerTags() []string {
 	return ev.FieldHandlers.ResolveContainerTags(ev, ev.BaseEvent.ContainerContext)
 }
 
+// GetEventService returns the value of the field, resolving if necessary
+func (ev *Event) GetEventService() string {
+	return ev.FieldHandlers.ResolveService(ev, &ev.BaseEvent)
+}
+
 // GetEventTimestamp returns the value of the field, resolving if necessary
 func (ev *Event) GetEventTimestamp() int {
 	return ev.FieldHandlers.ResolveEventTimestamp(ev, &ev.BaseEvent)
@@ -723,7 +728,7 @@ func (ev *Event) GetProcessParentCmdline() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveProcessCmdLine(ev, ev.BaseEvent.ProcessContext.Parent)
 }
@@ -737,7 +742,7 @@ func (ev *Event) GetProcessParentCmdlineScrubbed() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveProcessCmdLineScrubbed(ev, ev.BaseEvent.ProcessContext.Parent)
 }
@@ -751,7 +756,7 @@ func (ev *Event) GetProcessParentContainerId() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.ContainerID
 }
@@ -765,7 +770,7 @@ func (ev *Event) GetProcessParentCreatedAt() int {
 		return 0
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return 0
+		return 0 // ici
 	}
 	return ev.FieldHandlers.ResolveProcessCreatedAt(ev, ev.BaseEvent.ProcessContext.Parent)
 }
@@ -779,7 +784,7 @@ func (ev *Event) GetProcessParentEnvp() []string {
 		return []string{}
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveProcessEnvp(ev, ev.BaseEvent.ProcessContext.Parent)
 }
@@ -793,7 +798,7 @@ func (ev *Event) GetProcessParentEnvs() []string {
 		return []string{}
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return []string{}
+		return []string{} // ici
 	}
 	return ev.FieldHandlers.ResolveProcessEnvs(ev, ev.BaseEvent.ProcessContext.Parent)
 }
@@ -807,7 +812,7 @@ func (ev *Event) GetProcessParentFileName() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFileBasename(ev, &ev.BaseEvent.ProcessContext.Parent.FileEvent)
 }
@@ -832,7 +837,7 @@ func (ev *Event) GetProcessParentFilePath() string {
 		return ""
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return ""
+		return "" // ici
 	}
 	return ev.FieldHandlers.ResolveFilePath(ev, &ev.BaseEvent.ProcessContext.Parent.FileEvent)
 }
@@ -857,7 +862,7 @@ func (ev *Event) GetProcessParentPid() uint32 {
 		return uint32(0)
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.PIDContext.Pid
 }
@@ -871,7 +876,7 @@ func (ev *Event) GetProcessParentPpid() uint32 {
 		return uint32(0)
 	}
 	if !ev.BaseEvent.ProcessContext.HasParent() {
-		return uint32(0)
+		return uint32(0) // ici
 	}
 	return ev.BaseEvent.ProcessContext.Parent.PPid
 }
