@@ -16,6 +16,7 @@ import requests
 from invoke import task
 from invoke.exceptions import Exit
 
+from .agent import build as agent_build
 from .build_tags import UNIT_TEST_TAGS, get_default_build_tags
 from .libs.common.color import color_message
 from .libs.ninja_syntax import NinjaWriter
@@ -495,6 +496,7 @@ def build(
     strip_object_files=False,
     strip_binary=False,
     with_unit_test=False,
+    bundle=False,
 ):
     """
     Build the system-probe
@@ -520,6 +522,7 @@ def build(
         race=race,
         incremental_build=incremental_build,
         strip_binary=strip_binary,
+        bundle=bundle,
     )
 
 
@@ -549,7 +552,18 @@ def build_sysprobe_binary(
     binary=BIN_PATH,
     bundle_ebpf=False,
     strip_binary=False,
+    bundle=False,
 ):
+    if bundle:
+        return agent_build(
+            ctx,
+            race=race,
+            major_version=major_version,
+            python_runtimes=python_runtimes,
+            arch=arch,
+            go_mod=go_mod,
+        )
+
     ldflags, gcflags, env = get_build_flags(
         ctx,
         major_version=major_version,
@@ -561,6 +575,9 @@ def build_sysprobe_binary(
         build_tags.append(BUNDLE_TAG)
     if strip_binary:
         ldflags += ' -s -w'
+
+    if os.path.exists(binary):
+        os.remove(binary)
 
     cmd = 'go build -mod={go_mod}{race_opt}{build_type} -tags "{go_build_tags}" '
     cmd += '-o {agent_bin} -gcflags="{gcflags}" -ldflags="{ldflags}" {REPO_PATH}/cmd/system-probe'

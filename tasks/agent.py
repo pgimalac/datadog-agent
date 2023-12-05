@@ -20,12 +20,10 @@ from .build_tags import filter_incompatible_tags, get_build_tags, get_default_bu
 from .docker_tasks import pull_base_images
 from .flavor import AgentFlavor
 from .go import deps
-from .process_agent import build as process_agent_build
 from .rtloader import clean as rtloader_clean
 from .rtloader import install as rtloader_install
 from .rtloader import make as rtloader_make
 from .ssm import get_pfx_pass, get_signing_cert
-from .trace_agent import build as trace_agent_build
 from .utils import (
     REPO_PATH,
     bin_name,
@@ -40,7 +38,8 @@ from .utils import (
 from .windows_resources import build_messagetable, build_rc, versioninfo_vars
 
 # constants
-BIN_PATH = os.path.join(".", "bin", "agent")
+BIN_DIR = os.path.join(".", "bin")
+BIN_PATH = os.path.join(BIN_DIR, "agent")
 AGENT_TAG = "datadog/agent:master"
 
 AGENT_CORECHECKS = [
@@ -91,13 +90,17 @@ IOT_AGENT_CORECHECKS = [
     "jetson",
 ]
 
+BUNDLED_AGENTS = {
+    AgentFlavor.base: ["process-agent", "trace-agent", "security-agent", "system-probe"],
+}
+
 CACHED_WHEEL_FILENAME_PATTERN = "datadog_{integration}-*.whl"
 CACHED_WHEEL_DIRECTORY_PATTERN = "integration-wheels/{branch}/{hash}/{python_version}/"
 CACHED_WHEEL_FULL_PATH_PATTERN = CACHED_WHEEL_DIRECTORY_PATTERN + CACHED_WHEEL_FILENAME_PATTERN
 LAST_DIRECTORY_COMMIT_PATTERN = "git -C {integrations_dir} rev-list -1 HEAD {integration}"
 
 
-@task
+@task(iterable='exclude')
 def build(
     ctx,
     rebuild=False,
@@ -118,6 +121,8 @@ def build(
     go_mod="mod",
     windows_sysprobe=False,
     cmake_options='',
+    exclude=None,
+    bundle=True,
 ):
     """
     Build the agent. If the bits to include in the build are not specified,
@@ -127,6 +132,7 @@ def build(
         inv agent.build --build-exclude=systemd
     """
     flavor = AgentFlavor[flavor]
+    bundled_agents = BUNDLED_AGENTS.get(flavor, []) if bundle else []
 
     if not exclude_rtloader and not flavor.is_iot():
         # If embedded_path is set, we should give it to rtloader as it should install the headers/libs
@@ -165,29 +171,59 @@ def build(
         # Iot mode overrides whatever passed through `--build-exclude` and `--build-include`
         build_tags = get_default_build_tags(build="agent", arch=arch, flavor=flavor)
     else:
-        build_include = (
-            get_default_build_tags(build="agent", arch=arch, flavor=flavor)
-            if build_include is None
-            else filter_incompatible_tags(build_include.split(","), arch=arch)
-        )
-        build_exclude = [] if build_exclude is None else build_exclude.split(",")
-        build_tags = get_build_tags(build_include, build_exclude)
+        all_tags = set()
+        if development:
+            all_tags.add("ebpf_bindata")
+
+        for build in bundled_agents:
+            if build in exclude:
+                continue
+
+            all_tags.add("bundle_" + build.replace("-", "_"))
+            include_tags = (
+                get_default_build_tags(build=build, arch=arch, flavor=flavor)
+                if build_include is None
+                else filter_incompatible_tags(build_include.split(","), arch=arch)
+            )
+
+            exclude_tags = [] if build_exclude is None else build_exclude.split(",")
+            build_tags = get_build_tags(include_tags, exclude_tags)
+
+            all_tags |= set(build_tags)
+        build_tags = list(all_tags)
+
 
     cmd = "go build -mod={go_mod} {race_opt} {build_type} -tags \"{go_build_tags}\" "
 
+    agent_bin = os.path.join(BIN_PATH, bin_name("agent"))
     cmd += "-o {agent_bin} -gcflags=\"{gcflags}\" -ldflags=\"{ldflags}\" {REPO_PATH}/cmd/{flavor}"
     args = {
         "go_mod": go_mod,
         "race_opt": "-race" if race else "",
         "build_type": "-a" if rebuild else "",
         "go_build_tags": " ".join(build_tags),
-        "agent_bin": os.path.join(BIN_PATH, bin_name("agent")),
+        "agent_bin": agent_bin,
         "gcflags": gcflags,
         "ldflags": ldflags,
         "REPO_PATH": REPO_PATH,
         "flavor": "iot-agent" if flavor.is_iot() else "agent",
     }
     ctx.run(cmd.format(**args), env=env)
+
+    for build in bundled_agents:
+        if build in exclude:
+            continue
+
+        bundled_agent_dir = os.path.join(BIN_DIR, build)
+        bundled_agent_bin = os.path.join(bundled_agent_dir, bin_name(build))
+        allinone_bin = os.path.relpath(agent_bin, bundled_agent_dir)
+
+        if os.path.exists(bundled_agent_bin):
+            if os.path.islink(bundled_agent_bin) and os.readlink(bundled_agent_bin) == allinone_bin:
+                continue
+            os.unlink(bundled_agent_bin)
+
+        os.symlink(allinone_bin, bundled_agent_bin)
 
     render_config(
         ctx,
@@ -410,9 +446,9 @@ def hacky_dev_image_build(
             f'perl -0777 -pe \'s|{extracted_python_dir}(/opt/datadog-agent/embedded/lib/python\\d+\\.\\d+/../..)|substr $1."\\0"x length$&,0,length$&|e or die "pattern not found"\' -i dev/lib/libdatadog-agent-three.so'
         )
         if process_agent:
-            process_agent_build(ctx)
+            ctx.run("inv process-agent.build")
         if trace_agent:
-            trace_agent_build(ctx)
+            ctx.run("inv trace-agent.build")
 
     copy_extra_agents = ""
     if process_agent:
