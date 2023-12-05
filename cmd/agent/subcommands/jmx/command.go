@@ -33,6 +33,7 @@ import (
 	"github.com/DataDog/datadog-agent/comp/core/flare"
 	"github.com/DataDog/datadog-agent/comp/core/log/logimpl"
 	"github.com/DataDog/datadog-agent/comp/core/secrets"
+	"github.com/DataDog/datadog-agent/comp/core/tagger"
 	"github.com/DataDog/datadog-agent/comp/core/workloadmeta"
 	"github.com/DataDog/datadog-agent/comp/core/workloadmeta/collectors"
 	"github.com/DataDog/datadog-agent/comp/dogstatsd/replay"
@@ -122,6 +123,7 @@ func Commands(globalParams *command.GlobalParams) []*cobra.Command {
 			}),
 			workloadmeta.Module(),
 			apiimpl.Module(),
+<<<<<<< HEAD
 
 			// TODO(components): this is a temporary hack as the StartServer() method of the API package was previously called with nil arguments
 			// This highlights the fact that the API Server created by JMX (through ExecJmx... function) should be different from the ones created
@@ -135,6 +137,16 @@ func Commands(globalParams *command.GlobalParams) []*cobra.Command {
 			fx.Provide(func() inventoryhost.Component { return nil }),
 			fx.Provide(func() demultiplexer.Component { return nil }),
 			fx.Provide(func() inventorychecks.Component { return nil }),
+=======
+			fx.Supply(workloadmeta.NewParams()),
+			fx.Provide(func(config config.Component) tagger.Params {
+				if pkgconfig.IsCLCRunner() {
+					return tagger.Params{TaggerAgentType: tagger.CLCRunnerRemoteTaggerAgent}
+				}
+				return tagger.Params{TaggerAgentType: tagger.LocalTaggerAgent}
+			}),
+			tagger.Module(),
+>>>>>>> 72d5949a16 (migrate cmd to tagger component)
 		)
 	}
 
