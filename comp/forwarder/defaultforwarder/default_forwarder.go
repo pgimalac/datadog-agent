@@ -274,17 +274,31 @@ func NewDefaultForwarder(config config.Component, log log.Component, options *Op
 	domainForwarderSort := transaction.SortByCreatedTimeAndPriority{HighPriorityFirst: true}
 	transactionContainerSort := transaction.SortByCreatedTimeAndPriority{HighPriorityFirst: false}
 
+	isHAEnabled := config.GetBool("ha.enabled")
+	HASite := config.GetString("ha.site")
+	HADDURL =: config.GetString("ha.dd_url")
+	hasHAEndpoint =: HASite != "" || HADDURL != ""
+
 	for domain, resolver := range options.DomainResolvers {
 		isHA := false
-		if config.GetBool("ha.enabled") && config.GetString("ha.site") != "" {
-			log.Infof("HA is enabled, checking site: %v ", config.GetString("ha.site"))
-			siteURL := pkgcfgutils.BuildURLWithPrefix(pkgcfgutils.InfraURLPrefix, config.GetString("ha.site"))
+		if isHAEnabled && hasHAEndpoint {
+			siteURL := nil
+			if HASite != "" {
+				log.Infof("HA is enabled, checking site: %v", HASite)
+				siteURL = pkgcfgutils.BuildURLWithPrefix(pkgcfgutils.InfraURLPrefix, HASite)
+			}
+
+			if HADDURL != "" {
+				log.Infof("HA is enabled, checking url: %v", HADDURL)
+				siteURL = HADDURL
+			}
+
 			if domain == siteURL {
 				log.Infof("HA domain '%s', configured ", domain)
 				isHA = true
 			}
-
 		}
+
 		domain, _ := utils.AddAgentVersionToDomain(domain, "app")
 		resolver.SetBaseDomain(domain)
 		if resolver.GetAPIKeys() == nil || len(resolver.GetAPIKeys()) == 0 {
