@@ -109,8 +109,8 @@ func CheckUninstallation(t *testing.T, client *TestClient, packageName string) {
 	t.Run("remove install directory", func(tt *testing.T) {
 		installFolderPath := client.Helper.GetInstallFolder()
 
-		foundFiles, err := client.FileManager.FindFileInFolder(installFolderPath)
-		require.Error(tt, err, "should not find anything in install folder, found: ", foundFiles)
+		entries, err := client.FileManager.ReadDir(installFolderPath)
+		require.Error(tt, err, "should not find anything in install folder, found: ", entries)
 	})
 
 }

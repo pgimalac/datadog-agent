@@ -8,6 +8,7 @@ package common
 import (
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"strings"
 	"time"
 
@@ -32,10 +33,10 @@ type PackageManager interface {
 
 // FileManager generic interface
 type FileManager interface {
-	ReadFile(path string) (string, error)
-	FileExists(path string) (string, error)
-	FindFileInFolder(path string) (string, error)
-	WriteFile(path string, content string) (string, error)
+	ReadFile(path string) ([]byte, error)
+	ReadDir(path string) ([]fs.DirEntry, error)
+	FileExists(path string) (bool, error)
+	WriteFile(path string, content []byte) (int64, error)
 }
 
 // Helper generic interface
@@ -141,7 +142,7 @@ func (c *TestClient) SetConfig(confPath string, key string, value string) error 
 	if err != nil {
 		return err
 	}
-	_, err = c.FileManager.WriteFile(confPath, string(confUpdated))
+	_, err = c.FileManager.WriteFile(confPath, confUpdated)
 	return err
 }
 
