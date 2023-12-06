@@ -276,13 +276,13 @@ func NewDefaultForwarder(config config.Component, log log.Component, options *Op
 
 	isHAEnabled := config.GetBool("ha.enabled")
 	HASite := config.GetString("ha.site")
-	HADDURL =: config.GetString("ha.dd_url")
-	hasHAEndpoint =: HASite != "" || HADDURL != ""
+	HADDURL := config.GetString("ha.dd_url")
+	hasHAEndpoint := HASite != "" || HADDURL != ""
 
 	for domain, resolver := range options.DomainResolvers {
 		isHA := false
 		if isHAEnabled && hasHAEndpoint {
-			siteURL := nil
+			var siteURL string
 			if HASite != "" {
 				log.Infof("HA is enabled, checking site: %v", HASite)
 				siteURL = pkgcfgutils.BuildURLWithPrefix(pkgcfgutils.InfraURLPrefix, HASite)
