@@ -208,3 +208,7 @@ test/fakeintake/build/*
 !test/workload-checks/**
 
 kmt-deps/
+
+# Ignore generated CI configurations
+generated-config.yml
+static-analysis.datadog.yml
