@@ -11,22 +11,25 @@ import (
 	"os"
 	"strings"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common"
 	filemanager "github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/file-manager"
 	helpers "github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/helper"
+	portTester "github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/port-tester"
 	processmanager "github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/process-manager"
 	svcmanager "github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/svc-manager"
 	"github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/install/installparams"
 	"github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/platforms"
-	"github.com/stretchr/testify/require"
+
+	e2eOs "github.com/DataDog/test-infra-definitions/components/os"
+	"github.com/DataDog/test-infra-definitions/scenarios/aws/vm/ec2os"
+	"github.com/DataDog/test-infra-definitions/scenarios/aws/vm/ec2params"
 
 	"github.com/DataDog/datadog-agent/test/new-e2e/pkg/utils/e2e"
 	"github.com/DataDog/datadog-agent/test/new-e2e/pkg/utils/e2e/client"
 	"github.com/DataDog/datadog-agent/test/new-e2e/pkg/utils/e2e/params"
 	"github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/install"
-	e2eOs "github.com/DataDog/test-infra-definitions/components/os"
-	"github.com/DataDog/test-infra-definitions/scenarios/aws/vm/ec2os"
-	"github.com/DataDog/test-infra-definitions/scenarios/aws/vm/ec2params"
 
 	"testing"
 )
@@ -93,13 +96,14 @@ func (is *agentMSISuite) TestInstallAgent() {
 func (is *agentMSISuite) AgentTest() {
 	fileManager := filemanager.NewClientFileManager(is.Env().VM)
 	processManager := processmanager.NewWindowsProcessManager(is.Env().VM)
+	portTester := portTester.NewWindowsPortTester(is.Env().VM)
 
 	vm := is.Env().VM.(*client.PulumiStackVM)
 	agentClient, err := client.NewAgentClient(is.T(), vm, vm.GetOS(), false)
 	require.NoError(is.T(), err)
 
 	helper := helpers.NewWindowsHelper()
-	client := common.NewTestClient(is.Env().VM, agentClient, fileManager, helper, processManager)
+	client := common.NewTestClient(is.Env().VM, agentClient, fileManager, helper, processManager, portTester)
 	client.SvcManager = svcmanager.NewWindowsSvcManager(vm)
 
 	install.Windows(is.T(), client, installparams.WithArch(*architecture), installparams.WithFlavor(*flavor))

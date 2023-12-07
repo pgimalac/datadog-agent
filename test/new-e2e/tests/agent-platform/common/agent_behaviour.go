@@ -230,8 +230,19 @@ func CheckAgentPython(t *testing.T, client *TestClient, version string) {
 // CheckApmEnabled runs tests to check the agent behave properly with APM enabled
 func CheckApmEnabled(t *testing.T, client *TestClient) {
 	t.Run("port bound apm enabled", func(tt *testing.T) {
-		err := client.CheckPortBound(8126)
-		require.NoError(tt, err, "port 8196 should be bound when APM is enabled")
+		configFilePath := client.Helper.GetConfigFolder() + client.Helper.GetConfigFileName()
+
+		err := client.SetConfig(configFilePath, "apm_config.enabled", "true")
+		require.NoError(tt, err)
+
+		_, err = client.SvcManager.Restart(client.Helper.GetServiceName())
+		require.NoError(tt, err)
+
+		require.Eventually(tt, func() bool {
+			var bound bool
+			bound, err = client.PortTester.IsPortBound(8126)
+			return bound && err == nil
+		}, 1*time.Minute, 500*time.Millisecond, "port 8126 should be bound when APM is enabled", err)
 	})
 }
 
@@ -246,8 +257,9 @@ func CheckApmDisabled(t *testing.T, client *TestClient) {
 		_, err = client.SvcManager.Restart(client.Helper.GetServiceName())
 		require.NoError(tt, err)
 
-		err = client.CheckPortBound(8126)
-		require.Error(tt, err, "port should not be bound when apm is manually disabled")
+		bound, err := client.PortTester.IsPortBound(8126)
+		require.NoError(tt, err)
+		require.False(tt, bound, "port should not be bound when apm is manually disabled")
 	})
 }
 

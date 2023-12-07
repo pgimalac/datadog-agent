@@ -14,6 +14,8 @@ import (
 	"github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common"
 	"github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/install/installparams"
 	"github.com/stretchr/testify/require"
+
+	"golang.org/x/text/encoding/unicode"
 )
 
 // Unix install the agent from install script, by default will install the agent 7 build corresponding to the CI if running in the CI, else the latest Agent 7 version
@@ -88,9 +90,15 @@ func Windows(t *testing.T, client *common.TestClient, options ...installparams.O
 		tt.Log(output)
 		// Collect the install log
 		installLog, err := client.VMClient.ReadFile(remoteLogPath)
-		if err != nil {
+		if err == nil {
 			// TODO: save it locally instead of printing to console
-			tt.Log(installLog)
+			// convert utf-16 string to utf-8 string
+			log, err := unicode.UTF16(unicode.LittleEndian, unicode.IgnoreBOM).NewDecoder().String(string(installLog))
+			if err != nil {
+				tt.Log(string(installLog))
+			} else {
+				tt.Log(log)
+			}
 		}
 		require.NoError(tt, installErr, "agent installation should not return any error: ", installErr)
 	})

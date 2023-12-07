@@ -54,6 +54,10 @@ type Helper interface {
 	AgentProcesses() []string
 }
 
+type PortTester interface {
+	IsPortBound(port int) (bool, error)
+}
+
 func getServiceManager(vmClient e2eClient.VM) ServiceManager {
 	if _, err := vmClient.ExecuteWithError("command -v systemctl"); err == nil {
 		return svcmanager.NewSystemctlSvcManager(vmClient)
@@ -94,10 +98,11 @@ type TestClient struct {
 	SvcManager     ServiceManager
 	PkgManager     PackageManager
 	ProcessManager ProcessManager
+	PortTester     PortTester
 }
 
 // NewTestClient create a an ExtendedClient from VMClient and AgentCommandRunner, includes svcManager and pkgManager to write agent-platform tests
-func NewTestClient(vmClient e2eClient.VM, agentClient e2eClient.Agent, fileManager FileManager, helper Helper, processManager ProcessManager) *TestClient {
+func NewTestClient(vmClient e2eClient.VM, agentClient e2eClient.Agent, fileManager FileManager, helper Helper, processManager ProcessManager, portTester PortTester) *TestClient {
 	svcManager := getServiceManager(vmClient)
 	pkgManager := getPackageManager(vmClient)
 	return &TestClient{
@@ -108,19 +113,8 @@ func NewTestClient(vmClient e2eClient.VM, agentClient e2eClient.Agent, fileManag
 		SvcManager:     svcManager,
 		PkgManager:     pkgManager,
 		ProcessManager: processManager,
+		PortTester:     portTester,
 	}
-}
-
-// CheckPortBound check if the port is currently bound, use netstat or ss
-func (c *TestClient) CheckPortBound(port int) error {
-	netstatCmd := "sudo netstat -lntp | grep %v"
-	if _, err := c.VMClient.ExecuteWithError("command -v netstat"); err != nil {
-		netstatCmd = "sudo ss -lntp | grep %v"
-	}
-
-	_, err := c.ExecuteWithRetry(fmt.Sprintf(netstatCmd, port))
-
-	return err
 }
 
 // SetConfig set config given a key and a path to a yaml config file, support key nested twice at most
