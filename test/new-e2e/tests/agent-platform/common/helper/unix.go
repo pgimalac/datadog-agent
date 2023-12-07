@@ -31,6 +31,18 @@ func (u *Unix) GetConfigFileName() string { return "datadog.yaml" }
 // GetServiceName return the service name
 func (u *Unix) GetServiceName() string { return "datadog-agent" }
 
+// AgentProcesses return the list of agent processes
+func (u *Unix) AgentProcesses() []string {
+	return []string{
+		"datadog-agent",
+		"trace-agent",
+		"process-agent",
+		"security-agent",
+		"dogstatsd",
+		"system-probe",
+	}
+}
+
 // UnixDogstatsd implement helper function for Dogstatsd on Unix distributions
 type UnixDogstatsd struct{}
 
@@ -53,3 +65,15 @@ func (u *UnixDogstatsd) GetConfigFileName() string { return "dogstatsd.yaml" }
 
 // GetServiceName return the service name
 func (u *UnixDogstatsd) GetServiceName() string { return "datadog-dogstatsd" }
+
+// AgentProcesses return the list of agent processes
+func (u *UnixDogstatsd) AgentProcesses() []string {
+	return []string{
+		"datadog-agent",
+		"trace-agent",
+		"process-agent",
+		"security-agent",
+		"dogstatsd",
+		"system-probe",
+	}
+}

@@ -98,12 +98,10 @@ func CheckUninstallation(t *testing.T, client *TestClient, packageName string) {
 		require.NoError(tt, err, "should uninstall the agent")
 	})
 
-	t.Run("no agent process running", func(tt *testing.T) {
-		agentProcesses := []string{client.Helper.GetServiceName(), "system-probe", "security-agent"}
-		for _, process := range agentProcesses {
-			_, err := client.VMClient.ExecuteWithError(fmt.Sprintf("pgrep -f %s", process))
-			require.Error(tt, err, fmt.Sprintf("process %s should not be running", process))
-		}
+	t.Run("no running processes", func(tt *testing.T) {
+		running, err := RunningAgentProcesses(client)
+		require.NoError(tt, err)
+		require.Empty(tt, running, "no agent process should be running")
 	})
 
 	t.Run("remove install directory", func(tt *testing.T) {

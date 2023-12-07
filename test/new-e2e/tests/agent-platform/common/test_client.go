@@ -39,6 +39,11 @@ type FileManager interface {
 	WriteFile(path string, content []byte) (int64, error)
 }
 
+// ProcessManager generic interface
+type ProcessManager interface {
+	IsProcessRunning(process string) (bool, error)
+}
+
 // Helper generic interface
 type Helper interface {
 	GetInstallFolder() string
@@ -46,6 +51,7 @@ type Helper interface {
 	GetBinaryPath() string
 	GetConfigFileName() string
 	GetServiceName() string
+	AgentProcesses() []string
 }
 
 func getServiceManager(vmClient e2eClient.VM) ServiceManager {
@@ -81,25 +87,27 @@ func getPackageManager(vmClient e2eClient.VM) PackageManager {
 
 // TestClient contain the Agent Env and SvcManager and PkgManager for tests
 type TestClient struct {
-	VMClient    e2eClient.VM
-	AgentClient e2eClient.Agent
-	Helper      Helper
-	FileManager FileManager
-	SvcManager  ServiceManager
-	PkgManager  PackageManager
+	VMClient       e2eClient.VM
+	AgentClient    e2eClient.Agent
+	Helper         Helper
+	FileManager    FileManager
+	SvcManager     ServiceManager
+	PkgManager     PackageManager
+	ProcessManager ProcessManager
 }
 
 // NewTestClient create a an ExtendedClient from VMClient and AgentCommandRunner, includes svcManager and pkgManager to write agent-platform tests
-func NewTestClient(vmClient e2eClient.VM, agentClient e2eClient.Agent, fileManager FileManager, helper Helper) *TestClient {
+func NewTestClient(vmClient e2eClient.VM, agentClient e2eClient.Agent, fileManager FileManager, helper Helper, processManager ProcessManager) *TestClient {
 	svcManager := getServiceManager(vmClient)
 	pkgManager := getPackageManager(vmClient)
 	return &TestClient{
-		VMClient:    vmClient,
-		AgentClient: agentClient,
-		Helper:      helper,
-		FileManager: fileManager,
-		SvcManager:  svcManager,
-		PkgManager:  pkgManager,
+		VMClient:       vmClient,
+		AgentClient:    agentClient,
+		Helper:         helper,
+		FileManager:    fileManager,
+		SvcManager:     svcManager,
+		PkgManager:     pkgManager,
+		ProcessManager: processManager,
 	}
 }
 

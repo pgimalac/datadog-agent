@@ -17,6 +17,22 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func RunningAgentProcesses(client *TestClient) ([]string, error) {
+	agentProcesses := client.Helper.AgentProcesses()
+	runningAgentProcesses := []string{}
+	for _, process := range agentProcesses {
+		if AgentProcessIsRunning(client, process) {
+			runningAgentProcesses = append(runningAgentProcesses, process)
+		}
+	}
+	return runningAgentProcesses, nil
+}
+
+func AgentProcessIsRunning(client *TestClient, processName string) bool {
+	running, err := client.ProcessManager.IsProcessRunning(processName)
+	return running && err == nil
+}
+
 // CheckAgentBehaviour runs test to check the agent is behaving as expected
 func CheckAgentBehaviour(t *testing.T, client *TestClient) {
 	t.Run("datadog-agent service running", func(tt *testing.T) {
@@ -88,11 +104,9 @@ func CheckAgentStops(t *testing.T, client *TestClient) {
 	})
 
 	t.Run("no running processes", func(tt *testing.T) {
-		agentProcesses := []string{"datadog-agent", "system-probe", "security-agent"}
-		for _, process := range agentProcesses {
-			_, err := client.VMClient.ExecuteWithError(fmt.Sprintf("pgrep -f %s", process))
-			require.Error(tt, err, fmt.Sprintf("process %s should not be running", process))
-		}
+		running, err := RunningAgentProcesses(client)
+		require.NoError(tt, err)
+		require.Empty(tt, running, "no agent process should be running")
 	})
 
 	t.Run("starts after stop", func(tt *testing.T) {
@@ -115,11 +129,9 @@ func CheckDogstatsdAgentStops(t *testing.T, client *TestClient) {
 	})
 
 	t.Run("no running processes", func(tt *testing.T) {
-		dogstatsdProcesses := []string{"datadog-dogstatsd"}
-		for _, process := range dogstatsdProcesses {
-			_, err := client.VMClient.ExecuteWithError(fmt.Sprintf("pgrep -f %s", process))
-			require.Error(tt, err, fmt.Sprintf("process %s should not be running", process))
-		}
+		running, err := RunningAgentProcesses(client)
+		require.NoError(tt, err)
+		require.Empty(tt, running, "no agent process should be running")
 	})
 
 	t.Run("starts after stop", func(tt *testing.T) {
@@ -198,7 +210,8 @@ func CheckDogstatsdAgentRestarts(t *testing.T, client *TestClient) {
 // CheckAgentPython runs tests to check the agent use the correct python version
 func CheckAgentPython(t *testing.T, client *TestClient, version string) {
 	t.Run(fmt.Sprintf("set python version %s and restarts", version), func(tt *testing.T) {
-		err := client.SetConfig("/etc/datadog-agent/datadog.yaml", "python_version", version)
+		configFilePath := client.Helper.GetConfigFolder() + client.Helper.GetConfigFileName()
+		err := client.SetConfig(configFilePath, "python_version", version)
 		require.NoError(tt, err, "failed to set python version: ", err)
 
 		_, err = client.SvcManager.Restart(client.Helper.GetServiceName())
@@ -225,7 +238,7 @@ func CheckApmEnabled(t *testing.T, client *TestClient) {
 // CheckApmDisabled runs tests to check the agent behave properly when APM is disabled
 func CheckApmDisabled(t *testing.T, client *TestClient) {
 	t.Run("port not bound when disabled", func(tt *testing.T) {
-		configFilePath := client.Helper.GetConfigFolder() + "datadog.yaml"
+		configFilePath := client.Helper.GetConfigFolder() + client.Helper.GetConfigFileName()
 
 		err := client.SetConfig(configFilePath, "apm_config.enabled", "false")
 		require.NoError(tt, err)
@@ -254,8 +267,7 @@ func CheckCWSBehaviour(t *testing.T, client *TestClient) {
 	t.Run("security-agent is running", func(tt *testing.T) {
 		var err error
 		require.Eventually(tt, func() bool {
-			_, err = client.VMClient.ExecuteWithError("pgrep -f security-agent")
-			return err == nil
+			return AgentProcessIsRunning(client, "security-agent")
 		}, 1*time.Minute, 500*time.Millisecond, "security-agent should be running ", err)
 
 	})
@@ -263,8 +275,7 @@ func CheckCWSBehaviour(t *testing.T, client *TestClient) {
 	t.Run("system-probe is running", func(tt *testing.T) {
 		var err error
 		require.Eventually(tt, func() bool {
-			_, err = client.VMClient.ExecuteWithError("pgrep -f system-probe")
-			return err == nil
+			return AgentProcessIsRunning(client, "system-probe")
 		}, 1*time.Minute, 500*time.Millisecond, "system-probe should be running ", err)
 	})
 
