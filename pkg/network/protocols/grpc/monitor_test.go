@@ -519,11 +519,6 @@ func (s *USMgRPCSuite) TestLargeBodiesGRPCScenarios() {
 					if err != nil {
 						t.Logf("failed dumping http2_in_flight: %s", err)
 					}
-
-					err = monitor.DumpMaps(tlw, "http2_dynamic_table")
-					if err != nil {
-						t.Logf("failed dumping http2_dynamic_table: %s", err)
-					}
 				}
 			})
 		}
