@@ -329,12 +329,8 @@ static __always_inline void process_headers(struct __sk_buff *skb, dynamic_table
                 __sync_fetch_and_add(&http2_tel->response_seen, 1);
             } else if (current_header->index == kEmptyPath) {
                 current_stream->path_index = HTTP2_ROOT_PATH_INDEX;
-                current_stream->path_size = HTTP2_ROOT_PATH_LEN;
-                bpf_memcpy(current_stream->request_path, HTTP2_ROOT_PATH, HTTP2_ROOT_PATH_LEN);
             } else if (current_header->index == kIndexPath) {
                 current_stream->path_index = HTTP2_INDEX_PATH_INDEX;
-                current_stream->path_size = HTTP2_INDEX_PATH_LEN;
-                bpf_memcpy(current_stream->request_path, HTTP2_INDEX_PATH, HTTP2_INDEX_PATH_LEN);
             }
             continue;
         }
@@ -348,10 +344,6 @@ static __always_inline void process_headers(struct __sk_buff *skb, dynamic_table
             // Keeping the map update after the perf-event call, for the small chance the user mode will be able to
             // read the perf-event message and evict items from the map before we update it.
             bpf_map_update_elem(&http2_interesting_dynamic_table_set, &dynamic_table_value->key, &dummy_value, BPF_ANY);
-
-            current_stream->path_size = current_header->new_dynamic_value_size;
-            current_stream->is_huffman_encoded = current_header->is_huffman_encoded;
-            bpf_memcpy(current_stream->request_path, dynamic_table_value->buf, HTTP2_MAX_PATH_LEN);
         }
     }
 }
