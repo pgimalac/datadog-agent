@@ -7,6 +7,8 @@ package processmanager
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/DataDog/datadog-agent/test/new-e2e/pkg/utils/e2e/client"
 )
@@ -28,4 +30,27 @@ func (u *Unix) IsProcessRunning(process string) (bool, error) {
 		return false, err
 	}
 	return true, nil
+}
+
+// FindPID returns the PID of a process
+func (u *Unix) FindPID(process string) ([]int, error) {
+	out, err := u.vmClient.ExecuteWithError(fmt.Sprintf("pgrep -f '%s'", process))
+	if err != nil {
+		return nil, err
+	}
+
+	pids := []int{}
+	for _, strPid := range strings.Split(out, "\n") {
+		strPid = strings.TrimSpace(strPid)
+		if strPid == "" {
+			continue
+		}
+		pid, err := strconv.Atoi(strPid)
+		if err != nil {
+			return nil, err
+		}
+		pids = append(pids, pid)
+	}
+
+	return pids, nil
 }

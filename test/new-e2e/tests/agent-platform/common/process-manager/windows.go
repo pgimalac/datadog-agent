@@ -25,3 +25,8 @@ func NewWindowsProcessManager(vmClient client.VM) *Windows {
 func (s *Windows) IsProcessRunning(process string) (bool, error) {
 	return windows.IsProcessRunning(s.vmClient, process)
 }
+
+// FindPID returns PID of process
+func (s *Windows) FindPID(process string) ([]int, error) {
+	return windows.FindPID(s.vmClient, process)
+}

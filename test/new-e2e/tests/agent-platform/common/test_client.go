@@ -14,6 +14,7 @@ import (
 
 	e2eClient "github.com/DataDog/datadog-agent/test/new-e2e/pkg/utils/e2e/client"
 	pkgmanager "github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/pkg-manager"
+	portTester "github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/port-tester"
 	svcmanager "github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/svc-manager"
 	"gopkg.in/yaml.v2"
 )
@@ -41,6 +42,7 @@ type FileManager interface {
 
 // ProcessManager generic interface
 type ProcessManager interface {
+	FindPID(process string) ([]int, error)
 	IsProcessRunning(process string) (bool, error)
 }
 
@@ -56,6 +58,7 @@ type Helper interface {
 
 type PortTester interface {
 	IsPortBound(port int) (bool, error)
+	BoundPorts() ([]portTester.BoundPort, error)
 }
 
 func getServiceManager(vmClient e2eClient.VM) ServiceManager {

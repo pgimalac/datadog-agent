@@ -14,6 +14,7 @@ import (
 	"time"
 
 	e2eClient "github.com/DataDog/datadog-agent/test/new-e2e/pkg/utils/e2e/client"
+	portTester "github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/port-tester"
 	"github.com/stretchr/testify/require"
 )
 
@@ -31,6 +32,36 @@ func RunningAgentProcesses(client *TestClient) ([]string, error) {
 func AgentProcessIsRunning(client *TestClient, processName string) bool {
 	running, err := client.ProcessManager.IsProcessRunning(processName)
 	return running && err == nil
+}
+
+func PortBoundByPID(client *TestClient, port int, pid int) (portTester.BoundPort, error) {
+	ports, err := client.PortTester.BoundPorts()
+	if err != nil {
+		return nil, err
+	}
+	for _, boundPort := range ports {
+		if boundPort.PID() == pid && boundPort.LocalPort() == port {
+			return boundPort, nil
+		}
+	}
+	return nil, nil
+}
+
+func PortBoundByService(client *TestClient, port int, service string) (portTester.BoundPort, error) {
+	// TODO: get process name for service
+	pids, err := client.ProcessManager.FindPID(service)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, pid := range pids {
+		boundPort, err := PortBoundByPID(client, port, pid)
+		if err != nil {
+			return nil, err
+		}
+		return boundPort, nil
+	}
+	return nil, nil
 }
 
 // CheckAgentBehaviour runs test to check the agent is behaving as expected
@@ -238,11 +269,17 @@ func CheckApmEnabled(t *testing.T, client *TestClient) {
 		_, err = client.SvcManager.Restart(client.Helper.GetServiceName())
 		require.NoError(tt, err)
 
+		var boundPort portTester.BoundPort
 		require.Eventually(tt, func() bool {
-			var bound bool
-			bound, err = client.PortTester.IsPortBound(8126)
-			return bound && err == nil
-		}, 1*time.Minute, 500*time.Millisecond, "port 8126 should be bound when APM is enabled", err)
+			boundPort, err = PortBoundByService(client, 8126, "trace-agent")
+			if err != nil {
+				fmt.Println(err)
+				return false
+			}
+			return boundPort != nil
+		}, 1*time.Minute, 500*time.Millisecond, "port 8126 should be bound when APM is enabled: %v", err)
+
+		require.EqualValues(t, "127.0.0.1", boundPort.LocalAddress(), "trace-agent should only be listening locally")
 	})
 }
 

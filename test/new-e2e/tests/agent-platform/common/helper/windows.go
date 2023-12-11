@@ -10,7 +10,7 @@ import (
 	"github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common"
 )
 
-// Unix implement helper function for Unix distributions
+// Windows implement helper function for Windows distributions
 type Windows struct{}
 
 var _ common.Helper = (*Windows)(nil)

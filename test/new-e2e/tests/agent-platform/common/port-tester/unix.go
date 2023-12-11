@@ -3,7 +3,7 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2016-present Datadog, Inc.
 
-package svcmanager
+package porttester
 
 import (
 	"fmt"
@@ -35,4 +35,25 @@ func (u *Unix) IsPortBound(port int) (bool, error) {
 	}
 
 	return true, nil
+}
+
+// BoundPorts returns a map of ports to the process name they are bound to
+func (u *Unix) BoundPorts() ([]BoundPort, error) {
+	if _, err := u.vmClient.ExecuteWithError("command -v netstat"); err == nil {
+		out, err := u.vmClient.ExecuteWithError("sudo netstat -lntp")
+		if err != nil {
+			return nil, err
+		}
+		return FromNetstat(out)
+	}
+
+	if _, err := u.vmClient.ExecuteWithError("command -v ss"); err == nil {
+		out, err := u.vmClient.ExecuteWithError("sudo ss -lntp")
+		if err != nil {
+			return nil, err
+		}
+		return FromSs(out)
+	}
+
+	return nil, fmt.Errorf("no netstat or ss found")
 }
