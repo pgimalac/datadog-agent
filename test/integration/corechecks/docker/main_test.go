@@ -123,7 +123,6 @@ func setup() error {
 		tagger.Module(),
 		fx.Supply(tagger.NewTaggerParams()),
 		fx.Provide(func() context.Context { return context.TODO() }),
-		tagger.Module(),
 	))
 
 	// Start compose recipes
