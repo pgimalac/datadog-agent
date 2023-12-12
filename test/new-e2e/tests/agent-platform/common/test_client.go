@@ -56,6 +56,7 @@ type Helper interface {
 	AgentProcesses() []string
 }
 
+// PortTester generic interface
 type PortTester interface {
 	IsPortBound(port int) (bool, error)
 	BoundPorts() ([]portTester.BoundPort, error)

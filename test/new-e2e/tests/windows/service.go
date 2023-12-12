@@ -13,11 +13,13 @@ import (
 	"github.com/DataDog/datadog-agent/test/new-e2e/pkg/utils/e2e/client"
 )
 
+// GetServiceAccountName returns the account name for the service
 func GetServiceAccountName(vm client.VM, service string) (string, error) {
 	cmd := fmt.Sprintf("(Get-WmiObject Win32_Service -Filter \"Name=`'%s`'\").StartName", service)
 	return vm.ExecuteWithError(cmd)
 }
 
+// GetServiceInfo returns the service info as JSON
 func GetServiceInfo(vm client.VM, service string) (map[string]any, error) {
 	cmd := fmt.Sprintf("Get-Service -Name '%s' | ConvertTo-Json", service)
 	output, err := vm.ExecuteWithError(cmd)
@@ -35,30 +37,35 @@ func GetServiceInfo(vm client.VM, service string) (map[string]any, error) {
 	return result, nil
 }
 
+// GetServiceSDDL returns the SDDL of the service
 func GetServiceSDDL(vm client.VM, service string) (string, error) {
 	cmd := fmt.Sprintf("sc.exe sdshow '%s'", service)
 	out, err := vm.ExecuteWithError(cmd)
 	return strings.TrimSpace(out), err
 }
 
+// GetServiceStatus returns the status of the service
 func GetServiceStatus(vm client.VM, service string) (string, error) {
 	cmd := fmt.Sprintf("(Get-Service -Name '%s').Status", service)
 	out, err := vm.ExecuteWithError(cmd)
 	return strings.TrimSpace(out), err
 }
 
+// StopService stops the service
 func StopService(vm client.VM, service string) error {
 	cmd := fmt.Sprintf("Stop-Service -Force -Name '%s'", service)
 	_, err := vm.ExecuteWithError(cmd)
 	return err
 }
 
+// StartService starts the service
 func StartService(vm client.VM, service string) error {
 	cmd := fmt.Sprintf("Start-Service -Name '%s'", service)
 	_, err := vm.ExecuteWithError(cmd)
 	return err
 }
 
+// RestartService restarts the service
 func RestartService(vm client.VM, service string) error {
 	cmd := fmt.Sprintf("Restart-Service -Force -Name '%s'", service)
 	_, err := vm.ExecuteWithError(cmd)

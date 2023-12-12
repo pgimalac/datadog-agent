@@ -50,6 +50,7 @@ func PkillProcess(vm client.VM, pattern string) error {
 	return err
 }
 
+// FindPID returns a list of PIDs for processes that match the given pattern
 func FindPID(vm client.VM, pattern string) ([]int, error) {
 	cmd := fmt.Sprintf("Get-Process -Name '%s' | Select-Object -ExpandProperty Id", pattern)
 	out, err := vm.ExecuteWithError(cmd)

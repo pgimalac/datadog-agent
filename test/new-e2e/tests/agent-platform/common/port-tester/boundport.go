@@ -12,6 +12,7 @@ import (
 	"strings"
 )
 
+// BoundPort represents a port that is bound to a process
 type BoundPort interface {
 	LocalAddress() string
 	LocalPort() int
@@ -26,7 +27,6 @@ type boundPort struct {
 	pid          int
 }
 
-// boundPort implements BoundPort interface
 func (b *boundPort) LocalAddress() string {
 	return b.localAddress
 }
@@ -43,9 +43,10 @@ func (b *boundPort) PID() int {
 	return b.pid
 }
 
+// parseHostPort parses a host:port string into a host address and port number
+// EXAMPLE: 127.0.0.1:45917
+// EXAMPLE: [::]:45917
 func parseHostPort(address string) (string, int, error) {
-	// EXAMPLE: 127.0.0.1:45917
-	// EXAMPLE: [::]:45917
 	re := regexp.MustCompile(`(?P<Address>.+):(?P<Port>\d+)`)
 	matches := re.FindStringSubmatch(address)
 	if len(matches) != 3 {
@@ -62,6 +63,7 @@ func parseHostPort(address string) (string, int, error) {
 	return hostAddress, port, nil
 }
 
+// FromNetstat parses the output of the netstat command
 func FromNetstat(output string) ([]BoundPort, error) {
 	lines := strings.Split(output, "\n")
 	ports := make([]BoundPort, 0)
@@ -96,6 +98,7 @@ func FromNetstat(output string) ([]BoundPort, error) {
 	return ports, nil
 }
 
+// FromSs parses the output of the ss command
 func FromSs(output string) ([]BoundPort, error) {
 	lines := strings.Split(output, "\n")
 	ports := make([]BoundPort, 0)
