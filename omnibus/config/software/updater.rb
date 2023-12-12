@@ -67,6 +67,7 @@ build do
       "datadog-agent-sysprobe-exp.service.erb" => "datadog-agent-sysprobe-exp.service",
       "start-experiment.path.erb" => "start-experiment.path",
       "stop-experiment.path.erb" => "stop-experiment.path",
+      "datadog-updater.service.erb" => "datadog-updater.service",
     }
     templateToFile.each do |template, file|
       erb source: template,
