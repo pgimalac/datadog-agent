@@ -49,18 +49,31 @@ build do
     copy 'bin/updater', "#{install_dir}/bin/"
 
     # Systemd
-    if debian_target?
-      erb source: "systemd.service.erb",
-          dest: "/lib/systemd/system/datadog-agent.service",
-          mode: 0644,
-          vars: { install_dir: install_dir, etc_dir: etc_dir }
-    else
+    systemdPath = "/lib/systemd/system/"
+    if not debian_target?
       mkdir "/usr/lib/systemd/system/"
-      erb source: "systemd.service.erb",
-          dest: "/usr/lib/systemd/system/datadog-agent.service",
-          mode: 0644,
-          vars: { install_dir: install_dir, etc_dir: etc_dir }
+      systemdPath = "/usr/lib/systemd/system/"
     end
+    templateToFile = {
+      "datadog-agent.service.erb" => "datadog-agent.service",
+      "datadog-agent-exp.service.erb" => "datadog-agent-exp.service",
+      "datadog-agent-trace.service.erb" => "datadog-agent-trace.service",
+      "datadog-agent-trace-exp.service.erb" => "datadog-agent-trace-exp.service",
+      "datadog-agent-process.service.erb" => "datadog-agent-process.service",
+      "datadog-agent-process-exp.service.erb" => "datadog-agent-process-exp.service",
+      "datadog-agent-security.service.erb" => "datadog-agent-security.service",
+      "datadog-agent-security-exp.service.erb" => "datadog-agent-security-exp.service",
+      "datadog-agent-sysprobe.service.erb" => "datadog-agent-sysprobe.service",
+      "datadog-agent-sysprobe-exp.service.erb" => "datadog-agent-sysprobe-exp.service",
+      "start-experiment.path.erb" => "start-experiment.path",
+      "stop-experiment.path.erb" => "stop-experiment.path",
+    }
+    templateToFile.each do |template, file|
+      erb source: template,
+         dest: systemdPath + file,
+         mode: 0644,
+         vars: { install_dir: install_dir, etc_dir: etc_dir }
+  end
 
   end
   block do
@@ -71,3 +84,4 @@ build do
   # final package
   delete "#{install_dir}/uselessfile"
 end
+
