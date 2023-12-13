@@ -30,9 +30,9 @@ type kindSuite struct {
 
 func TestKindSuite(t *testing.T) {
 
-	KubeVersions := []string{"1.27", "1.23", "1.20", "1.19"}
+	kubeVersions := []string{"1.27", "1.23", "1.20", "1.19"}
 
-	for _, version := range KubeVersions {
+	for _, version := range kubeVersions {
 		version := version
 		t.Run("TestKind_"+version, func(t *testing.T) {
 			t.Parallel()
