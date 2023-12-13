@@ -3,33 +3,16 @@ Updater namespaced tasks
 """
 
 
-import ast
-import glob
 import os
-import platform
-import re
-import shutil
 import sys
-import tempfile
-from distutils.dir_util import copy_tree
 
 from invoke import task
-from invoke.exceptions import Exit, ParseError
 
 from .build_tags import filter_incompatible_tags, get_build_tags, get_default_build_tags
-from .docker_tasks import pull_base_images
 from .go import deps
-from .process_agent import build as process_agent_build
-from .rtloader import clean as rtloader_clean
-from .rtloader import install as rtloader_install
-from .rtloader import make as rtloader_make
-from .ssm import get_pfx_pass, get_signing_cert
-from .trace_agent import build as trace_agent_build
 from .utils import (
     REPO_PATH,
     bin_name,
-    cache_version,
-    generate_config,
     get_build_flags,
     get_version,
     load_release_versions,

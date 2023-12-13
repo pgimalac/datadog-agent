@@ -118,9 +118,6 @@ if linux_target?
   end
 end
 
-resources_path "#{Omnibus::Config.project_root}/resources/agent"
-
-dependency 'datadog-buildpack-finalize'
 exclude '\.git*'
 exclude 'bundler\/git'
 
