@@ -168,7 +168,8 @@ new-e2e-containers-dev:
       - EXTRA_PARAMS: --run TestKindSuite
       - EXTRA_PARAMS: --run TestEKSSuite
       - EXTRA_PARAMS: --run TestECSSuite
-      - EXTRA_PARAMS: --skip "Test(Kind|EKS|ECS)Suite"
+      - EXTRA_PARAMS: --run TestDockerSuite
+      - EXTRA_PARAMS: --skip "Test(Kind|EKS|ECS|Docker)Suite"
 
 new-e2e-containers-main:
   extends: .new_e2e_template
@@ -185,7 +186,8 @@ new-e2e-containers-main:
       - EXTRA_PARAMS: --run TestKindSuite
       - EXTRA_PARAMS: --run TestEKSSuite
       - EXTRA_PARAMS: --run TestECSSuite
-      - EXTRA_PARAMS: --skip "Test(Kind|EKS|ECS)Suite"
+      - EXTRA_PARAMS: --run TestDockerSuite
+      - EXTRA_PARAMS: --skip "Test(Kind|EKS|ECS|Docker)Suite"
   # Temporary, until we manage to stabilize those tests.
   allow_failure: true
 
