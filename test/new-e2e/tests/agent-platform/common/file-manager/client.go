@@ -12,12 +12,12 @@ import (
 	"github.com/DataDog/datadog-agent/test/new-e2e/pkg/utils/e2e/client"
 )
 
-// Unix implement filemanager interface for Unix distributions
+// Client implement filemanager interface for VMs
 type Client struct {
 	vmClient client.VM
 }
 
-// NewUnixFileManager create a new file manager using the client
+// NewClientFileManager create a new file manager using the client
 // Note: The file operations will be restricted to the permissions of the client user
 func NewClientFileManager(vmClient client.VM) *Client {
 	return &Client{vmClient: vmClient}

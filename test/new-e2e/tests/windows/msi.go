@@ -41,15 +41,15 @@ func UninstallMSI(client client.VM, msiPath string, logPath string) error {
 	}
 	cmd := fmt.Sprintf("Exit (start-process -passthru -wait msiexec.exe -argumentList /x,'%s',/qn,/l,%s).ExitCode", msiPath, remoteLogPath)
 
-	output, uninstallerr := client.ExecuteWithError(cmd)
+	output, uninstallErr := client.ExecuteWithError(cmd)
 	// Collect the install log
 	err = client.GetFile(remoteLogPath, logPath)
 	if err != nil {
 		fmt.Printf("failed to collect uninstall log: %s\n", err)
 	}
 
-	if uninstallerr != nil {
-		return fmt.Errorf("failed to uninstall MSI: %w\n%s", uninstallerr, output)
+	if uninstallErr != nil {
+		return fmt.Errorf("failed to uninstall MSI: %w\n%s", uninstallErr, output)
 	}
 	return nil
 }

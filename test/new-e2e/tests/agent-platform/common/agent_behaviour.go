@@ -18,6 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// RunningAgentProcesses returns the list of running agent processes
 func RunningAgentProcesses(client *TestClient) ([]string, error) {
 	agentProcesses := client.Helper.AgentProcesses()
 	runningAgentProcesses := []string{}
@@ -29,11 +30,13 @@ func RunningAgentProcesses(client *TestClient) ([]string, error) {
 	return runningAgentProcesses, nil
 }
 
+// AgentProcessIsRunning returns true if the agent process is running
 func AgentProcessIsRunning(client *TestClient, processName string) bool {
 	running, err := client.ProcessManager.IsProcessRunning(processName)
 	return running && err == nil
 }
 
+// PortBoundByPID returns the info about the port bound by a given PID
 func PortBoundByPID(client *TestClient, port int, pid int) (portTester.BoundPort, error) {
 	ports, err := client.PortTester.BoundPorts()
 	if err != nil {
@@ -47,6 +50,7 @@ func PortBoundByPID(client *TestClient, port int, pid int) (portTester.BoundPort
 	return nil, nil
 }
 
+// PortBoundByService returns info about the port bound by a given service
 func PortBoundByService(client *TestClient, port int, service string) (portTester.BoundPort, error) {
 	// TODO: get process name for service
 	pids, err := client.ProcessManager.FindPID(service)
@@ -59,7 +63,9 @@ func PortBoundByService(client *TestClient, port int, service string) (portTeste
 		if err != nil {
 			return nil, err
 		}
-		return boundPort, nil
+		if boundPort != nil {
+			return boundPort, nil
+		}
 	}
 	return nil, nil
 }

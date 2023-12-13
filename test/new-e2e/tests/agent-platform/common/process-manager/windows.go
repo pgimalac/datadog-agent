@@ -16,7 +16,7 @@ type Windows struct {
 	vmClient client.VM
 }
 
-// NewServiceSvcManager return service service manager
+// NewWindowsProcessManager returns process manager for Windows sytems
 func NewWindowsProcessManager(vmClient client.VM) *Windows {
 	return &Windows{vmClient}
 }

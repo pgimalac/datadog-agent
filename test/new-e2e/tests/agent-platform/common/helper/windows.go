@@ -6,14 +6,8 @@
 // Package helper implement interfaces to get some information that can be OS specific
 package helper
 
-import (
-	"github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common"
-)
-
 // Windows implement helper function for Windows distributions
 type Windows struct{}
-
-var _ common.Helper = (*Windows)(nil)
 
 // NewWindowsHelper create a new instance of Windows helper
 func NewWindowsHelper() *Windows { return &Windows{} }

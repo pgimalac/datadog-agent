@@ -18,7 +18,7 @@ type Unix struct {
 	vmClient client.VM
 }
 
-// NewProcessManager return process manager
+// NewUnixProcessManager return process manager for Unix systems
 func NewUnixProcessManager(vmClient client.VM) *Unix {
 	return &Unix{vmClient}
 }

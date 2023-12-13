@@ -2,7 +2,8 @@
 // under the Apache License Version 2.0.
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2016-present Datadog, Inc.
-package installscript
+
+package installtest
 
 import (
 	"flag"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/DataDog/datadog-agent/test/new-e2e/pkg/utils/e2e"
 	"github.com/DataDog/datadog-agent/test/new-e2e/pkg/utils/e2e/params"
+	"github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common"
 	windows "github.com/DataDog/datadog-agent/test/new-e2e/tests/windows"
 	windowsAgent "github.com/DataDog/datadog-agent/test/new-e2e/tests/windows/agent"
 
@@ -24,6 +26,9 @@ var (
 
 type agentMSISuite struct {
 	e2e.Suite[e2e.VMEnv]
+
+	msiURL       string
+	majorVersion string
 }
 
 func TestMSI(t *testing.T) {
@@ -33,8 +38,14 @@ func TestMSI(t *testing.T) {
 		opts = append(opts, params.WithDevMode())
 	}
 
+	// TODO: Configurable url/version/pipeline
+	s := &agentMSISuite{
+		msiURL:       `https://s3.amazonaws.com/ddagent-windows-stable/datadog-agent-7-latest.amd64.msi`,
+		majorVersion: "7",
+	}
+
 	e2e.Run(t,
-		&agentMSISuite{},
+		s,
 		e2e.EC2VMStackDef(ec2params.WithOS(ec2os.WindowsOS)),
 		opts...)
 }
@@ -42,13 +53,36 @@ func TestMSI(t *testing.T) {
 func (is *agentMSISuite) TestInstallAgent() {
 	vm := is.Env().VM
 
-	msi := `https://s3.amazonaws.com/ddagent-windows-stable/datadog-agent-7-latest.amd64.msi`
+	// TODO: Add apikey option
+	apikey := "00000000000000000000000000000000"
 	is.Run("install the agent", func() {
-		err := windows.InstallMSI(vm, msi, "", "install.log")
+		args := fmt.Sprintf(`APIKEY="%s"`, apikey)
+		err := windows.InstallMSI(vm, is.msiURL, args, "install.log")
 		is.Require().NoError(err, "should install the agent")
 	})
+
+	client := common.NewWindowsTestClient(is.T(), vm)
+
+	is.Run("agent runtime behavior", func() {
+		common.CheckInstallation(is.T(), client)
+		common.CheckAgentBehaviour(is.T(), client)
+		common.CheckAgentStops(is.T(), client)
+		common.CheckAgentRestarts(is.T(), client)
+		common.CheckIntegrationInstall(is.T(), client)
+		if is.majorVersion == "6" {
+			common.CheckAgentPython(is.T(), client, "2")
+		}
+		common.CheckAgentPython(is.T(), client, "3")
+		common.CheckApmEnabled(is.T(), client)
+		common.CheckApmDisabled(is.T(), client)
+		// TODO: common.CheckCWSBehaviour(is.T(), client)
+	})
+
 	is.Run("uninstall the agent", func() {
 		err := windowsAgent.UninstallAgent(vm, "uninstall.log")
 		is.Require().NoError(err, "should uninstall the agent")
+
+		common.CheckUninstallation(is.T(), client)
 	})
+
 }

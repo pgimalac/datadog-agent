@@ -11,11 +11,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common"
-	"github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/install/installparams"
 	"github.com/stretchr/testify/require"
 
-	"golang.org/x/text/encoding/unicode"
+	"github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common"
+	"github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/install/installparams"
 )
 
 // Unix install the agent from install script, by default will install the agent 7 build corresponding to the CI if running in the CI, else the latest Agent 7 version
@@ -72,34 +71,5 @@ func Unix(t *testing.T, client *common.TestClient, options ...installparams.Opti
 		output, err := client.VMClient.ExecuteWithError(cmd)
 		tt.Log(output)
 		require.NoError(tt, err, "agent installation should not return any error: ", err)
-	})
-}
-
-func Windows(t *testing.T, client *common.TestClient, options ...installparams.Option) {
-
-	// TODO: construct MSI URL from version params
-	url := "https://s3.amazonaws.com/ddagent-windows-stable/datadog-agent-7-latest.amd64.msi"
-	// TODO: Add apikey option
-	apikey := "00000000000000000000000000000000"
-	remoteLogPath := `C:\Windows\Temp\install.log`
-	t.Run("Installing the agent", func(tt *testing.T) {
-		cmd := fmt.Sprintf(`Start-Process -Wait msiexec -PassThru -ArgumentList '/qn /l %s /i %s APIKEY="%s"'`,
-			remoteLogPath, url, apikey)
-
-		output, installErr := client.VMClient.ExecuteWithError(cmd)
-		tt.Log(output)
-		// Collect the install log
-		installLog, err := client.VMClient.ReadFile(remoteLogPath)
-		if err == nil {
-			// TODO: save it locally instead of printing to console
-			// convert utf-16 string to utf-8 string
-			log, err := unicode.UTF16(unicode.LittleEndian, unicode.IgnoreBOM).NewDecoder().String(string(installLog))
-			if err != nil {
-				tt.Log(string(installLog))
-			} else {
-				tt.Log(log)
-			}
-		}
-		require.NoError(tt, installErr, "agent installation should not return any error: ", installErr)
 	})
 }

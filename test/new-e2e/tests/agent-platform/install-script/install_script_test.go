@@ -119,6 +119,15 @@ func (is *installScriptSuite) TestInstallAgent() {
 	}
 }
 
+func (is *installScriptSuite) testUninstall(client *common.TestClient, flavor string) {
+	is.T().Run("remove the agent", func(tt *testing.T) {
+		_, err := client.PkgManager.Remove(flavor)
+		require.NoError(tt, err, "should uninstall the agent")
+	})
+
+	common.CheckUninstallation(is.T(), client)
+}
+
 func (is *installScriptSuite) AgentTest(flavor string) {
 	fileManager := filemanager.NewUnixFileManager(is.Env().VM)
 	processManager := processmanager.NewUnixProcessManager(is.Env().VM)
@@ -148,8 +157,7 @@ func (is *installScriptSuite) AgentTest(flavor string) {
 		common.CheckCWSBehaviour(is.T(), client)
 	}
 	common.CheckInstallationInstallScript(is.T(), client)
-	common.CheckUninstallation(is.T(), client, flavor)
-
+	is.testUninstall(client, flavor)
 }
 
 func (is *installScriptSuite) IotAgentTest() {
@@ -172,7 +180,7 @@ func (is *installScriptSuite) IotAgentTest() {
 	common.CheckAgentRestarts(is.T(), client)
 
 	common.CheckInstallationInstallScript(is.T(), client)
-	common.CheckUninstallation(is.T(), client, "datadog-iot-agent")
+	is.testUninstall(client, "datadog-iot-agent")
 }
 
 func (is *installScriptSuite) DogstatsdAgentTest() {
@@ -194,5 +202,5 @@ func (is *installScriptSuite) DogstatsdAgentTest() {
 	common.CheckDogstatsdAgentStops(is.T(), client)
 	common.CheckDogstatsdAgentRestarts(is.T(), client)
 	common.CheckInstallationInstallScript(is.T(), client)
-	common.CheckUninstallation(is.T(), client, "datadog-dogstatsd")
+	is.testUninstall(client, "datadog-dogstatsd")
 }

@@ -13,10 +13,16 @@ import (
 	"time"
 
 	e2eClient "github.com/DataDog/datadog-agent/test/new-e2e/pkg/utils/e2e/client"
+	filemanager "github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/file-manager"
+	helpers "github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/helper"
 	pkgmanager "github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/pkg-manager"
 	portTester "github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/port-tester"
+	processmanager "github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/process-manager"
 	svcmanager "github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/svc-manager"
+	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
+
+	"testing"
 )
 
 // ServiceManager generic interface
@@ -203,4 +209,21 @@ func (c *TestClient) ExecuteWithRetry(cmd string) (string, error) {
 
 	return output, err
 
+}
+
+// NewWindowsTestClient create a TestClient for Windows VM
+func NewWindowsTestClient(t *testing.T, vmClient e2eClient.VM) *TestClient {
+	fileManager := filemanager.NewClientFileManager(vmClient)
+	processManager := processmanager.NewWindowsProcessManager(vmClient)
+	portTester := portTester.NewWindowsPortTester(vmClient)
+
+	vm := vmClient.(*e2eClient.PulumiStackVM)
+	agentClient, err := e2eClient.NewAgentClient(t, vm, vm.GetOS(), false)
+	require.NoError(t, err)
+
+	helper := helpers.NewWindowsHelper()
+	client := NewTestClient(vmClient, agentClient, fileManager, helper, processManager, portTester)
+	client.SvcManager = svcmanager.NewWindowsSvcManager(vm)
+
+	return client
 }

@@ -18,7 +18,7 @@ type WindowsSvcManager struct {
 	vmClient client.VM
 }
 
-// NewServiceSvcManager return service service manager
+// NewWindowsSvcManager returns Windows service manager
 func NewWindowsSvcManager(vmClient client.VM) *WindowsSvcManager {
 	return &WindowsSvcManager{vmClient}
 }

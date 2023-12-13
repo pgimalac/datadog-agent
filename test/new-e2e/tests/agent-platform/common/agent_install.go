@@ -87,16 +87,10 @@ func CheckInstallationInstallScript(t *testing.T, client *TestClient) {
 		require.True(tt, installerVersionRegex.MatchString(installMethodJSON["installer_version"]))
 		require.Equal(tt, installMethodJSON["tool"], "install_script")
 	})
-
 }
 
 // CheckUninstallation runs check to see if the agent uninstall properly
-func CheckUninstallation(t *testing.T, client *TestClient, packageName string) {
-
-	t.Run("remove the agent", func(tt *testing.T) {
-		_, err := client.PkgManager.Remove(packageName)
-		require.NoError(tt, err, "should uninstall the agent")
-	})
+func CheckUninstallation(t *testing.T, client *TestClient) {
 
 	t.Run("no running processes", func(tt *testing.T) {
 		running, err := RunningAgentProcesses(client)
@@ -110,5 +104,4 @@ func CheckUninstallation(t *testing.T, client *TestClient, packageName string) {
 		entries, err := client.FileManager.ReadDir(installFolderPath)
 		require.Error(tt, err, "should not find anything in install folder, found: ", entries)
 	})
-
 }
