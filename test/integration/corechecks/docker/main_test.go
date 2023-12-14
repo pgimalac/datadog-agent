@@ -122,7 +122,6 @@ func setup() error {
 		workloadmeta.Module(),
 		tagger.Module(),
 		fx.Supply(tagger.NewTaggerParams()),
-		fx.Provide(func() context.Context { return context.TODO() }),
 	))
 
 	// Start compose recipes
