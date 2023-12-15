@@ -54,22 +54,11 @@ func TestHTTP2Path(t *testing.T) {
 				}
 				copy(arr[:], buf)
 
-				request := &EbpfTx{
-					Stream: http2Stream{
-						Is_huffman_encoded: huffmanEnabled,
-						Request_path:       arr,
-						Path_size:          uint8(len(buf)),
-					},
-				}
-
-				outBuf := make([]byte, 200)
-
-				path, ok := request.Path(outBuf)
+				path, err := decodeHTTP2Path(arr, uint8(len(buf)))
 				if tt.expectedErr {
-					assert.False(t, ok)
+					assert.Error(t, err)
 					return
 				}
-				assert.True(t, ok)
 				assert.Equal(t, tt.rawPath, string(path))
 			})
 		}
