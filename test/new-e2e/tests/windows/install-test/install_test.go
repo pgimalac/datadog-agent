@@ -53,6 +53,9 @@ func TestMSI(t *testing.T) {
 func (is *agentMSISuite) TestInstallAgent() {
 	vm := is.Env().VM
 
+	err := windows.DisableDefender(vm)
+	is.Require().NoError(err, "should disable defender")
+
 	// TODO: Add apikey option
 	apikey := "00000000000000000000000000000000"
 	is.Run("install the agent", func() {
