@@ -15,6 +15,7 @@ import (
 
 	e2eClient "github.com/DataDog/datadog-agent/test/new-e2e/pkg/utils/e2e/client"
 	"github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/bound-port"
+	"github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/process"
 	"github.com/stretchr/testify/require"
 )
 
@@ -53,7 +54,7 @@ func PortBoundByPID(client *TestClient, port int, pid int) (boundport.BoundPort,
 // PortBoundByService returns info about the port bound by a given service
 func PortBoundByService(client *TestClient, port int, service string) (boundport.BoundPort, error) {
 	// TODO: get process name for service
-	pids, err := client.ProcessManager.FindPID(service)
+	pids, err := process.FindPID(client.VMClient, service)
 	if err != nil {
 		return nil, err
 	}

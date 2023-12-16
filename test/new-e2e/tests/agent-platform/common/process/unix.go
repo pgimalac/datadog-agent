@@ -3,7 +3,7 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2016-present Datadog, Inc.
 
-package processmanager
+package process
 
 import (
 	"fmt"
@@ -13,28 +13,16 @@ import (
 	"github.com/DataDog/datadog-agent/test/new-e2e/pkg/utils/e2e/client"
 )
 
-// Unix struct for Unix process manager
-type Unix struct {
-	vmClient client.VM
-}
-
-// NewUnixProcessManager return process manager for Unix systems
-func NewUnixProcessManager(vmClient client.VM) *Unix {
-	return &Unix{vmClient}
-}
-
-// IsProcessRunning returns true if process is running
-func (u *Unix) IsProcessRunning(process string) (bool, error) {
-	_, err := u.vmClient.ExecuteWithError(fmt.Sprintf("pgrep -f %s", process))
+func isProcessRunningUnix(client client.VM, process string) (bool, error) {
+	_, err := client.ExecuteWithError(fmt.Sprintf("pgrep -f %s", process))
 	if err != nil {
 		return false, err
 	}
 	return true, nil
 }
 
-// FindPID returns the PID of a process
-func (u *Unix) FindPID(process string) ([]int, error) {
-	out, err := u.vmClient.ExecuteWithError(fmt.Sprintf("pgrep -f '%s'", process))
+func findPIDUnix(client client.VM, process string) ([]int, error) {
+	out, err := client.ExecuteWithError(fmt.Sprintf("pgrep -f '%s'", process))
 	if err != nil {
 		return nil, err
 	}

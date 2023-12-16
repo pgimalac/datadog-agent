@@ -16,7 +16,6 @@ import (
 	filemanager "github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/file-manager"
 	helpers "github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/helper"
 	pkgmanager "github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/pkg-manager"
-	processmanager "github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/process-manager"
 	svcmanager "github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/svc-manager"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
@@ -43,12 +42,6 @@ type FileManager interface {
 	ReadDir(path string) ([]fs.DirEntry, error)
 	FileExists(path string) (bool, error)
 	WriteFile(path string, content []byte) (int64, error)
-}
-
-// ProcessManager generic interface
-type ProcessManager interface {
-	FindPID(process string) ([]int, error)
-	IsProcessRunning(process string) (bool, error)
 }
 
 // Helper generic interface
@@ -94,27 +87,25 @@ func getPackageManager(vmClient e2eClient.VM) PackageManager {
 
 // TestClient contain the Agent Env and SvcManager and PkgManager for tests
 type TestClient struct {
-	VMClient       e2eClient.VM
-	AgentClient    e2eClient.Agent
-	Helper         Helper
-	FileManager    FileManager
-	SvcManager     ServiceManager
-	PkgManager     PackageManager
-	ProcessManager ProcessManager
+	VMClient    e2eClient.VM
+	AgentClient e2eClient.Agent
+	Helper      Helper
+	FileManager FileManager
+	SvcManager  ServiceManager
+	PkgManager  PackageManager
 }
 
 // NewTestClient create a an ExtendedClient from VMClient and AgentCommandRunner, includes svcManager and pkgManager to write agent-platform tests
-func NewTestClient(vmClient e2eClient.VM, agentClient e2eClient.Agent, fileManager FileManager, helper Helper, processManager ProcessManager) *TestClient {
+func NewTestClient(vmClient e2eClient.VM, agentClient e2eClient.Agent, fileManager FileManager, helper Helper) *TestClient {
 	svcManager := getServiceManager(vmClient)
 	pkgManager := getPackageManager(vmClient)
 	return &TestClient{
-		VMClient:       vmClient,
-		AgentClient:    agentClient,
-		Helper:         helper,
-		FileManager:    fileManager,
-		SvcManager:     svcManager,
-		PkgManager:     pkgManager,
-		ProcessManager: processManager,
+		VMClient:    vmClient,
+		AgentClient: agentClient,
+		Helper:      helper,
+		FileManager: fileManager,
+		SvcManager:  svcManager,
+		PkgManager:  pkgManager,
 	}
 }
 
@@ -205,14 +196,13 @@ func (c *TestClient) ExecuteWithRetry(cmd string) (string, error) {
 // NewWindowsTestClient create a TestClient for Windows VM
 func NewWindowsTestClient(t *testing.T, vmClient e2eClient.VM) *TestClient {
 	fileManager := filemanager.NewClientFileManager(vmClient)
-	processManager := processmanager.NewWindowsProcessManager(vmClient)
 
 	vm := vmClient.(*e2eClient.PulumiStackVM)
 	agentClient, err := e2eClient.NewAgentClient(t, vm, vm.GetOS(), false)
 	require.NoError(t, err)
 
 	helper := helpers.NewWindowsHelper()
-	client := NewTestClient(vmClient, agentClient, fileManager, helper, processManager)
+	client := NewTestClient(vmClient, agentClient, fileManager, helper)
 	client.SvcManager = svcmanager.NewWindowsSvcManager(vm)
 
 	return client

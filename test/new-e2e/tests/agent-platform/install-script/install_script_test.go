@@ -14,7 +14,6 @@ import (
 	"github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common"
 	filemanager "github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/file-manager"
 	helpers "github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/helper"
-	processmanager "github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/process-manager"
 	"github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/install/installparams"
 	"github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/platforms"
 	"github.com/stretchr/testify/require"
@@ -129,14 +128,13 @@ func (is *installScriptSuite) testUninstall(client *common.TestClient, flavor st
 
 func (is *installScriptSuite) AgentTest(flavor string) {
 	fileManager := filemanager.NewUnixFileManager(is.Env().VM)
-	processManager := processmanager.NewUnixProcessManager(is.Env().VM)
 
 	vm := is.Env().VM.(*client.PulumiStackVM)
 	agentClient, err := client.NewAgentClient(is.T(), vm, vm.GetOS(), false)
 	require.NoError(is.T(), err)
 
 	unixHelper := helpers.NewUnixHelper()
-	client := common.NewTestClient(is.Env().VM, agentClient, fileManager, unixHelper, processManager)
+	client := common.NewTestClient(is.Env().VM, agentClient, fileManager, unixHelper)
 
 	install.Unix(is.T(), client, installparams.WithArch(*architecture), installparams.WithFlavor(flavor), installparams.WithMajorVersion(*majorVersion))
 
@@ -160,14 +158,13 @@ func (is *installScriptSuite) AgentTest(flavor string) {
 
 func (is *installScriptSuite) IotAgentTest() {
 	fileManager := filemanager.NewUnixFileManager(is.Env().VM)
-	processManager := processmanager.NewUnixProcessManager(is.Env().VM)
 
 	vm := is.Env().VM.(*client.PulumiStackVM)
 	agentClient, err := client.NewAgentClient(is.T(), vm, vm.GetOS(), false)
 	require.NoError(is.T(), err)
 
 	unixHelper := helpers.NewUnixHelper()
-	client := common.NewTestClient(is.Env().VM, agentClient, fileManager, unixHelper, processManager)
+	client := common.NewTestClient(is.Env().VM, agentClient, fileManager, unixHelper)
 
 	install.Unix(is.T(), client, installparams.WithArch(*architecture), installparams.WithFlavor(*flavor))
 
@@ -182,14 +179,13 @@ func (is *installScriptSuite) IotAgentTest() {
 
 func (is *installScriptSuite) DogstatsdAgentTest() {
 	fileManager := filemanager.NewUnixFileManager(is.Env().VM)
-	processManager := processmanager.NewUnixProcessManager(is.Env().VM)
 
 	vm := is.Env().VM.(*client.PulumiStackVM)
 	agentClient, err := client.NewAgentClient(is.T(), vm, vm.GetOS(), false)
 	require.NoError(is.T(), err)
 
 	unixHelper := helpers.NewUnixDogstatsdHelper()
-	client := common.NewTestClient(is.Env().VM, agentClient, fileManager, unixHelper, processManager)
+	client := common.NewTestClient(is.Env().VM, agentClient, fileManager, unixHelper)
 
 	install.Unix(is.T(), client, installparams.WithArch(*architecture), installparams.WithFlavor(*flavor))
 
