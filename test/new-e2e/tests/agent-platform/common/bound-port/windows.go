@@ -3,33 +3,16 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2016-present Datadog, Inc.
 
-package porttester
+package boundport
 
 import (
 	"encoding/json"
 
 	"github.com/DataDog/datadog-agent/test/new-e2e/pkg/utils/e2e/client"
-	"github.com/DataDog/datadog-agent/test/new-e2e/tests/windows"
 )
 
-// Windows struct for Windows port testing
-type Windows struct {
-	vmClient client.VM
-}
-
-// NewWindowsPortTester return port tester
-func NewWindowsPortTester(vmClient client.VM) *Windows {
-	return &Windows{vmClient}
-}
-
-// IsPortBound returns true if the port is bound
-func (s *Windows) IsPortBound(port int) (bool, error) {
-	return windows.IsPortBound(s.vmClient, port)
-}
-
-// BoundPorts returns a map of ports to the process name they are bound to
-func (s *Windows) BoundPorts() ([]BoundPort, error) {
-	out, err := s.vmClient.ExecuteWithError(`Get-NetTCPConnection -State Listen | Foreach-Object {
+func boundPortsWindows(client client.VM) ([]BoundPort, error) {
+	out, err := client.ExecuteWithError(`Get-NetTCPConnection -State Listen | Foreach-Object {
 		@{
 			LocalAddress=$_.LocalAddress
 			LocalPort = $_.LocalPort

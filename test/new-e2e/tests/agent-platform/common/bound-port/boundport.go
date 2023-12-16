@@ -3,14 +3,18 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2016-present Datadog, Inc.
 
-// Package porttester provides utilies for testing ports
-package porttester
+// Package boundport provides utilies for getting bound port information
+package boundport
 
 import (
 	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/DataDog/datadog-agent/test/new-e2e/pkg/utils/e2e/client"
+	"github.com/DataDog/datadog-agent/test/new-e2e/tests/windows"
+	componentos "github.com/DataDog/test-infra-definitions/components/os"
 )
 
 // BoundPort represents a port that is bound to a process
@@ -42,6 +46,28 @@ func (b *boundPort) Process() string {
 
 func (b *boundPort) PID() int {
 	return b.pid
+}
+
+// IsPortBound returns true if the port is bound
+func IsPortBound(client client.VM, port int) (bool, error) {
+	os := client.GetOSType()
+	if os == componentos.UnixType {
+		return isPortBoundUnix(client, port)
+	} else if os == componentos.WindowsType {
+		return windows.IsPortBound(client, port)
+	}
+	return false, fmt.Errorf("unsupported OS type: %v", os)
+}
+
+// BoundPorts returns a map of ports to the process name they are bound to
+func BoundPorts(client client.VM) ([]BoundPort, error) {
+	os := client.GetOSType()
+	if os == componentos.UnixType {
+		return boundPortsUnix(client)
+	} else if os == componentos.WindowsType {
+		return boundPortsWindows(client)
+	}
+	return nil, fmt.Errorf("unsupported OS type: %v", os)
 }
 
 // parseHostPort parses a host:port string into a host address and port number

@@ -16,7 +16,6 @@ import (
 	filemanager "github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/file-manager"
 	helpers "github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/helper"
 	pkgmanager "github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/pkg-manager"
-	portTester "github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/port-tester"
 	processmanager "github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/process-manager"
 	svcmanager "github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/svc-manager"
 	"github.com/stretchr/testify/require"
@@ -62,12 +61,6 @@ type Helper interface {
 	AgentProcesses() []string
 }
 
-// PortTester generic interface
-type PortTester interface {
-	IsPortBound(port int) (bool, error)
-	BoundPorts() ([]portTester.BoundPort, error)
-}
-
 func getServiceManager(vmClient e2eClient.VM) ServiceManager {
 	if _, err := vmClient.ExecuteWithError("command -v systemctl"); err == nil {
 		return svcmanager.NewSystemctlSvcManager(vmClient)
@@ -108,11 +101,10 @@ type TestClient struct {
 	SvcManager     ServiceManager
 	PkgManager     PackageManager
 	ProcessManager ProcessManager
-	PortTester     PortTester
 }
 
 // NewTestClient create a an ExtendedClient from VMClient and AgentCommandRunner, includes svcManager and pkgManager to write agent-platform tests
-func NewTestClient(vmClient e2eClient.VM, agentClient e2eClient.Agent, fileManager FileManager, helper Helper, processManager ProcessManager, portTester PortTester) *TestClient {
+func NewTestClient(vmClient e2eClient.VM, agentClient e2eClient.Agent, fileManager FileManager, helper Helper, processManager ProcessManager) *TestClient {
 	svcManager := getServiceManager(vmClient)
 	pkgManager := getPackageManager(vmClient)
 	return &TestClient{
@@ -123,7 +115,6 @@ func NewTestClient(vmClient e2eClient.VM, agentClient e2eClient.Agent, fileManag
 		SvcManager:     svcManager,
 		PkgManager:     pkgManager,
 		ProcessManager: processManager,
-		PortTester:     portTester,
 	}
 }
 
@@ -215,14 +206,13 @@ func (c *TestClient) ExecuteWithRetry(cmd string) (string, error) {
 func NewWindowsTestClient(t *testing.T, vmClient e2eClient.VM) *TestClient {
 	fileManager := filemanager.NewClientFileManager(vmClient)
 	processManager := processmanager.NewWindowsProcessManager(vmClient)
-	portTester := portTester.NewWindowsPortTester(vmClient)
 
 	vm := vmClient.(*e2eClient.PulumiStackVM)
 	agentClient, err := e2eClient.NewAgentClient(t, vm, vm.GetOS(), false)
 	require.NoError(t, err)
 
 	helper := helpers.NewWindowsHelper()
-	client := NewTestClient(vmClient, agentClient, fileManager, helper, processManager, portTester)
+	client := NewTestClient(vmClient, agentClient, fileManager, helper, processManager)
 	client.SvcManager = svcmanager.NewWindowsSvcManager(vm)
 
 	return client

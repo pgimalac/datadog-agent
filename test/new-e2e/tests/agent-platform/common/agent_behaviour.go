@@ -14,7 +14,7 @@ import (
 	"time"
 
 	e2eClient "github.com/DataDog/datadog-agent/test/new-e2e/pkg/utils/e2e/client"
-	portTester "github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/port-tester"
+	"github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/bound-port"
 	"github.com/stretchr/testify/require"
 )
 
@@ -32,13 +32,13 @@ func RunningAgentProcesses(client *TestClient) ([]string, error) {
 
 // AgentProcessIsRunning returns true if the agent process is running
 func AgentProcessIsRunning(client *TestClient, processName string) bool {
-	running, err := client.ProcessManager.IsProcessRunning(processName)
+	running, err := process.IsProcessRunning(client.VMClient, processName)
 	return running && err == nil
 }
 
 // PortBoundByPID returns the info about the port bound by a given PID
-func PortBoundByPID(client *TestClient, port int, pid int) (portTester.BoundPort, error) {
-	ports, err := client.PortTester.BoundPorts()
+func PortBoundByPID(client *TestClient, port int, pid int) (boundport.BoundPort, error) {
+	ports, err := boundport.BoundPorts(client.VMClient)
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func PortBoundByPID(client *TestClient, port int, pid int) (portTester.BoundPort
 }
 
 // PortBoundByService returns info about the port bound by a given service
-func PortBoundByService(client *TestClient, port int, service string) (portTester.BoundPort, error) {
+func PortBoundByService(client *TestClient, port int, service string) (boundport.BoundPort, error) {
 	// TODO: get process name for service
 	pids, err := client.ProcessManager.FindPID(service)
 	if err != nil {
@@ -275,7 +275,7 @@ func CheckApmEnabled(t *testing.T, client *TestClient) {
 		_, err = client.SvcManager.Restart(client.Helper.GetServiceName())
 		require.NoError(tt, err)
 
-		var boundPort portTester.BoundPort
+		var boundPort boundport.BoundPort
 		require.Eventually(tt, func() bool {
 			boundPort, err = PortBoundByService(client, 8126, "trace-agent")
 			if err != nil {
@@ -300,7 +300,7 @@ func CheckApmDisabled(t *testing.T, client *TestClient) {
 		_, err = client.SvcManager.Restart(client.Helper.GetServiceName())
 		require.NoError(tt, err)
 
-		bound, err := client.PortTester.IsPortBound(8126)
+		bound, err := boundport.IsPortBound(client.VMClient, 8126)
 		require.NoError(tt, err)
 		require.False(tt, bound, "port should not be bound when apm is manually disabled")
 	})
