@@ -9,6 +9,7 @@ package infra
 import (
 	"context"
 	"errors"
+	"flag"
 	"fmt"
 	"os"
 	"runtime"
@@ -39,6 +40,11 @@ const (
 var (
 	stackManager     *StackManager
 	initStackManager sync.Once
+
+	// Sets the log level for Pulumi operations
+	// Be careful setting this value, as it can expose sensitive information in the logs.
+	// https://www.pulumi.com/docs/support/troubleshooting/#verbose-logging
+	pulumiLogLevel = flag.Int("pulumi-log-level", 1, "Pulumi log level")
 )
 
 // StackManager handles
@@ -229,7 +235,7 @@ func (sm *StackManager) getStack(ctx context.Context, name string, config runner
 	}
 
 	upCtx, cancel := context.WithTimeout(ctx, stackUpTimeout)
-	var loglevel uint = 1
+	var loglevel = uint(*pulumiLogLevel)
 	defer cancel()
 	upResult, err := stack.Up(upCtx, optup.ProgressStreams(os.Stderr), optup.DebugLogging(debug.LoggingOptions{
 		LogToStdErr:   true,
