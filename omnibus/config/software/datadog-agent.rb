@@ -61,6 +61,7 @@ build do
   env = with_embedded_path(env)
 
   # we assume the go deps are already installed before running omnibus
+  bundle_arg = bundled_agents.map { |k| "--bundle #{k}" }.join(" ")
   if windows_target?
     platform = windows_arch_i386? ? "x86" : "x64"
     do_windows_sysprobe = ""
@@ -70,13 +71,12 @@ build do
     command "inv -e rtloader.clean"
     command "inv -e rtloader.make --python-runtimes #{py_runtimes_arg} --install-prefix \"#{windows_safe_path(python_2_embedded)}\" --cmake-options \"-G \\\"Unix Makefiles\\\"\" --arch #{platform}", :env => env
     command "mv rtloader/bin/*.dll  #{install_dir}/bin/agent/"
-    command "inv -e agent.build --exclude-rtloader --python-runtimes #{py_runtimes_arg} --major-version #{major_version_arg} --rebuild --no-development --embedded-path=#{install_dir}/embedded --arch #{platform} #{do_windows_sysprobe} --flavor #{flavor_arg}", env: env
+    command "inv -e agent.build --exclude-rtloader --python-runtimes #{py_runtimes_arg} --major-version #{major_version_arg} --rebuild --no-development --embedded-path=#{install_dir}/embedded --arch #{platform} #{do_windows_sysprobe} --flavor #{flavor_arg} #{bundle_arg}", env: env
     command "inv -e systray.build --major-version #{major_version_arg} --rebuild --arch #{platform}", env: env
   else
     command "inv -e rtloader.clean"
     command "inv -e rtloader.make --python-runtimes #{py_runtimes_arg} --install-prefix \"#{install_dir}/embedded\" --cmake-options '-DCMAKE_CXX_FLAGS:=\"-D_GLIBCXX_USE_CXX11_ABI=0 -I#{install_dir}/embedded/include\" -DCMAKE_C_FLAGS:=\"-I#{install_dir}/embedded/include\" -DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_FIND_FRAMEWORK:STRING=NEVER'", :env => env
     command "inv -e rtloader.install"
-    bundle_arg = bundled_agents.map { |k| "--bundle #{k}" }.join(" ")
     command "inv -e agent.build --exclude-rtloader --python-runtimes #{py_runtimes_arg} --major-version #{major_version_arg} --rebuild --no-development --embedded-path=#{install_dir}/embedded --python-home-2=#{install_dir}/embedded --python-home-3=#{install_dir}/embedded --flavor #{flavor_arg} #{bundle_arg}", env: env
   end
 
@@ -108,7 +108,7 @@ build do
     mkdir Omnibus::Config.package_dir() unless Dir.exists?(Omnibus::Config.package_dir())
   end
 
-  if windows_target? or (not bundled_agents.include? "trace-agent")
+  if not bundled_agents.include? "trace-agent"
     # defer compilation step in a block to allow getting the project's build version, which is populated
     # only once the software that the project takes its version from (i.e. `datadog-agent`) has finished building
     platform = windows_arch_i386? ? "x86" : "x64"
@@ -120,38 +120,50 @@ build do
       copy 'bin/trace-agent/trace-agent', "#{install_dir}/embedded/bin"
     end
   else
-    link "#{install_dir}/bin/agent/agent", "#{install_dir}/embedded/bin/trace-agent"
+    if windows_target?
+      link "#{install_dir}/bin/agent/agent.exe", "#{install_dir}/bin/agent/trace-agent.exe"
+    else
+      link "#{install_dir}/bin/agent/agent", "#{install_dir}/embedded/bin/trace-agent"
+    end
   end
 
   # Process agent
-  if windows_target?
-    platform = windows_arch_i386? ? "x86" : "x64"
-    # Build the process-agent with the correct go version for windows
-    command "invoke -e process-agent.build --python-runtimes #{py_runtimes_arg} --major-version #{major_version_arg} --arch #{platform} --flavor #{flavor_arg}", :env => env
+  if not bundled_agents.include? "process-agent"
+    if windows_target?
+      platform = windows_arch_i386? ? "x86" : "x64"
+      # Build the process-agent with the correct go version for windows
+      command "invoke -e process-agent.build --python-runtimes #{py_runtimes_arg} --major-version #{major_version_arg} --arch #{platform} --flavor #{flavor_arg}", :env => env
 
-    copy 'bin/process-agent/process-agent.exe', "#{install_dir}/bin/agent"
-  else
-    if not bundled_agents.include? "process-agent"
+      copy 'bin/process-agent/process-agent.exe', "#{install_dir}/bin/agent"
+    else
       command "invoke -e process-agent.build --python-runtimes #{py_runtimes_arg} --major-version #{major_version_arg} --flavor #{flavor_arg}", :env => env
       copy 'bin/process-agent/process-agent', "#{install_dir}/embedded/bin"
+    end
+  else
+    if windows_target?
+      link "#{install_dir}/bin/agent/agent.exe", "#{install_dir}/bin/agent/process-agent.exe"
     else
       link "#{install_dir}/bin/agent/agent", "#{install_dir}/embedded/bin/process-agent"
     end
   end
 
   # System-probe
-  if windows_target?
-    unless windows_arch_i386?
-      if ENV['WINDOWS_DDNPM_DRIVER'] and not ENV['WINDOWS_DDNPM_DRIVER'].empty?
-        ## don't bother with system probe build on x86.
-        command "invoke -e system-probe.build --windows"
-        copy 'bin/system-probe/system-probe.exe', "#{install_dir}/bin/agent"
+  if not bundled_agents.include? "system-probe"
+    if windows_target?
+      unless windows_arch_i386?
+        if ENV['WINDOWS_DDNPM_DRIVER'] and not ENV['WINDOWS_DDNPM_DRIVER'].empty?
+          ## don't bother with system probe build on x86.
+          command "invoke -e system-probe.build --windows"
+          copy 'bin/system-probe/system-probe.exe', "#{install_dir}/bin/agent"
+        end
       end
-    end
-  elsif linux_target?
-    if not bundled_agents.include? "system-probe"
+    elsif linux_target?
       command "invoke -e system-probe.build-sysprobe-binary"
       copy "bin/system-probe/system-probe", "#{install_dir}/embedded/bin"
+    end
+  else
+    if windows_target?
+      link "#{install_dir}/bin/agent/agent.exe", "#{install_dir}/bin/agent/system-probe.exe"
     else
       link "#{install_dir}/bin/agent/agent", "#{install_dir}/embedded/bin/system-probe"
     end
@@ -165,19 +177,23 @@ build do
 
   # Security agent
   unless heroku_target?
-    if not windows_target? or (ENV['WINDOWS_DDPROCMON_DRIVER'] and not ENV['WINDOWS_DDPROCMON_DRIVER'].empty?)
-      if not linux_target? or (not bundled_agents.include? "security-agent")
+    if not bundled_agents.include? "security-agent"
+      if not windows_target? or (ENV['WINDOWS_DDPROCMON_DRIVER'] and not ENV['WINDOWS_DDPROCMON_DRIVER'].empty?)
         command "invoke -e security-agent.build --major-version #{major_version_arg}", :env => env
         if windows_target?
           copy 'bin/security-agent/security-agent.exe', "#{install_dir}/bin/agent"
         else
           copy 'bin/security-agent/security-agent', "#{install_dir}/embedded/bin"
         end
+      end
+    else
+      if windows_target?
+        link "#{install_dir}/bin/agent/agent.exe", "#{install_dir}/bin/agent/security-agent.exe"
       else
         link "#{install_dir}/bin/agent/agent", "#{install_dir}/embedded/bin/security-agent"
       end
-      move 'bin/agent/dist/security-agent.yaml', "#{conf_dir}/security-agent.yaml.example"
     end
+    move 'bin/agent/dist/security-agent.yaml', "#{conf_dir}/security-agent.yaml.example"
   end
 
   # APM Injection agent

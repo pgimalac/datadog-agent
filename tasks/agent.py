@@ -146,6 +146,8 @@ def build(
     )
 
     bundled_agents = ["agent"]
+    bundled_agents += bundle or BUNDLED_AGENTS.get(flavor, [])
+
     if sys.platform == 'win32':
         # Important for x-compiling
         env["CGO_ENABLED"] = "1"
@@ -162,8 +164,6 @@ def build(
             vars=vars,
             out="cmd/agent/rsrc.syso",
         )
-    else:
-        bundled_agents += bundle or BUNDLED_AGENTS.get(flavor, [])
 
     if flavor.is_iot():
         # Iot mode overrides whatever passed through `--build-exclude` and `--build-include`

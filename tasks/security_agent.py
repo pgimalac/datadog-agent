@@ -63,7 +63,7 @@ def build(
     """
     Build the security agent
     """
-    if bundle and sys.platform != "win32":
+    if bundle:
         return agent_build(
             ctx,
             race=race,

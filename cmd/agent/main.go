@@ -3,44 +3,29 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2016-present Datadog, Inc.
 
-//go:build !windows
-
 // Main package for the agent binary
 package main
 
 import (
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 
-	"github.com/DataDog/datadog-agent/cmd/agent/command"
-	"github.com/DataDog/datadog-agent/cmd/agent/subcommands"
 	"github.com/DataDog/datadog-agent/cmd/internal/runcmd"
-	"github.com/spf13/cobra"
 )
 
-func init() {
-	registerAgent(func() *cobra.Command {
-		return command.MakeCommand(subcommands.AgentSubcommands())
-	}, "agent", "datadog-agent")
-}
-
-var agents = map[string]func() *cobra.Command{}
-
-func registerAgent(getCommand func() *cobra.Command, names ...string) {
-	for _, name := range names {
-		agents[name] = getCommand
-	}
-}
-
 func main() {
-	executable := path.Base(os.Args[0])
-	process := strings.TrimSuffix(executable, path.Ext(executable))
+	executable := filepath.Base(os.Args[0])
+	process := strings.TrimSuffix(executable, filepath.Ext(executable))
 
 	if agentCmdBuilder := agents[process]; agentCmdBuilder != nil {
-		rootCmd := agentCmdBuilder()
-		os.Exit(runcmd.Run(rootCmd))
+		if rootCmd := agentCmdBuilder(); rootCmd != nil {
+			os.Exit(runcmd.Run(rootCmd))
+		}
+
+		// if not command is returned, main was already handled by the callback
+		return
 	}
 
 	fmt.Fprintf(os.Stderr, "'%s' is an incorrect invocation of the Datadog Agent\n", process)
