@@ -21,8 +21,6 @@ relative_path 'src/github.com/DataDog/datadog-agent'
 build do
   license :project_license
 
-  bundled_agents = ["process-agent", "security-agent", "system-probe"]
-
   # set GOPATH on the omnibus source dir for this software
   gopath = Pathname.new(project_dir) + '../../../..'
   etc_dir = "/etc/datadog-agent"
