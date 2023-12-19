@@ -79,11 +79,6 @@ func (u *Unix) ReadFile(path string) ([]byte, error) {
 	return []byte(out), err
 }
 
-// FindFileInFolder search for files in the given folder return an error if no files are found
-func (u *Unix) FindFileInFolder(path string) (string, error) {
-	return u.vmClient.ExecuteWithError(fmt.Sprintf("sudo find '%s' -type f", path))
-}
-
 // WriteFile write content to the file, does not return number of bytes written
 // TODO: return number of bytes written
 func (u *Unix) WriteFile(path string, content []byte) (int64, error) {

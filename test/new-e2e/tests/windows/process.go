@@ -13,19 +13,6 @@ import (
 	"github.com/DataDog/datadog-agent/test/new-e2e/pkg/utils/e2e/client"
 )
 
-// ListProcess returns list of process
-func ListProcess(vm client.VM) ([]string, error) {
-	//cmd := "Get-CimInstance Win32_Process | Select-Object -ExpandProperty CommandLine"
-	//cmd := "Get-Process | Select-Object -ExpandProperty ProcessName"
-	cmd := "Get-CimInstance Win32_Process | Select-Object -ExpandProperty Name"
-	output, err := vm.ExecuteWithError(cmd)
-	if err != nil {
-		return nil, err
-	}
-
-	return strings.Split(output, "\n"), nil
-}
-
 // IsProcessRunning returns true if process is running
 func IsProcessRunning(vm client.VM, imageName string) (bool, error) {
 	cmd := fmt.Sprintf(`tasklist /fi "ImageName -eq '%s'"`, imageName)
@@ -34,20 +21,6 @@ func IsProcessRunning(vm client.VM, imageName string) (bool, error) {
 		return false, err
 	}
 	return strings.Contains(out, imageName), nil
-}
-
-// KillProcess kill process
-func KillProcess(vm client.VM, pid int) error {
-	cmd := fmt.Sprintf("Stop-Process -Id '%d'", pid)
-	_, err := vm.ExecuteWithError(cmd)
-	return err
-}
-
-// PkillProcess kill process
-func PkillProcess(vm client.VM, pattern string) error {
-	cmd := fmt.Sprintf("Stop-Process -Name '%s'", pattern)
-	_, err := vm.ExecuteWithError(cmd)
-	return err
 }
 
 // FindPID returns a list of PIDs for processes that match the given pattern
