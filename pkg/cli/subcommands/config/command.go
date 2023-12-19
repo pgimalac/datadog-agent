@@ -115,6 +115,10 @@ func showSubsectionConfiguration(log log.Component, config config.Component, cli
 		return err
 	}
 
+	if len(cliParams.args) != 1 {
+		return fmt.Errorf("Empty or invalid subsection specified")
+	}
+
 	c, err := cliParams.GlobalParams.SettingsClient()
 	if err != nil {
 		return err
