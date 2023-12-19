@@ -54,7 +54,13 @@ func DisableDefender(vmClient client.VM) error {
 	return nil
 }
 
-// IsTamperProtected returns true if Windows Defender is tamper protected
+// IsTamperProtected returns true if Windows Defender is tamper protected.
+// If true, then Windows Defender cannot be disabled programatically and must be
+// disabled through the UI.
+//
+// https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/prevent-changes-to-security-settings-with-tamper-protection
+//
+// https://learn.microsoft.com/en-us/microsoft-365/security/defender-endpoint/manage-tamper-protection-individual-device
 func IsTamperProtected(vmClient client.VM) (bool, error) {
 	out, err := vmClient.ExecuteWithError("(Get-MpComputerStatus).IsTamperProtected")
 	if err != nil {
