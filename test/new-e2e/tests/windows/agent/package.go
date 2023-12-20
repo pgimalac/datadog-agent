@@ -101,7 +101,23 @@ func GetMajorVersionFromEnv() string {
 	return majorVersion
 }
 
+// GetArchFromEnv looks at environment variabes to select the agent arch.
+
+// WINDOWS_AGENT_ARCH: The arch of the agent, x86_64
+//
+// Default arch: x86_64
+func GetArchFromEnv() string {
+	arch := os.Getenv("WINDOWS_AGENT_ARCH")
+	if arch == "" {
+		arch = "x86_64"
+	}
+	return arch
+}
+
 // GetMSIURLFromEnv looks at environment variabes to select the agent MSI URL.
+//
+// The majorVersion and arch parameters are optional, if not provided they are
+// read from the environment.
 //
 // The following environment variables select the agent version:
 //
@@ -116,18 +132,19 @@ func GetMajorVersionFromEnv() string {
 //   - CI_PIPELINE_ID: use the URL from a specific CI pipeline
 //
 // If none of the above are set, the latest stable version is used.
-func GetMSIURLFromEnv() (string, error) {
+func GetMSIURLFromEnv(majorVersion string, arch string) (string, error) {
 	// check for manually provided URL
 	url := os.Getenv("WINDOWS_AGENT_MSI_URL")
 	if url != "" {
 		return url, nil
 	}
 
-	majorVersion := GetMajorVersionFromEnv()
+	if majorVersion == "" {
+		majorVersion = GetMajorVersionFromEnv()
+	}
 
-	arch := os.Getenv("WINDOWS_AGENT_ARCH")
 	if arch == "" {
-		arch = "x86_64"
+		arch = GetArchFromEnv()
 	}
 
 	// check if we should use the URL from a specific CI pipeline

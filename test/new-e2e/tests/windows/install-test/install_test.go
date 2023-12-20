@@ -40,7 +40,7 @@ func TestMSI(t *testing.T) {
 	}
 
 	majorVersion := windowsAgent.GetMajorVersionFromEnv()
-	msiURL, err := windowsAgent.GetMSIURLFromEnv()
+	msiURL, err := windowsAgent.GetMSIURLFromEnv(majorVersion, "")
 	if err != nil {
 		t.Fatalf("failed to get MSI URL from env: %v", err)
 	}
