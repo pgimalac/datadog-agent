@@ -53,7 +53,7 @@ func PortBoundByPID(client *TestClient, port int, pid int) (boundport.BoundPort,
 
 // PortBoundByService returns info about the port bound by a given service
 func PortBoundByService(client *TestClient, port int, service string) (boundport.BoundPort, error) {
-	// TODO: get process name for service
+	// TODO: might need to map service name to process name, this is working right now though
 	pids, err := process.FindPID(client.VMClient, service)
 	if err != nil {
 		return nil, err

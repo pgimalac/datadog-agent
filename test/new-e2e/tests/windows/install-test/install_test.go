@@ -85,7 +85,8 @@ func (is *agentMSISuite) TestInstallAgent() {
 		common.CheckAgentPython(is.T(), client, "3")
 		common.CheckApmEnabled(is.T(), client)
 		common.CheckApmDisabled(is.T(), client)
-		// TODO: common.CheckCWSBehaviour(is.T(), client)
+		// TODO: CWS on Windows isn't available yet
+		// common.CheckCWSBehaviour(is.T(), client)
 	})
 
 	is.Run("uninstall the agent", func() {

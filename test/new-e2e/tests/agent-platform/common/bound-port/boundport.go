@@ -59,7 +59,7 @@ func IsPortBound(client client.VM, port int) (bool, error) {
 	return false, fmt.Errorf("unsupported OS type: %v", os)
 }
 
-// BoundPorts returns a map of ports to the process name they are bound to
+// BoundPorts returns a list of ports that are bound on the host
 func BoundPorts(client client.VM) ([]BoundPort, error) {
 	os := client.GetOSType()
 	if os == componentos.UnixType {
