@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"sync"
 	"time"
@@ -76,14 +77,18 @@ type Collector struct {
 var globalCollector *Collector
 
 func getDefaultArtifactOption(root string, opts sbom.ScanOptions) artifact.Option {
+	parallel := 1
+	if opts.Fast {
+		parallel = runtime.NumCPU()
+	}
+
 	option := artifact.Option{
 		Offline:           true,
 		NoProgress:        true,
 		DisabledAnalyzers: DefaultDisabledCollectors(opts.Analyzers),
-		Slow:              !opts.Fast,
+		Parallel:          parallel,
 		SBOMSources:       []string{},
 		DisabledHandlers:  DefaultDisabledHandlers(),
-		CollectFiles:      opts.CollectFiles,
 	}
 
 	if len(opts.Analyzers) == 1 && opts.Analyzers[0] == OSAnalyzers {
