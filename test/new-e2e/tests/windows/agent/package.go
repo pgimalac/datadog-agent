@@ -9,6 +9,7 @@ package agent
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/DataDog/datadog-agent/test/new-e2e/tests/windows/agent/installers/v2"
@@ -85,4 +86,60 @@ func GetPipelineMSIURL(pipelineID string, majorVersion string, arch string) (str
 	}
 
 	return "", fmt.Errorf("no agent MSI found for pipeline %v and arch %v", pipelineID, arch)
+}
+
+// GetMajorVersionFromEnv looks at environment variabes to select the agent major version.
+//
+// WINDOWS_AGENT_MAJOR_VERSION: The major version of the agent, 6 or 7
+//
+// Default major version: 7
+func GetMajorVersionFromEnv() string {
+	majorVersion := os.Getenv("WINDOWS_AGENT_MAJOR_VERSION")
+	if majorVersion == "" {
+		majorVersion = "7"
+	}
+	return majorVersion
+}
+
+// GetMSIURLFromEnv looks at environment variabes to select the agent MSI URL.
+//
+// The following environment variables select the agent version:
+//
+//   - WINDOWS_AGENT_MAJOR_VERSION: The major version of the agent, 6 or 7
+//
+//   - WINDOWS_AGENT_ARCH: The arch of the agent, x86_64
+//
+// The following environment variables select the package:
+//
+//   - WINDOWS_AGENT_MSI_URL: manually provided URL (version and arch are ignored)
+//
+//   - CI_PIPELINE_ID: use the URL from a specific CI pipeline
+//
+// If none of the above are set, the latest stable version is used.
+func GetMSIURLFromEnv() (string, error) {
+	// check for manually provided URL
+	url := os.Getenv("WINDOWS_AGENT_MSI_URL")
+	if url != "" {
+		return url, nil
+	}
+
+	majorVersion := GetMajorVersionFromEnv()
+
+	arch := os.Getenv("WINDOWS_AGENT_ARCH")
+	if arch == "" {
+		arch = "x86_64"
+	}
+
+	// check if we should use the URL from a specific CI pipeline
+	pipelineID := os.Getenv("CI_PIPELINE_ID")
+	if pipelineID != "" {
+		url, err := GetPipelineMSIURL(pipelineID, majorVersion, arch)
+		if err != nil {
+			return "", err
+		}
+		return url, nil
+	}
+
+	// Default to latest stable
+	return GetLatestMSIURL(majorVersion, arch), nil
 }

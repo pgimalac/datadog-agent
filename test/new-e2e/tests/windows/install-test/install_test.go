@@ -8,7 +8,6 @@ package installtest
 import (
 	"flag"
 	"fmt"
-	"os"
 
 	"github.com/DataDog/test-infra-definitions/scenarios/aws/vm/ec2os"
 	"github.com/DataDog/test-infra-definitions/scenarios/aws/vm/ec2params"
@@ -40,22 +39,11 @@ func TestMSI(t *testing.T) {
 		opts = append(opts, params.WithDevMode())
 	}
 
-	// TODO: Configurable url/version/pipeline
-	majorVersion := "7"
-	arch := "x86_64"
-
-	var err error
-	var msiURL string
-	pipelineID := os.Getenv("CI_PIPELINE_ID")
-	if pipelineID != "" {
-		msiURL, err = windowsAgent.GetPipelineMSIURL(pipelineID, majorVersion, arch)
-		if err != nil {
-			t.Fatal(err)
-		}
-	} else {
-		msiURL = windowsAgent.GetLatestMSIURL(majorVersion, arch)
+	majorVersion := windowsAgent.GetMajorVersionFromEnv()
+	msiURL, err := windowsAgent.GetMSIURLFromEnv()
+	if err != nil {
+		t.Fatalf("failed to get MSI URL from env: %v", err)
 	}
-
 	t.Logf("Using MSI URL: %v", msiURL)
 
 	s := &agentMSISuite{
