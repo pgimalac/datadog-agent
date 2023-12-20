@@ -8,6 +8,7 @@
 package serializers
 
 import (
+	"github.com/DataDog/datadog-agent/pkg/security/secl/compiler/eval"
 	"github.com/DataDog/datadog-agent/pkg/security/secl/model"
 	"github.com/DataDog/datadog-agent/pkg/security/utils"
 )
@@ -19,7 +20,13 @@ type ContainerContextSerializer struct {
 	ID string `json:"id,omitempty"`
 	// Creation time of the container
 	CreatedAt *utils.EasyjsonTime `json:"created_at,omitempty"`
+	// Variables values
+	Variables Variables `json:"variables,omitempty"`
 }
+
+// Variables serializes the variable values
+// easyjson:json
+type Variables map[string]interface{}
 
 // MatchedRuleSerializer serializes a rule
 // easyjson:json
@@ -51,6 +58,8 @@ type EventContextSerializer struct {
 	MatchedRules []MatchedRuleSerializer `json:"matched_rules,omitempty"`
 	// Origin of the event
 	Origin string `json:"origin,omitempty"`
+	// Variables values
+	Variables Variables `json:"variables,omitempty"`
 }
 
 // ProcessContextSerializer serializes a process context to JSON
@@ -61,6 +70,8 @@ type ProcessContextSerializer struct {
 	Parent *ProcessSerializer `json:"parent,omitempty"`
 	// Ancestor processes
 	Ancestors []*ProcessSerializer `json:"ancestors,omitempty"`
+	// Variables values
+	Variables Variables `json:"variables,omitempty"`
 }
 
 // IPPortSerializer is used to serialize an IP and Port context to JSON
@@ -210,17 +221,18 @@ func newExitEventSerializer(e *model.Event) *ExitEventSerializer {
 }
 
 // NewBaseEventSerializer creates a new event serializer based on the event type
-func NewBaseEventSerializer(event *model.Event) *BaseEventSerializer {
+func NewBaseEventSerializer(event *model.Event, opts *eval.Opts) *BaseEventSerializer {
 	pc := event.ProcessContext
 
 	eventType := model.EventType(event.Type)
 
 	s := &BaseEventSerializer{
 		EventContextSerializer: EventContextSerializer{
-			Name:   eventType.String(),
-			Origin: event.Origin,
+			Name:      eventType.String(),
+			Origin:    event.Origin,
+			Variables: newVariablesContext(event, opts, ""),
 		},
-		ProcessContextSerializer: newProcessContextSerializer(pc, event),
+		ProcessContextSerializer: newProcessContextSerializer(pc, event, opts),
 		Date:                     utils.NewEasyjsonTime(event.ResolveEventTime()),
 	}
 
