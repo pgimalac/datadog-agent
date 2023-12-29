@@ -3,8 +3,8 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2016-present Datadog, Inc.
 
-// Package e2e_test contains cws e2e tests
-package e2e_test
+// Package cws holds cws e2e tests
+package cws
 
 import (
 	_ "embed"
@@ -25,12 +25,26 @@ import (
 	"github.com/DataDog/datadog-agent/test/new-e2e/pkg/runner"
 	"github.com/DataDog/datadog-agent/test/new-e2e/pkg/runner/parameters"
 	"github.com/DataDog/datadog-agent/test/new-e2e/pkg/utils/e2e"
-	e2elib "github.com/DataDog/datadog-agent/test/new-e2e/tests/cws/lib"
+	"github.com/DataDog/datadog-agent/test/new-e2e/tests/cws/api"
+)
+
+const (
+	// securityStartLog is the log corresponding to a successful start of the security-agent
+	securityStartLog = "Successfully connected to the runtime security module"
+
+	// systemProbeStartLog is the log corresponding to a successful start of the system-probe
+	systemProbeStartLog = "runtime security started"
+
+	// securityAgentPath is the path of the security-agent binary
+	securityAgentPath = "/opt/datadog-agent/embedded/bin/security-agent"
+
+	// policiesPath is the path of the default runtime security policies
+	policiesPath = "/etc/datadog-agent/runtime-security.d/test.policy"
 )
 
 type agentSuite struct {
 	e2e.Suite[e2e.AgentEnv]
-	apiClient     *e2elib.APIClient
+	apiClient     *api.Client
 	signalRuleID  string
 	agentRuleID   string
 	dirname       string
@@ -66,11 +80,11 @@ func (a *agentSuite) SetupSuite() {
 	tempDir := a.Env().VM.Execute("mktemp -d")
 	a.dirname = strings.TrimSuffix(tempDir, "\n")
 	a.filename = fmt.Sprintf("%s/secret", a.dirname)
-	a.testID = e2elib.RandomString(4)
+	a.testID = randomString(4)
 	a.desc = fmt.Sprintf("e2e test rule %s", a.testID)
 	a.agentRuleName = fmt.Sprintf("new_e2e_agent_rule_%s", a.testID)
 	a.Suite.SetupSuite()
-	a.apiClient = e2elib.NewAPIClient()
+	a.apiClient = api.NewClient()
 }
 
 func (a *agentSuite) TearDownSuite() {
@@ -101,11 +115,11 @@ func (a *agentSuite) TestOpenSignal() {
 	assert.Equal(a.T(), isReady, true, "Agent should be ready")
 
 	// Check if system-probe has started
-	err = a.waitAgentLogs("system-probe", e2elib.SystemProbeStartLog)
+	err = a.waitAgentLogs("system-probe", systemProbeStartLog)
 	require.NoError(a.T(), err, "system-probe could not start")
 
 	// Check if security-agent has started
-	err = a.waitAgentLogs("security-agent", e2elib.SecurityStartLog)
+	err = a.waitAgentLogs("security-agent", securityStartLog)
 	require.NoError(a.T(), err, "security-agent could not start")
 
 	// Download policies
@@ -116,7 +130,7 @@ func (a *agentSuite) TestOpenSignal() {
 	require.NoError(a.T(), err, "Could not get APP KEY")
 
 	a.EventuallyWithT(func(c *assert.CollectT) {
-		policies := a.Env().VM.Execute(fmt.Sprintf("DD_APP_KEY=%s DD_API_KEY=%s %s runtime policy download", appKey, apiKey, e2elib.SecurityAgentPath))
+		policies := a.Env().VM.Execute(fmt.Sprintf("DD_APP_KEY=%s DD_API_KEY=%s %s runtime policy download", appKey, apiKey, securityAgentPath))
 		assert.NotEmpty(c, policies, "should not be empty")
 		a.policies = policies
 	}, 5*time.Minute, 10*time.Second)
@@ -125,16 +139,16 @@ func (a *agentSuite) TestOpenSignal() {
 	assert.Contains(a.T(), a.policies, a.desc, "The policies should contain the created rule")
 
 	// Push policies
-	a.Env().VM.Execute(fmt.Sprintf("echo -e %s > temp.txt\nsudo cp temp.txt %s", strconv.Quote(a.policies), e2elib.PoliciesPath))
+	a.Env().VM.Execute(fmt.Sprintf("echo -e %s > temp.txt\nsudo cp temp.txt %s", strconv.Quote(a.policies), policiesPath))
 	a.Env().VM.Execute("rm temp.txt")
-	policiesFile := a.Env().VM.Execute(fmt.Sprintf("cat %s", e2elib.PoliciesPath))
+	policiesFile := a.Env().VM.Execute(fmt.Sprintf("cat %s", policiesPath))
 	assert.Contains(a.T(), policiesFile, a.desc, "The policies file should contain the created rule")
 
 	// Reload policies
-	a.Env().VM.Execute(fmt.Sprintf("sudo %s runtime policy reload", e2elib.SecurityAgentPath))
+	a.Env().VM.Execute(fmt.Sprintf("sudo %s runtime policy reload", securityAgentPath))
 
 	// Check `downloaded` ruleset_loaded
-	result, err := e2elib.WaitAppLogs(a.apiClient, "host:cws-new-e2e-test-host rule_id:ruleset_loaded")
+	result, err := api.WaitAppLogs(a.apiClient, "host:cws-new-e2e-test-host rule_id:ruleset_loaded")
 	require.NoError(a.T(), err, "could not get new ruleset")
 
 	agentContext := result.Attributes["agent"].(map[string]interface{})
@@ -148,7 +162,7 @@ func (a *agentSuite) TestOpenSignal() {
 	require.NoError(a.T(), err, "could not send payload")
 
 	// Check app signal
-	signal, err := e2elib.WaitAppSignal(a.apiClient, fmt.Sprintf("host:cws-new-e2e-test-host @workflow.rule.id:%s", a.signalRuleID))
+	signal, err := api.WaitAppSignal(a.apiClient, fmt.Sprintf("host:cws-new-e2e-test-host @workflow.rule.id:%s", a.signalRuleID))
 	require.NoError(a.T(), err)
 	assert.Contains(a.T(), signal.Tags, fmt.Sprintf("rule_id:%s", strings.ToLower(a.agentRuleName)), "unable to find agent_rule_name tag")
 	agentContext = signal.Attributes["agent"].(map[string]interface{})
