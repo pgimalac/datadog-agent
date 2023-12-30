@@ -12,9 +12,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	model "github.com/DataDog/agent-payload/v5/process"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	model "github.com/DataDog/agent-payload/v5/process"
+	"github.com/DataDog/datadog-agent/pkg/orchestrator"
 )
 
 type Item struct {
@@ -213,7 +215,7 @@ func TestChunkOrchestratorMetadataBySizeAndWeight(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			chunks := chunkOrchestratorPayloadsBySizeAndWeight(tc.orchestratorResources, tc.orchestratorYaml, tc.maxChunkSize, tc.maxChunkWeight)
+			chunks := orchestrator.ChunkOrchestratorPayloadsBySizeAndWeight(tc.orchestratorResources, tc.orchestratorYaml, weightForOrchestratorPayload, tc.maxChunkSize, tc.maxChunkWeight)
 			assert.Equal(t, tc.expectedChunks, chunks)
 		})
 	}

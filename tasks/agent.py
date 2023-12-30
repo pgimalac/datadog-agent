@@ -69,6 +69,7 @@ AGENT_CORECHECKS = [
     "jetson",
     "telemetry",
     "orchestrator_pod",
+    "orchestrator_ecs",
 ]
 
 WINDOWS_CORECHECKS = [

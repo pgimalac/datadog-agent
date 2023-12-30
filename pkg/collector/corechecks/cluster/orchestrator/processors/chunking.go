@@ -8,36 +8,11 @@
 //nolint:revive // TODO(CAPP) Fix revive linter
 package processors
 
-import (
-	model "github.com/DataDog/agent-payload/v5/process"
+import model "github.com/DataDog/agent-payload/v5/process"
 
-	"github.com/DataDog/datadog-agent/pkg/process/util"
-)
-
-// chunkOrchestratorPayloadsBySizeAndWeight chunks orchestrator payloads by max allowed size and max allowed weight of a chunk
-// We use yaml size as payload weight
-func chunkOrchestratorPayloadsBySizeAndWeight(orchestratorPayloads []interface{}, orchestratorYaml []interface{}, maxChunkSize, maxChunkWeight int) [][]interface{} {
-	if len(orchestratorPayloads) == 0 {
-		return make([][]interface{}, 0)
+func weightForOrchestratorPayload(payloads []interface{}, i int) int {
+	if i >= len(payloads) {
+		return 0
 	}
-
-	chunker := &util.ChunkAllocator[[]interface{}, interface{}]{
-		AppendToChunk: func(chunk *[]interface{}, payloads []interface{}) {
-			*chunk = append(*chunk, payloads...)
-		},
-	}
-
-	list := &util.PayloadList[interface{}]{
-		Items: orchestratorPayloads,
-		WeightAt: func(i int) int {
-			if i >= len(orchestratorYaml) {
-				return 0
-			}
-			return len(orchestratorYaml[i].(*model.Manifest).Content)
-		},
-	}
-
-	util.ChunkPayloadsBySizeAndWeight[[]interface{}, interface{}](list, chunker, maxChunkSize, maxChunkWeight)
-
-	return *chunker.GetChunks()
+	return len(payloads[i].(*model.Manifest).Content)
 }

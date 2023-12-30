@@ -10,9 +10,12 @@ package ecs
 
 import (
 	"context"
+	"reflect"
 	"strings"
+	"time"
 
 	"github.com/DataDog/datadog-agent/comp/core/workloadmeta"
+	"github.com/DataDog/datadog-agent/comp/core/workloadmeta/collectors/util"
 	"github.com/DataDog/datadog-agent/pkg/config"
 	"github.com/DataDog/datadog-agent/pkg/errors"
 	ecsutil "github.com/DataDog/datadog-agent/pkg/util/ecs"
@@ -20,6 +23,7 @@ import (
 	v1 "github.com/DataDog/datadog-agent/pkg/util/ecs/metadata/v1"
 	v3or4 "github.com/DataDog/datadog-agent/pkg/util/ecs/metadata/v3or4"
 	"github.com/DataDog/datadog-agent/pkg/util/log"
+	"github.com/DataDog/datadog-agent/pkg/util/retry"
 
 	"go.uber.org/fx"
 )
@@ -30,16 +34,17 @@ const (
 )
 
 type collector struct {
-	id                  string
-	store               workloadmeta.Component
-	catalog             workloadmeta.AgentType
-	metaV1              v1.Client
-	metaV3or4           func(metaURI, metaVersion string) v3or4.Client
-	clusterName         string
-	hasResourceTags     bool
-	collectResourceTags bool
-	resourceTags        map[string]resourceTags
-	seen                map[workloadmeta.EntityID]struct{}
+	id                               string
+	store                            workloadmeta.Component
+	catalog                          workloadmeta.AgentType
+	metaV1                           v1.Client
+	metaV3or4                        func(metaURI, metaVersion string) v3or4.Client
+	clusterName                      string
+	hasResourceTags                  bool
+	collectResourceTags              bool
+	resourceTags                     map[string]resourceTags
+	seen                             map[workloadmeta.EntityID]struct{}
+	orchestratorECSCollectionEnabled bool
 }
 
 type resourceTags struct {
@@ -49,12 +54,19 @@ type resourceTags struct {
 
 // NewCollector returns a new ecs collector provider and an error
 func NewCollector() (workloadmeta.CollectorProvider, error) {
+	orchestratorECSCollectionEnabled := false
+	if config.Datadog.GetBool("orchestrator_explorer.enabled") &&
+		config.Datadog.GetBool("orchestrator_explorer.ecs_collection.enabled") {
+		orchestratorECSCollectionEnabled = true
+	}
+
 	return workloadmeta.CollectorProvider{
 		Collector: &collector{
-			id:           collectorID,
-			resourceTags: make(map[string]resourceTags),
-			seen:         make(map[workloadmeta.EntityID]struct{}),
-			catalog:      workloadmeta.NodeAgent | workloadmeta.ProcessAgent,
+			id:                               collectorID,
+			resourceTags:                     make(map[string]resourceTags),
+			seen:                             make(map[workloadmeta.EntityID]struct{}),
+			catalog:                          workloadmeta.NodeAgent | workloadmeta.ProcessAgent,
+			orchestratorECSCollectionEnabled: orchestratorECSCollectionEnabled,
 		},
 	}, nil
 }
@@ -125,6 +137,13 @@ func (c *collector) parseTasks(ctx context.Context, tasks []v1.Task) []workloadm
 	for _, task := range tasks {
 		// We only want to collect tasks without a STOPPED status.
 		if task.KnownStatus == "STOPPED" {
+			continue
+		}
+
+		// If the orchestrator explorer ecs collection is enabled, collector will query the v4 task endpoint for each task
+		// and store task and container in the store.
+		if c.orchestratorECSCollectionEnabled {
+			events = append(events, c.parseV4Task(ctx, task, seen)...)
 			continue
 		}
 
@@ -233,6 +252,70 @@ func (c *collector) parseTaskContainers(
 	return taskContainers, events
 }
 
+func (c *collector) parseV4Task(ctx context.Context, task v1.Task, seen map[workloadmeta.EntityID]struct{}) []workloadmeta.CollectorEvent {
+	v4Task := c.getV4TaskWithTags(ctx, task)
+	return util.ParseV4Task(v4Task, seen)
+}
+
+// getV4TaskWithTags fetches task and tasks from the metadata v4 API
+func (c *collector) getV4TaskWithTags(ctx context.Context, task v1.Task) v3or4.Task {
+	var metaURI string
+	var metaVersion string
+	for _, taskContainer := range task.Containers {
+		containerID := taskContainer.DockerID
+		container, err := c.store.GetContainer(containerID)
+		if err != nil {
+			log.Tracef("cannot find container %q found in task %s: %s", taskContainer, task.Arn, err)
+			continue
+		}
+
+		uri, ok := container.EnvVars[v3or4.DefaultMetadataURIv4EnvVariable]
+		if ok && uri != "" {
+			metaURI = uri
+			metaVersion = "v4"
+			break
+		}
+	}
+
+	if metaURI == "" {
+		log.Errorf("failed to get client for metadata v3 or v4 API from task %s and the following containers: %v", task.Arn, task.Containers)
+		return v1TaskToV4Task(task)
+	}
+
+	metaV3orV4 := c.metaV3or4(metaURI, metaVersion)
+
+	var taskWithTagsRetry retry.Retrier
+	var taskWithTags *v3or4.Task
+	var err error
+
+	_ = taskWithTagsRetry.SetupRetrier(&retry.Config{
+		Name: "get-v4-task-with-tags",
+		AttemptMethod: func() error {
+			taskWithTags, err = metaV3orV4.GetTaskWithTags(ctx)
+			return err
+		},
+		Strategy:   retry.RetryCount,
+		RetryCount: 10,
+		RetryDelay: 200 * time.Millisecond,
+	})
+
+	// retry 10 times with 200ms delay between each attempt
+	// which means it will retry for 2 seconds for each task before giving up
+	for {
+		err = taskWithTagsRetry.TriggerRetry()
+		if err == nil || (reflect.ValueOf(err).Kind() == reflect.Ptr && reflect.ValueOf(err).IsNil()) {
+			break
+		}
+
+		if retry.IsErrPermaFail(err) {
+			log.Errorf("failed to get task with tags from metadata %s API: %s", metaVersion, err)
+			return v1TaskToV4Task(task)
+		}
+	}
+
+	return *taskWithTags
+}
+
 // getResourceTags fetches task and container instance tags from the ECS API,
 // and caches them for the lifetime of the task, to avoid hitting throttling
 // limits from tasks being updated on every pull. Tags won't change in the
@@ -288,4 +371,24 @@ func (c *collector) getResourceTags(ctx context.Context, entity *workloadmeta.EC
 	c.resourceTags[entity.ID] = rt
 
 	return rt
+}
+
+func v1TaskToV4Task(task v1.Task) v3or4.Task {
+	result := v3or4.Task{
+		TaskARN:       task.Arn,
+		DesiredStatus: task.DesiredStatus,
+		KnownStatus:   task.KnownStatus,
+		Family:        task.Family,
+		Version:       task.Version,
+		Containers:    make([]v3or4.Container, 0, len(task.Containers)),
+	}
+
+	for _, container := range task.Containers {
+		result.Containers = append(result.Containers, v3or4.Container{
+			Name:       container.Name,
+			DockerName: container.DockerName,
+			DockerID:   container.DockerID,
+		})
+	}
+	return result
 }

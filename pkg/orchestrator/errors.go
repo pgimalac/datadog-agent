@@ -3,9 +3,7 @@
 // This product includes software developed at Datadog (https://www.datadoghq.com/).
 // Copyright 2016-present Datadog, Inc.
 
-//go:build orchestrator
-
-package processors
+package orchestrator
 
 import (
 	"fmt"
@@ -13,13 +11,13 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/DataDog/datadog-agent/pkg/orchestrator"
+	orchestrator "github.com/DataDog/datadog-agent/pkg/orchestrator/model"
 	"github.com/DataDog/datadog-agent/pkg/util/log"
 )
 
-// newMarshallingError creates an error that wraps the cause of a marshalling
+// NewMarshallingError creates an error that wraps the cause of a marshalling
 // error.
-func newMarshallingError(cause error) error {
+func NewMarshallingError(cause error) error {
 	return errors.WithMessage(cause, "unable to marshal resource to JSON")
 }
 
@@ -27,6 +25,6 @@ func newMarshallingError(cause error) error {
 func RecoverOnPanic() {
 	if r := recover(); r != nil {
 		stack := debug.Stack()
-		log.Errorc(fmt.Sprintf("unable to process resources (panic!): %s", stack), orchestrator.ExtraLogContext)
+		log.Errorc(fmt.Sprintf("unable to process resources (panic!): %s", string(stack)), orchestrator.ExtraLogContext)
 	}
 }
