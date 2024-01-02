@@ -953,7 +953,7 @@ workflow:
       paths:
         - tools/windows/DatadogAgentInstaller/**/*
         - .gitlab/new-e2e_testing/windows.yml
-        - test/new-e2e/windows/install-test/**/*
+        - test/new-e2e/tests/windows/install-test/**/*
         - tasks/msi.py
       compare_to: main # TODO: use a variable, when this is supported https://gitlab.com/gitlab-org/gitlab/-/issues/369916
     when: on_success

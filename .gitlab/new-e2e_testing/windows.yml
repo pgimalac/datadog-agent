@@ -4,14 +4,12 @@
   variables:
     TARGETS: ./tests/windows/install-test
     TEAM: windows-agent
-  rules:
-    - !reference [.on_windows_installer_changes_or_manual]
 
 # Agent 6
 .new-e2e_windows_a6_x86_64:
   variables:
     WINDOWS_AGENT_ARCH: "x86_64"
-  needs: ["windows_msi_x64-a6"]
+  needs: ["deploy_windows_testing-a6"]
 
 new-e2e-windows-agent-msi-windows-server-a6-x86_64:
   stage: kitchen_testing
@@ -22,12 +20,13 @@ new-e2e-windows-agent-msi-windows-server-a6-x86_64:
     - .new-e2e_agent_a6
   rules:
     - !reference [.on_deploy_a6]
+    - !reference [.on_windows_installer_changes_or_manual]
 
 # Agent 7
 .new-e2e_windows_a7_x86_64:
   variables:
     WINDOWS_AGENT_ARCH: "x86_64"
-  needs: ["windows_msi_and_bosh_zip_x64-a7"]
+  needs: ["deploy_windows_testing-a7"]
 
 new-e2e-windows-agent-msi-windows-server-a7-x86_64:
   stage: kitchen_testing
@@ -38,3 +37,4 @@ new-e2e-windows-agent-msi-windows-server-a7-x86_64:
     - .new-e2e_agent_a7
   rules:
     - !reference [.on_default_new-e2e_tests_a7]
+    - !reference [.on_windows_installer_changes_or_manual]
