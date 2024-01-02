@@ -531,10 +531,10 @@ func hashMapNumberOfEntries(mp *ebpf.Map) int64 {
 		return -1
 	}
 
-	canUseBatchApi := true // TODO(gjulianm): Use BatchAPISupported() when merged
+	canUseBatchAPI := true // TODO(gjulianm): Use BatchAPISupported() when merged
 	numElements := 0
 
-	if canUseBatchApi {
+	if canUseBatchAPI {
 		// Here we duplicate a bit the code from cilium/ebpf to use the batch API
 		// in our own way, because the way it's coded there it cannot be used with
 		// key sizes that are only known at runtime.
