@@ -92,17 +92,25 @@ func GetPipelineMSIURL(pipelineID string, majorVersion string, arch string) (str
 //
 // WINDOWS_AGENT_MAJOR_VERSION: The major version of the agent, 6 or 7
 //
+// AGENT_MAJOR_VERSION: The major version of the agent, 6 or 7
+//
 // Default major version: 7
 func GetMajorVersionFromEnv() string {
 	majorVersion := os.Getenv("WINDOWS_AGENT_MAJOR_VERSION")
-	if majorVersion == "" {
-		majorVersion = "7"
+	if majorVersion != "" {
+		return majorVersion
 	}
-	return majorVersion
+
+	majorVersion = os.Getenv("AGENT_MAJOR_VERSION")
+	if majorVersion != "" {
+		return majorVersion
+	}
+
+	return "7"
 }
 
 // GetArchFromEnv looks at environment variabes to select the agent arch.
-
+//
 // WINDOWS_AGENT_ARCH: The arch of the agent, x86_64
 //
 // Default arch: x86_64
@@ -122,6 +130,8 @@ func GetArchFromEnv() string {
 // The following environment variables select the agent version:
 //
 //   - WINDOWS_AGENT_MAJOR_VERSION: The major version of the agent, 6 or 7
+//
+//   - AGENT_MAJOR_VERSION: The major version of the agent, 6 or 7
 //
 //   - WINDOWS_AGENT_ARCH: The arch of the agent, x86_64
 //
