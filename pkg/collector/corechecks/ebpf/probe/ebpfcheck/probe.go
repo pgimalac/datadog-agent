@@ -573,8 +573,8 @@ func hashMapNumberOfEntries(mp *ebpf.Map) int64 {
 		_, _, errno := unix.Syscall(unix.SYS_BPF, uintptr(BpfMapLookupBatchCommandCode), uintptr(unsafe.Pointer(&attr)), unsafe.Sizeof(attr))
 
 		// We only care about the errno returned. Note that batch lookup commands return
-		// ENOENT to indicate it is the last batch. In this case, we want a single batch so
-		// it should return ENOENT in normal operation
+		// ENOENT to indicate it is the last batch. In this case, we want a single batch with all
+		// the elements so it should return ENOENT in normal operation
 		if errno != 0 && errno != unix.ENOENT {
 			log.Debugf("error iterating map %s: %s", mp.String(), errno)
 			fmt.Printf("no luck: %s\n", errno)
