@@ -550,7 +550,7 @@ func hashMapNumberOfEntries(mp *ebpf.Map) int64 {
 		values := make([]byte, mp.ValueSize()*mp.MaxEntries())
 		cursor := make([]byte, mp.KeySize(), 4)
 
-		const BPF_MAP_LOOKUP_BATCH = uint32(24)
+		const BpfMapLookupBatchCommandCode = uint32(24)
 		type MapLookupBatchAttr struct {
 			InBatch   Pointer
 			OutBatch  Pointer
@@ -570,7 +570,7 @@ func hashMapNumberOfEntries(mp *ebpf.Map) int64 {
 			OutBatch: NewPointer(unsafe.Pointer(&cursor[0])),
 		}
 
-		_, _, errno := unix.Syscall(unix.SYS_BPF, uintptr(BPF_MAP_LOOKUP_BATCH), uintptr(unsafe.Pointer(&attr)), unsafe.Sizeof(attr))
+		_, _, errno := unix.Syscall(unix.SYS_BPF, uintptr(BpfMapLookupBatchCommandCode), uintptr(unsafe.Pointer(&attr)), unsafe.Sizeof(attr))
 
 		// We only care about the errno returned. Note that batch lookup commands return
 		// ENOENT to indicate it is the last batch. In this case, we want a single batch so
