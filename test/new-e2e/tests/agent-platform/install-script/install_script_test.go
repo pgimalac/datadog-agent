@@ -139,6 +139,7 @@ func (is *installScriptSuite) AgentTest(flavor string) {
 	install.Unix(is.T(), client, installparams.WithArch(*architecture), installparams.WithFlavor(flavor), installparams.WithMajorVersion(*majorVersion))
 
 	common.CheckInstallation(is.T(), client)
+	common.CheckSigningKeys(is.T(), client)
 	common.CheckAgentBehaviour(is.T(), client)
 	common.CheckAgentStops(is.T(), client)
 	common.CheckAgentRestarts(is.T(), client)
@@ -169,6 +170,7 @@ func (is *installScriptSuite) IotAgentTest() {
 	install.Unix(is.T(), client, installparams.WithArch(*architecture), installparams.WithFlavor(*flavor))
 
 	common.CheckInstallation(is.T(), client)
+	common.CheckSigningKeys(is.T(), client)
 	common.CheckAgentBehaviour(is.T(), client)
 	common.CheckAgentStops(is.T(), client)
 	common.CheckAgentRestarts(is.T(), client)
@@ -190,6 +192,7 @@ func (is *installScriptSuite) DogstatsdAgentTest() {
 	install.Unix(is.T(), client, installparams.WithArch(*architecture), installparams.WithFlavor(*flavor))
 
 	common.CheckInstallation(is.T(), client)
+	common.CheckSigningKeys(is.T(), client)
 	common.CheckDogstatdAgentBehaviour(is.T(), client)
 	common.CheckDogstatsdAgentStops(is.T(), client)
 	common.CheckDogstatsdAgentRestarts(is.T(), client)

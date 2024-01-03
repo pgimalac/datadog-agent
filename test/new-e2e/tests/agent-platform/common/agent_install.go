@@ -32,7 +32,10 @@ func CheckInstallation(t *testing.T, client *TestClient) {
 		_, err := client.FileManager.FileExists(binaryPath)
 		require.NoError(tt, err, "datadog-agent binary should be present")
 	})
+}
 
+// CheckSigningKeys ensures datadog-signing-keys package is installed
+func CheckSigningKeys(t *testing.T, client *TestClient) {
 	t.Run("datadog-signing-keys package", func(tt *testing.T) {
 		if _, err := client.VMClient.ExecuteWithError("dpkg --version"); err != nil {
 			tt.Skip()
