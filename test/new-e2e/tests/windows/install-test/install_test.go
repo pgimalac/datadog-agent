@@ -40,11 +40,15 @@ func TestMSI(t *testing.T) {
 	}
 
 	majorVersion := windowsAgent.GetMajorVersionFromEnv()
-	msiURL, err := windowsAgent.GetMSIURLFromEnv(majorVersion, "")
+	arch := windowsAgent.GetArchFromEnv()
+	msiURL, err := windowsAgent.GetMSIURLFromEnv(majorVersion, arch)
 	if err != nil {
 		t.Fatalf("failed to get MSI URL from env: %v", err)
 	}
 	t.Logf("Using MSI URL: %v", msiURL)
+
+	// Set stack name to avoid conflicts with other tests
+	opts = append(opts, params.WithStackName(fmt.Sprintf("windows-msi-test-A%s-%s", majorVersion, arch)))
 
 	s := &agentMSISuite{
 		msiURL:       msiURL,
