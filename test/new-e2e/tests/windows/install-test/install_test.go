@@ -8,6 +8,8 @@ package installtest
 import (
 	"flag"
 	"fmt"
+	"os"
+	"strings"
 
 	"github.com/DataDog/test-infra-definitions/scenarios/aws/vm/ec2os"
 	"github.com/DataDog/test-infra-definitions/scenarios/aws/vm/ec2params"
@@ -39,20 +41,28 @@ func TestMSI(t *testing.T) {
 		opts = append(opts, params.WithDevMode())
 	}
 
-	majorVersion := windowsAgent.GetMajorVersionFromEnv()
-	arch := windowsAgent.GetArchFromEnv()
-	msiURL, err := windowsAgent.GetMSIURLFromEnv(majorVersion, arch)
+	_, pipelineFound := os.LookupEnv("CI_PIPELINE_ID")
+	channel, channelFound := windowsAgent.LookupChannelFromEnv()
+	version, _ := windowsAgent.LookupVersionFromEnv()
+	arch, _ := windowsAgent.LookupArchFromEnv()
+	msiURL, err := windowsAgent.GetMSIURLFromEnv("", version, arch)
 	if err != nil {
 		t.Fatalf("failed to get MSI URL from env: %v", err)
 	}
 	t.Logf("Using MSI URL: %v", msiURL)
 
 	// Set stack name to avoid conflicts with other tests
-	opts = append(opts, params.WithStackName(fmt.Sprintf("windows-msi-test-A%s-%s", majorVersion, arch)))
+	// Include channel if we're not running in a CI pipeline.
+	// E2E auto includes the pipeline ID in the stack name, so we don't need to do that here.
+	stackNameChannelPart := ""
+	if !pipelineFound && channelFound {
+		stackNameChannelPart = fmt.Sprintf("-%s", channel)
+	}
+	opts = append(opts, params.WithStackName(fmt.Sprintf("windows-msi-test-v%s-%s%s", version, arch, stackNameChannelPart)))
 
 	s := &agentMSISuite{
 		msiURL:       msiURL,
-		majorVersion: majorVersion,
+		majorVersion: strings.Split(version, ".")[0],
 	}
 
 	e2e.Run(t,
