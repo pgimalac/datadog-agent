@@ -30,6 +30,20 @@ const (
 	stableURL                     = "https://s3.amazonaws.com/dd-agent-mstesting/builds/stable/installers_v2.json"
 )
 
+// Package contains identifying information about an Agent MSI package.
+type Package struct {
+	// PipelineID is the pipeline ID used to lookup the MSI URL from the CI pipeline artifacts.
+	PipelineID string
+	// Channel is the channel used to lookup the MSI URL for the Version from the installers_v2.json file.
+	Channel string
+	// Version is the version of the MSI, e.g. 7.49.0-1, 7.49.0-rc.3-1, or a major version, e.g. 7
+	Version string
+	// Arch is the architecture of the MSI, e.g. x86_64
+	Arch string
+	// URL is the URL the MSI can be downloaded from
+	URL string
+}
+
 // GetBetaMSIURL returns the URL for the beta agent MSI
 // majorVersion: 6, 7
 // arch: x86_64
@@ -122,7 +136,7 @@ func GetPipelineMSIURL(pipelineID string, majorVersion string, arch string) (str
 //
 // WINDOWS_AGENT_CHANNEL: beta, stable
 //
-// default is stable channel
+// Default channel: stable
 func LookupChannelFromEnv() (string, bool) {
 	channel := os.Getenv("WINDOWS_AGENT_CHANNEL")
 	if channel != "" {
@@ -179,32 +193,36 @@ func LookupArchFromEnv() (string, bool) {
 //
 // See also LookupChannelFromEnv()
 //
-// default is stable channel
+// Default channel: stable
 func LookupChannelURLFromEnv() (string, bool) {
 	channelURL := os.Getenv("WINDOWS_AGENT_CHANNEL_URL")
 	if channelURL != "" {
 		return channelURL, true
 	}
 
-	channel, _ := LookupChannelFromEnv()
+	channel, channelFound := LookupChannelFromEnv()
 	channelURL, err := GetChannelURL(channel)
 	if err != nil {
-		return channelURL, true
+		// passthru the found var from the channel name lookup
+		return channelURL, channelFound
 	}
 
 	return stableURL, false
 }
 
-// GetMSIURLFromEnv looks at environment variabes to select the agent MSI URL.
+// GetPackageFromEnv looks at environment variabes to select the Agent MSI URL.
 //
-// The channel, version, and arch parameters are optional, if not provided they are
-// read from the environment.
+// The returned Package contains the MSI URL and other identifying information.
+// Some Package fields will be populated but may not be related to the returned URL.
+// For example, if a URL is provided directly, the Channel, Version, and Arch fields
+// have no effect on the returned URL. They are returned anyway so they can be used for
+// other purposes, such as logging, stack name, instance options, test assertions, etc.
 //
-// Primary environment variables in order of priority:
+// These environment variables are mutually exclusive, only one should be set, listed here in the order they are considered:
 //
-// WINDOWS_AGENT_MSI_URL: manually provided URL (all other parameters are ignored)
+// WINDOWS_AGENT_MSI_URL: manually provided URL (all other parameters are informational only)
 //
-// CI_PIPELINE_ID: use the URL from a specific CI pipeline, major version and arch are used, channel is ignored
+// CI_PIPELINE_ID: use the URL from a specific CI pipeline, major version and arch are used, channel is blank
 //
 // WINDOWS_AGENT_VERSION: The complete version, e.g. 7.49.0-1, 7.49.0-rc.3-1, or a major version, e.g. 7, arch and channel are used
 //
@@ -214,81 +232,84 @@ func LookupChannelURLFromEnv() (string, bool) {
 //
 // WINDOWS_AGENT_ARCH: The arch of the agent, x86_64
 //
-// Since not all versions in the beta channel contain `rc`, the version is not used to assume
-// the channel. To use a beta version, set the channel option.
+// If a channel is not provided and the version contains `-rc.`, the beta channel is used.
 //
-// See other Get*FromEnv functions for more options and details.
+// See other Lookup*FromEnv functions for more options and details.
 //
 // If none of the above are set, the latest stable version is used.
-func GetMSIURLFromEnv(channel string, version string, arch string) (string, error) {
-	// check for manually provided MSI URL
-	url := os.Getenv("WINDOWS_AGENT_MSI_URL")
-	if url != "" {
-		return url, nil
-	}
-
-	// If direct URL is not provided, see if a version was provided
-	if version == "" {
-		version, _ = LookupVersionFromEnv()
-	}
-
-	if arch == "" {
-		arch, _ = LookupArchFromEnv()
-	}
+func GetPackageFromEnv() (*Package, error) {
+	// Collect env opts
+	channel, channelFound := LookupChannelFromEnv()
+	version, _ := LookupVersionFromEnv()
+	arch, _ := LookupArchFromEnv()
+	pipelineID, pipelineIDFound := os.LookupEnv("CI_PIPELINE_ID")
 
 	majorVersion := strings.Split(version, ".")[0]
 
+	var err error
+
+	if !channelFound {
+		// if channel is not provided, check if we can infer it from the version,
+		// If version contains `-rc.`, assume it is a beta version
+		if strings.Contains(strings.ToLower(version), `-rc.`) {
+			channel = betaChannel
+		}
+	}
+
+	// If a direct URL is provided, use it
+	url := os.Getenv("WINDOWS_AGENT_MSI_URL")
+	if url != "" {
+		return &Package{
+			Channel: channel,
+			Version: version,
+			Arch:    arch,
+			URL:     url,
+		}, nil
+	}
+
 	// check if we should use the URL from a specific CI pipeline
-	pipelineID := os.Getenv("CI_PIPELINE_ID")
-	if pipelineID != "" {
+	if pipelineIDFound {
 		url, err := GetPipelineMSIURL(pipelineID, majorVersion, arch)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
-		return url, nil
+		return &Package{
+			PipelineID: pipelineID,
+			Version:    version,
+			Arch:       arch,
+			URL:        url,
+		}, nil
 	}
 
 	// if version is a complete version, e.g. 7.49.0-1, use it as is
 	if strings.Contains(version, ".") {
-		channelURL, err := selectChannelWithVersion(channel, version)
-		if err != nil {
-			return "", err
+		// if channel URL or name is provided, lookup its URL
+		channelURL, channelURLFound := LookupChannelURLFromEnv()
+		if !channelURLFound {
+			channelURL, err = GetChannelURL(channel)
+			if err != nil {
+				return nil, err
+			}
 		}
-		return installers.GetProductURL(channelURL, agentInstallerListProductName, version, arch)
+		// Get MSI URL
+		url, err := installers.GetProductURL(channelURL, agentInstallerListProductName, version, arch)
+		if err != nil {
+			return nil, err
+		}
+		return &Package{
+			Channel: channel,
+			Version: version,
+			Arch:    arch,
+			URL:     url,
+		}, nil
 	}
 
 	// Default to latest stable
-	return GetLatestMSIURL(majorVersion, arch), nil
-}
-
-// selectChannelWithVersion returns the channel URL based on the provided channel and version. If
-// a channel is provided, it is used. If a channel is not provided, the version is used to determine
-// the channel. If the version contains `-rc.`, the beta channel is used, otherwise the stable channel is used.
-func selectChannelWithVersion(channel string, version string) (string, error) {
-	if channel != "" {
-		// if channel name is provided, lookup its URL
-		channelURL, err := GetChannelURL(channel)
-		if err != nil {
-			return "", err
-		}
-		return channelURL, nil
-	}
-
-	channelURL, found := LookupChannelURLFromEnv()
-	if found {
-		return channelURL, nil
-	}
-
-	// if channel is not provided, check if we can infer it from the version,
-	// If version contains `-rc.`, assume it is a beta version
-	if strings.Contains(strings.ToLower(version), `-rc.`) {
-		channelURL, err := GetChannelURL(betaChannel)
-		if err != nil {
-			return "", err
-		}
-		return channelURL, nil
-	}
-
-	// if not then the returned default is used.
-	return channelURL, nil
+	url = GetLatestMSIURL(majorVersion, arch)
+	return &Package{
+		Channel: stableChannel,
+		Version: version,
+		Arch:    arch,
+		URL:     url,
+	}, nil
 }

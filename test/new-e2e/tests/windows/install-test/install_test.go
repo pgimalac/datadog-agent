@@ -8,7 +8,6 @@ package installtest
 import (
 	"flag"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/DataDog/test-infra-definitions/scenarios/aws/vm/ec2os"
@@ -30,7 +29,7 @@ var (
 type agentMSISuite struct {
 	e2e.Suite[e2e.VMEnv]
 
-	msiURL       string
+	agentPackage *windowsAgent.Package
 	majorVersion string
 }
 
@@ -41,28 +40,24 @@ func TestMSI(t *testing.T) {
 		opts = append(opts, params.WithDevMode())
 	}
 
-	_, pipelineFound := os.LookupEnv("CI_PIPELINE_ID")
-	channel, channelFound := windowsAgent.LookupChannelFromEnv()
-	version, _ := windowsAgent.LookupVersionFromEnv()
-	arch, _ := windowsAgent.LookupArchFromEnv()
-	msiURL, err := windowsAgent.GetMSIURLFromEnv("", version, arch)
+	agentPackage, err := windowsAgent.GetPackageFromEnv()
 	if err != nil {
 		t.Fatalf("failed to get MSI URL from env: %v", err)
 	}
-	t.Logf("Using MSI URL: %v", msiURL)
+	t.Logf("Using Agent: %#v", agentPackage)
 
 	// Set stack name to avoid conflicts with other tests
 	// Include channel if we're not running in a CI pipeline.
 	// E2E auto includes the pipeline ID in the stack name, so we don't need to do that here.
 	stackNameChannelPart := ""
-	if !pipelineFound && channelFound {
-		stackNameChannelPart = fmt.Sprintf("-%s", channel)
+	if agentPackage.PipelineID == "" && agentPackage.Channel != "" {
+		stackNameChannelPart = fmt.Sprintf("-%s", agentPackage.Channel)
 	}
-	opts = append(opts, params.WithStackName(fmt.Sprintf("windows-msi-test-v%s-%s%s", version, arch, stackNameChannelPart)))
+	opts = append(opts, params.WithStackName(fmt.Sprintf("windows-msi-test-v%s-%s%s", agentPackage.Version, agentPackage.Arch, stackNameChannelPart)))
 
 	s := &agentMSISuite{
-		msiURL:       msiURL,
-		majorVersion: strings.Split(version, ".")[0],
+		agentPackage: agentPackage,
+		majorVersion: strings.Split(agentPackage.Version, ".")[0],
 	}
 
 	e2e.Run(t,
@@ -81,7 +76,7 @@ func (is *agentMSISuite) TestInstallAgent() {
 	apikey := "00000000000000000000000000000000"
 	is.Run("install the agent", func() {
 		args := fmt.Sprintf(`APIKEY="%s"`, apikey)
-		err := windows.InstallMSI(vm, is.msiURL, args, "install.log")
+		err := windows.InstallMSI(vm, is.agentPackage.URL, args, "install.log")
 		is.Require().NoError(err, "should install the agent")
 	})
 
