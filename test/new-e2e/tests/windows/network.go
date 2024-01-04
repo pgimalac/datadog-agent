@@ -13,6 +13,7 @@ import (
 	"github.com/DataDog/datadog-agent/test/new-e2e/pkg/utils/e2e/client"
 )
 
+// BoundPort represents a port that is bound to a process
 type BoundPort struct {
 	localAddress string
 	localPort    int
@@ -20,18 +21,22 @@ type BoundPort struct {
 	pid          int
 }
 
+// LocalAddress returns the local address of the bound port
 func (b *BoundPort) LocalAddress() string {
 	return b.localAddress
 }
 
+// LocalPort returns the local port of the bound port
 func (b *BoundPort) LocalPort() int {
 	return b.localPort
 }
 
+// Process returns the process name of the bound port
 func (b *BoundPort) Process() string {
 	return b.processName
 }
 
+// PID returns the PID of the bound port
 func (b *BoundPort) PID() int {
 	return b.pid
 }
@@ -45,6 +50,7 @@ func IsPortBound(vmClient client.VM, port int) (bool, error) {
 	return !strings.EqualFold(strings.TrimSpace(out), "False"), nil
 }
 
+// ListBoundPorts returns a list of bound ports
 func ListBoundPorts(client client.VM) ([]*BoundPort, error) {
 	out, err := client.ExecuteWithError(`Get-NetTCPConnection -State Listen | Foreach-Object {
 		@{
