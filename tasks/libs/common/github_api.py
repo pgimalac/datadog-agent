@@ -81,7 +81,7 @@ class GithubAPI:
         """
         Returns the team assignment labels for a given PR, and whether the team assignment should be checked
         """
-        pr = self._repository.get_pull(pull_number)
+        pr = self._repository.get_pull(int(pull_number))
         labels = [label.name for label in pr.get_labels()]
         if any(skip_label in labels for skip_label in self.SKIP_QA_LABELS):
             return False, []
@@ -91,7 +91,7 @@ class GithubAPI:
         """
         Check if labels are ok for skipping QA
         """
-        pr = self._repository.get_pull(pull_number)
+        pr = self._repository.get_pull(int(pull_number))
         labels = [label.name for label in pr.get_labels()]
         if self.SKIP_QA in labels and not any(skip_label in labels for skip_label in self.SKIP_QA_REASONS):
             return False
@@ -101,14 +101,14 @@ class GithubAPI:
         """
         Returns the milestone for a given PR
         """
-        pr = self._repository.get_pull(pull_number)
+        pr = self._repository.get_pull(int(pull_number))
         return pr.milestone.title if pr.milestone else None
 
     def is_release_note_needed(self, pull_number):
         """
         Check if labels are ok for skipping QA
         """
-        pr = self._repository.get_pull(pull_number)
+        pr = self._repository.get_pull(int(pull_number))
         labels = [label.name for label in pr.get_labels()]
         if "changelog/no-changelog" in labels:
             return False
@@ -118,7 +118,7 @@ class GithubAPI:
         """
         Look in modified files for a release note
         """
-        pr = self._repository.get_pull(pull_number)
+        pr = self._repository.get_pull(int(pull_number))
         for file in pr.get_files():
             if (
                 file.filename.startswith("releasenotes/notes/")
