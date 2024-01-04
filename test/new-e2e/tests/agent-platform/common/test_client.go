@@ -13,9 +13,11 @@ import (
 	"time"
 
 	e2eClient "github.com/DataDog/datadog-agent/test/new-e2e/pkg/utils/e2e/client"
+	"github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/bound-port"
 	filemanager "github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/file-manager"
 	helpers "github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/helper"
 	pkgmanager "github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/pkg-manager"
+	"github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/process"
 	svcmanager "github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common/svc-manager"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
@@ -206,4 +208,56 @@ func NewWindowsTestClient(t *testing.T, vmClient e2eClient.VM) *TestClient {
 	client.SvcManager = svcmanager.NewWindowsSvcManager(vm)
 
 	return client
+}
+
+// RunningAgentProcesses returns the list of running agent processes
+func RunningAgentProcesses(client *TestClient) ([]string, error) {
+	agentProcesses := client.Helper.AgentProcesses()
+	runningAgentProcesses := []string{}
+	for _, process := range agentProcesses {
+		if AgentProcessIsRunning(client, process) {
+			runningAgentProcesses = append(runningAgentProcesses, process)
+		}
+	}
+	return runningAgentProcesses, nil
+}
+
+// AgentProcessIsRunning returns true if the agent process is running
+func AgentProcessIsRunning(client *TestClient, processName string) bool {
+	running, err := process.IsProcessRunning(client.VMClient, processName)
+	return running && err == nil
+}
+
+// PortBoundByPID returns the info about the port bound by a given PID
+func PortBoundByPID(client *TestClient, port int, pid int) (boundport.BoundPort, error) {
+	ports, err := boundport.BoundPorts(client.VMClient)
+	if err != nil {
+		return nil, err
+	}
+	for _, boundPort := range ports {
+		if boundPort.PID() == pid && boundPort.LocalPort() == port {
+			return boundPort, nil
+		}
+	}
+	return nil, nil
+}
+
+// PortBoundByService returns info about the port bound by a given service
+func PortBoundByService(client *TestClient, port int, service string) (boundport.BoundPort, error) {
+	// TODO: might need to map service name to process name, this is working right now though
+	pids, err := process.FindPID(client.VMClient, service)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, pid := range pids {
+		boundPort, err := PortBoundByPID(client, port, pid)
+		if err != nil {
+			return nil, err
+		}
+		if boundPort != nil {
+			return boundPort, nil
+		}
+	}
+	return nil, nil
 }
