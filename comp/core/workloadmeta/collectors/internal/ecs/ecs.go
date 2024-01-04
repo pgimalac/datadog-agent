@@ -10,9 +10,14 @@ package ecs
 
 import (
 	"context"
+	"fmt"
+	"hash/fnv"
 	"reflect"
 	"strings"
 	"time"
+
+	"github.com/patrickmn/go-cache"
+	"golang.org/x/time/rate"
 
 	"github.com/DataDog/datadog-agent/comp/core/workloadmeta"
 	"github.com/DataDog/datadog-agent/comp/core/workloadmeta/collectors/util"
@@ -22,6 +27,7 @@ import (
 	ecsmeta "github.com/DataDog/datadog-agent/pkg/util/ecs/metadata"
 	v1 "github.com/DataDog/datadog-agent/pkg/util/ecs/metadata/v1"
 	v3or4 "github.com/DataDog/datadog-agent/pkg/util/ecs/metadata/v3or4"
+	"github.com/DataDog/datadog-agent/pkg/util/flavor"
 	"github.com/DataDog/datadog-agent/pkg/util/log"
 	"github.com/DataDog/datadog-agent/pkg/util/retry"
 
@@ -34,17 +40,22 @@ const (
 )
 
 type collector struct {
-	id                               string
-	store                            workloadmeta.Component
-	catalog                          workloadmeta.AgentType
-	metaV1                           v1.Client
-	metaV3or4                        func(metaURI, metaVersion string) v3or4.Client
-	clusterName                      string
-	hasResourceTags                  bool
-	collectResourceTags              bool
-	resourceTags                     map[string]resourceTags
-	seen                             map[workloadmeta.EntityID]struct{}
-	orchestratorECSCollectionEnabled bool
+	id                      string
+	store                   workloadmeta.Component
+	catalog                 workloadmeta.AgentType
+	metaV1                  v1.Client
+	metaV3or4               func(metaURI, metaVersion string) v3or4.Client
+	clusterName             string
+	hasResourceTags         bool
+	collectResourceTags     bool
+	resourceTags            map[string]resourceTags
+	seen                    map[workloadmeta.EntityID]struct{}
+	v4TaskEnabled           bool
+	v4TaskCache             *cache.Cache
+	v4TaskRefreshInterval   time.Duration
+	v4TaskQueue             []string
+	v4TaskNumberLimitPerRun int
+	v4TaskRateLimiter       *rate.Limiter
 }
 
 type resourceTags struct {
@@ -54,19 +65,31 @@ type resourceTags struct {
 
 // NewCollector returns a new ecs collector provider and an error
 func NewCollector() (workloadmeta.CollectorProvider, error) {
-	orchestratorECSCollectionEnabled := false
-	if config.Datadog.GetBool("orchestrator_explorer.enabled") &&
-		config.Datadog.GetBool("orchestrator_explorer.ecs_collection.enabled") {
-		orchestratorECSCollectionEnabled = true
+	v4TaskEnabled := false
+	// Only enable v4TaskEnabled for core agent
+	if config.Datadog.GetBool("orchestrator_explorer.ecs_collection.enabled") &&
+		flavor.GetFlavor() == flavor.DefaultAgent {
+		v4TaskEnabled = true
 	}
+	log.Infof("run ecs collector with v4TaskEnabled: %t on %s", v4TaskEnabled, flavor.GetFlavor())
+
+	v4TaskRefreshInterval := config.Datadog.GetDuration("ecs_ec2_task_cache_ttl")
+	v4TaskNumberLimitPerRun := config.Datadog.GetInt("ecs_ec2_task_limit_per_run")
+	v4TaskRateRPS := config.Datadog.GetInt("ecs_ec2_task_rate")
+	v4TaskRateBurst := config.Datadog.GetInt("ecs_ec2_task_burst")
 
 	return workloadmeta.CollectorProvider{
 		Collector: &collector{
-			id:                               collectorID,
-			resourceTags:                     make(map[string]resourceTags),
-			seen:                             make(map[workloadmeta.EntityID]struct{}),
-			catalog:                          workloadmeta.NodeAgent | workloadmeta.ProcessAgent,
-			orchestratorECSCollectionEnabled: orchestratorECSCollectionEnabled,
+			id:                      collectorID,
+			resourceTags:            make(map[string]resourceTags),
+			seen:                    make(map[workloadmeta.EntityID]struct{}),
+			catalog:                 workloadmeta.NodeAgent | workloadmeta.ProcessAgent,
+			v4TaskEnabled:           v4TaskEnabled,
+			v4TaskCache:             cache.New(v4TaskRefreshInterval, 30*time.Second),
+			v4TaskQueue:             make([]string, 0, 2*v4TaskNumberLimitPerRun),
+			v4TaskRefreshInterval:   v4TaskRefreshInterval,
+			v4TaskNumberLimitPerRun: v4TaskNumberLimitPerRun,
+			v4TaskRateLimiter:       rate.NewLimiter(rate.Every(time.Duration(1/v4TaskRateRPS)*time.Second), v4TaskRateBurst),
 		},
 	}, nil
 }
@@ -133,6 +156,8 @@ func (c *collector) GetTargetCatalog() workloadmeta.AgentType {
 func (c *collector) parseTasks(ctx context.Context, tasks []v1.Task) []workloadmeta.CollectorEvent {
 	events := []workloadmeta.CollectorEvent{}
 	seen := make(map[workloadmeta.EntityID]struct{})
+	// get task ARNs to fetch from the metadata v4 API
+	taskArns := c.getTaskArnsToFetch(tasks)
 
 	for _, task := range tasks {
 		// We only want to collect tasks without a STOPPED status.
@@ -142,8 +167,12 @@ func (c *collector) parseTasks(ctx context.Context, tasks []v1.Task) []workloadm
 
 		// If the orchestrator explorer ecs collection is enabled, collector will query the v4 task endpoint for each task
 		// and store task and container in the store.
-		if c.orchestratorECSCollectionEnabled {
-			events = append(events, c.parseV4Task(ctx, task, seen)...)
+		if c.v4TaskEnabled {
+			if _, ok := taskArns[task.Arn]; !ok {
+				events = append(events, util.ParseV4Task(v1TaskToV4Task(task), seen)...)
+			} else {
+				events = append(events, c.parseV4Task(ctx, task, seen)...)
+			}
 			continue
 		}
 
@@ -260,7 +289,6 @@ func (c *collector) parseV4Task(ctx context.Context, task v1.Task, seen map[work
 // getV4TaskWithTags fetches task and tasks from the metadata v4 API
 func (c *collector) getV4TaskWithTags(ctx context.Context, task v1.Task) v3or4.Task {
 	var metaURI string
-	var metaVersion string
 	for _, taskContainer := range task.Containers {
 		containerID := taskContainer.DockerID
 		container, err := c.store.GetContainer(containerID)
@@ -272,7 +300,6 @@ func (c *collector) getV4TaskWithTags(ctx context.Context, task v1.Task) v3or4.T
 		uri, ok := container.EnvVars[v3or4.DefaultMetadataURIv4EnvVariable]
 		if ok && uri != "" {
 			metaURI = uri
-			metaVersion = "v4"
 			break
 		}
 	}
@@ -282,25 +309,43 @@ func (c *collector) getV4TaskWithTags(ctx context.Context, task v1.Task) v3or4.T
 		return v1TaskToV4Task(task)
 	}
 
-	metaV3orV4 := c.metaV3or4(metaURI, metaVersion)
+	err := c.v4TaskRateLimiter.Wait(ctx)
+	if err != nil {
+		log.Warnf("failed to get task with tags from metadata v4 API: %s", err)
+		return v1TaskToV4Task(task)
+	}
 
+	taskWithTags, err := getV4TaskWithRetry(ctx, c.metaV3or4(metaURI, "v4"))
+	if err != nil {
+		log.Warnf("failed to get task with tags from metadata v4 API: %s", err)
+		return v1TaskToV4Task(task)
+	}
+
+	c.v4TaskCache.Set(task.Arn, struct{}{}, c.v4TaskRefreshInterval+jitter(task.Arn))
+
+	return *taskWithTags
+}
+
+func getV4TaskWithRetry(ctx context.Context, metaV3orV4 v3or4.Client) (*v3or4.Task, error) {
 	var taskWithTagsRetry retry.Retrier
 	var taskWithTags *v3or4.Task
 	var err error
+	maxRetryCount := 3
+	retryCount := 0
 
 	_ = taskWithTagsRetry.SetupRetrier(&retry.Config{
 		Name: "get-v4-task-with-tags",
 		AttemptMethod: func() error {
+			retryCount++
 			taskWithTags, err = metaV3orV4.GetTaskWithTags(ctx)
 			return err
 		},
-		Strategy:   retry.RetryCount,
-		RetryCount: 10,
-		RetryDelay: 200 * time.Millisecond,
+		Strategy:          retry.Backoff,
+		InitialRetryDelay: 250 * time.Millisecond,
+		MaxRetryDelay:     1 * time.Second,
 	})
 
-	// retry 10 times with 200ms delay between each attempt
-	// which means it will retry for 2 seconds for each task before giving up
+	// retry 3 times with exponential backoff strategy: 250ms, 500ms, 1s
 	for {
 		err = taskWithTagsRetry.TriggerRetry()
 		if err == nil || (reflect.ValueOf(err).Kind() == reflect.Ptr && reflect.ValueOf(err).IsNil()) {
@@ -308,12 +353,52 @@ func (c *collector) getV4TaskWithTags(ctx context.Context, task v1.Task) v3or4.T
 		}
 
 		if retry.IsErrPermaFail(err) {
-			log.Errorf("failed to get task with tags from metadata %s API: %s", metaVersion, err)
-			return v1TaskToV4Task(task)
+			return nil, err
+		}
+
+		if retryCount >= maxRetryCount {
+			return nil, fmt.Errorf("failed to get task with tags from metadata v4 API after %d retries", maxRetryCount)
 		}
 	}
+	return taskWithTags, nil
+}
 
-	return *taskWithTags
+// getTaskArnsToFetch returns a list of task ARNs to fetch from the metadata v4 API
+// It uses v4TaskCache to know whether a task has been fetched during previous runs
+// The length of taskArns is limited by v4TaskNumberLimitPerRun to avoid long time running for a single pull
+func (c *collector) getTaskArnsToFetch(tasks []v1.Task) map[string]struct{} {
+	taskArns := make(map[string]struct{}, c.v4TaskNumberLimitPerRun)
+
+	for _, task := range tasks {
+		if task.KnownStatus == "STOPPED" {
+			continue
+		}
+		c.v4TaskQueue = append(c.v4TaskQueue, task.Arn)
+	}
+
+	index := 0
+	for _, taskArn := range c.v4TaskQueue {
+		if len(taskArns) >= c.v4TaskNumberLimitPerRun {
+			break
+		}
+
+		// Task is in the queue but not in current running task list
+		// It means the task has been stopped, skip it
+		if !hasTask(taskArn, tasks) {
+			index++
+			continue
+		}
+
+		// if task is not in the cache or expired, add it
+		if _, ok := c.v4TaskCache.Get(taskArn); !ok {
+			taskArns[taskArn] = struct{}{}
+		}
+		index++
+	}
+
+	c.v4TaskQueue = c.v4TaskQueue[index:]
+
+	return taskArns
 }
 
 // getResourceTags fetches task and container instance tags from the ECS API,
@@ -391,4 +476,23 @@ func v1TaskToV4Task(task v1.Task) v3or4.Task {
 		})
 	}
 	return result
+}
+
+func jitter(s string) time.Duration {
+	h := fnv.New32a()
+	_, err := h.Write([]byte(s))
+	if err != nil {
+		return 0
+	}
+	second := time.Duration(h.Sum32()%61) * time.Second
+	return second
+}
+
+func hasTask(taskARN string, tasks []v1.Task) bool {
+	for _, task := range tasks {
+		if task.Arn == taskARN {
+			return true
+		}
+	}
+	return false
 }

@@ -842,12 +842,15 @@ func (d KubernetesDeployment) String(verbose bool) string {
 
 var _ Entity = &KubernetesDeployment{}
 
+type ECSTaskTags map[string]string
+type ContainerInstanceTags map[string]string
+
 // ECSTask is an Entity representing an ECS Task.
 type ECSTask struct {
 	EntityID
 	EntityMeta
-	Tags                    map[string]string
-	ContainerInstanceTags   map[string]string
+	Tags                    ECSTaskTags
+	ContainerInstanceTags   ContainerInstanceTags
 	ClusterName             string
 	AWSAccountID            int
 	Region                  string
