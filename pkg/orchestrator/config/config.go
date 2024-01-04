@@ -196,3 +196,20 @@ func IsOrchestratorEnabled() (bool, bool, string) {
 	coreCheck := config.Datadog.GetBool(OrchestratorNSKey("run_on_node_agent"))
 	return enabled, coreCheck, clusterName
 }
+
+// IsOrchestratorECSExplorerEnabled checks if orchestrator ecs explorer features are enabled
+func IsOrchestratorECSExplorerEnabled() bool {
+	if !config.Datadog.GetBool(OrchestratorNSKey("enabled")) {
+		return false
+	}
+
+	if !config.Datadog.GetBool(OrchestratorNSKey("ecs_collection.enabled")) {
+		return false
+	}
+
+	if config.IsECS() || config.IsECSFargate() {
+		return true
+	}
+
+	return false
+}

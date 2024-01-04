@@ -227,12 +227,12 @@ func parseRegionAndAWSAccountID(taskARN string) (string, int) {
 	if len(id) != 12 {
 		return region, 0
 	}
-	awsAccountID, err := strconv.ParseInt(id, 10, 64)
+	awsAccountID, err := strconv.Atoi(id)
 	if err != nil {
 		return region, 0
 	}
 
-	return region, int(awsAccountID)
+	return region, awsAccountID
 }
 
 func parseClusterName(cluster string) string {

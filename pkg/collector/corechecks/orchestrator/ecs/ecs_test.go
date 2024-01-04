@@ -159,11 +159,11 @@ func task(id string) *workloadmeta.ECSTask {
 				ID: "938f6d263c464aa5985dc67ab7f38a7e-1714341084",
 			},
 		},
-		Tags: map[string]string{
+		Tags: workloadmeta.ECSTaskTags{
 			"ecs.cluster": "ecs-cluster",
 			"region":      "us-east-1",
 		},
-		ContainerInstanceTags: map[string]string{
+		ContainerInstanceTags: workloadmeta.ContainerInstanceTags{
 			"instance": "instance-1",
 			"region":   "us-east-1",
 		},

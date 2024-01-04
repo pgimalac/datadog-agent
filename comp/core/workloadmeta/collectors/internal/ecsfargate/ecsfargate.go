@@ -22,6 +22,7 @@ import (
 	ecsmeta "github.com/DataDog/datadog-agent/pkg/util/ecs/metadata"
 	v2 "github.com/DataDog/datadog-agent/pkg/util/ecs/metadata/v2"
 	"github.com/DataDog/datadog-agent/pkg/util/ecs/metadata/v3or4"
+	"github.com/DataDog/datadog-agent/pkg/util/flavor"
 	"github.com/DataDog/datadog-agent/pkg/util/log"
 )
 
@@ -31,28 +32,26 @@ const (
 )
 
 type collector struct {
-	id                               string
-	store                            workloadmeta.Component
-	catalog                          workloadmeta.AgentType
-	metaV2                           v2.Client
-	metaV4                           v3or4.Client
-	seen                             map[workloadmeta.EntityID]struct{}
-	orchestratorECSCollectionEnabled bool
+	id            string
+	store         workloadmeta.Component
+	catalog       workloadmeta.AgentType
+	metaV2        v2.Client
+	metaV4        v3or4.Client
+	seen          map[workloadmeta.EntityID]struct{}
+	v4TaskEnabled bool
 }
 
 // NewCollector returns a new ecsfargate collector provider and an error
 func NewCollector() (workloadmeta.CollectorProvider, error) {
-	orchestratorECSCollectionEnabled := false
-	if config.Datadog.GetBool("orchestrator_explorer.enabled") &&
-		config.Datadog.GetBool("orchestrator_explorer.ecs_collection.enabled") {
-		orchestratorECSCollectionEnabled = true
-	}
+	v4TaskEnabled := config.Datadog.GetBool("orchestrator_explorer.enabled") &&
+		config.Datadog.GetBool("orchestrator_explorer.ecs_collection.enabled") &&
+		(flavor.GetFlavor() == flavor.DefaultAgent)
 	return workloadmeta.CollectorProvider{
 		Collector: &collector{
-			id:                               collectorID,
-			catalog:                          workloadmeta.NodeAgent | workloadmeta.ProcessAgent,
-			seen:                             make(map[workloadmeta.EntityID]struct{}),
-			orchestratorECSCollectionEnabled: orchestratorECSCollectionEnabled,
+			id:            collectorID,
+			catalog:       workloadmeta.NodeAgent | workloadmeta.ProcessAgent,
+			seen:          make(map[workloadmeta.EntityID]struct{}),
+			v4TaskEnabled: v4TaskEnabled,
 		},
 	}, nil
 }
@@ -74,16 +73,19 @@ func (c *collector) Start(_ context.Context, store workloadmeta.Component) error
 	if err != nil {
 		return err
 	}
-	c.metaV4, err = ecsmeta.V4FromCurrentTask()
-	if err != nil {
-		return err
+
+	if c.v4TaskEnabled {
+		c.metaV4, err = ecsmeta.V4FromCurrentTask()
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
 func (c *collector) Pull(ctx context.Context) error {
-	if c.orchestratorECSCollectionEnabled {
+	if c.v4TaskEnabled {
 		task, err := c.metaV4.GetTask(ctx)
 		if err != nil {
 			return err

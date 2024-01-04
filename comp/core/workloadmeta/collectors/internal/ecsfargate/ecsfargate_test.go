@@ -28,7 +28,7 @@ func (store *fakeWorkloadmetaStore) Notify(events []workloadmeta.CollectorEvent)
 	store.notifiedEvents = append(store.notifiedEvents, events...)
 }
 
-func TestPullWithOrchestratorECSCollectionEnabled(t *testing.T) {
+func TestPullWithV4TaskEnabled(t *testing.T) {
 	// Start a dummy Http server to simulate ECS Fargate metadata v4 endpoint
 	dummyECS, err := testutil.NewDummyECS(
 		testutil.FileHandlerOption("/v4/1234-1/task", "./testdata/redis.json"),
@@ -40,9 +40,9 @@ func TestPullWithOrchestratorECSCollectionEnabled(t *testing.T) {
 	store := &fakeWorkloadmetaStore{}
 	// create an ECS Fargate collector with orchestratorECSCollectionEnabled enabled
 	collector := collector{
-		store:                            store,
-		orchestratorECSCollectionEnabled: true,
-		metaV4:                           v3or4.NewClient(fmt.Sprintf("%s/v4/1234-1", ts.URL), "v4"),
+		store:         store,
+		v4TaskEnabled: true,
+		metaV4:        v3or4.NewClient(fmt.Sprintf("%s/v4/1234-1", ts.URL), "v4"),
 	}
 	err = collector.Pull(context.Background())
 	require.Nil(t, err)

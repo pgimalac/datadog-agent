@@ -14,9 +14,12 @@ import (
 	"errors"
 	"fmt"
 	"testing"
+	"time"
 
+	"github.com/patrickmn/go-cache"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/time/rate"
 
 	"github.com/DataDog/datadog-agent/comp/core/workloadmeta"
 	"github.com/DataDog/datadog-agent/pkg/util/ecs/metadata/testutil"
@@ -139,7 +142,7 @@ func TestPull(t *testing.T) {
 
 }
 
-func TestPullWithOrchestratorECSCollectionEnabled(t *testing.T) {
+func TestPullWithV4TaskEnabled(t *testing.T) {
 	// Start a dummy Http server to simulate ECS metadata endpoints
 	// /v1/tasks: return the list of tasks containing datadog-agent task and nginx task
 	dummyECS, err := testutil.NewDummyECS(
@@ -178,14 +181,19 @@ func TestPullWithOrchestratorECSCollectionEnabled(t *testing.T) {
 		},
 	}
 
-	// create an ECS collector with orchestratorECSCollectionEnabled enabled
+	// create an ECS collector with v4TaskEnabled enabled
 	collector := collector{
-		store:                            store,
-		orchestratorECSCollectionEnabled: true,
-		metaV1:                           v1.NewClient(ts.URL),
+		store:         store,
+		v4TaskEnabled: true,
+		metaV1:        v1.NewClient(ts.URL),
 		metaV3or4: func(metaURI, metaVersion string) v3or4.Client {
 			return v3or4.NewClient(metaURI, metaVersion)
 		},
+		v4TaskCache:             cache.New(3*time.Minute, 30*time.Second),
+		v4TaskRefreshInterval:   3 * time.Minute,
+		v4TaskNumberLimitPerRun: 100,
+		v4TaskQueue:             make([]string, 0, 5),
+		v4TaskRateLimiter:       rate.NewLimiter(rate.Every(1*time.Second/35), 60),
 	}
 	err = collector.Pull(context.Background())
 	require.Nil(t, err)
@@ -234,4 +242,61 @@ func TestPullWithOrchestratorECSCollectionEnabled(t *testing.T) {
 		}
 	}
 	require.Equal(t, 4, count)
+	require.Equal(t, 0, len(collector.v4TaskQueue))
+	require.Equal(t, 2, len(collector.v4TaskCache.Items()))
+}
+
+func TestGetTaskArnsToFetch(t *testing.T) {
+	collector := collector{
+		v4TaskCache:             cache.New(3*time.Minute, 30*time.Second),
+		v4TaskRefreshInterval:   3 * time.Minute,
+		v4TaskNumberLimitPerRun: 10,
+		v4TaskQueue:             make([]string, 0, 3),
+	}
+
+	// generate tasks
+	taskCount := 30
+	tasks := make([]v1.Task, 0, taskCount)
+	for i := 0; i < taskCount; i++ {
+		tasks = append(tasks, v1.Task{
+			Arn: fmt.Sprintf("1234-%d", i),
+		})
+	}
+
+	// add totalTaskInCache tasks to the cache
+	taskInCache := 3
+	for i := 0; i < taskInCache; i++ {
+		collector.v4TaskCache.SetDefault(fmt.Sprintf("1234-%d", i), struct{}{})
+	}
+
+	// add stopped tasks to the queue
+	stoppedTask := 2
+	for i := 0; i < stoppedTask; i++ {
+		collector.v4TaskQueue = append(collector.v4TaskQueue, fmt.Sprintf("1234-stopped-%d", i))
+	}
+
+	// add running tasks to the queue
+	runningTask := 10
+	for i := 0; i < runningTask; i++ {
+		collector.v4TaskQueue = append(collector.v4TaskQueue, fmt.Sprintf("1234-%d", i))
+	}
+
+	taskArns := collector.getTaskArnsToFetch(tasks)
+
+	require.Equal(t, collector.v4TaskNumberLimitPerRun, len(taskArns))
+	for i := 3; i < 13; i++ {
+		if _, ok := taskArns[fmt.Sprintf("1234-%d", i)]; !ok {
+			t.Errorf("task arn %d not found", i)
+		}
+	}
+	assert.Equal(t, 17, len(collector.v4TaskQueue))
+
+}
+
+func TestJitter(t *testing.T) {
+	actual := jitter("test")
+	assert.Equal(t, 23*time.Second, actual)
+
+	actual = jitter("test2")
+	assert.Equal(t, 7*time.Second, actual)
 }
