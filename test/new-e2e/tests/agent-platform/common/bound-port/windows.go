@@ -6,40 +6,19 @@
 package boundport
 
 import (
-	"encoding/json"
-
 	"github.com/DataDog/datadog-agent/test/new-e2e/pkg/utils/e2e/client"
+	"github.com/DataDog/datadog-agent/test/new-e2e/tests/windows"
 )
 
 func boundPortsWindows(client client.VM) ([]BoundPort, error) {
-	out, err := client.ExecuteWithError(`Get-NetTCPConnection -State Listen | Foreach-Object {
-		@{
-			LocalAddress=$_.LocalAddress
-			LocalPort = $_.LocalPort
-			Process = (Get-Process -Id $_.OwningProcess).Name
-			PID = $_.OwningProcess
-		}} | ConvertTo-JSON`)
+	ports, err := windows.ListBoundPorts(client)
 	if err != nil {
 		return nil, err
 	}
-
-	// unmarshal out as JSON
-	var ports []map[string]any
-	err = json.Unmarshal([]byte(out), &ports)
-	if err != nil {
-		return nil, err
-	}
-
-	// process JSON to BoundPort
+	// convert to BoundPort interface
 	boundPorts := make([]BoundPort, 0, len(ports))
 	for _, port := range ports {
-		boundPorts = append(boundPorts, &boundPort{
-			localAddress: port["LocalAddress"].(string),
-			localPort:    int(port["LocalPort"].(float64)),
-			processName:  port["Process"].(string),
-			pid:          int(port["PID"].(float64)),
-		})
+		boundPorts = append(boundPorts, port)
 	}
-
 	return boundPorts, nil
 }
