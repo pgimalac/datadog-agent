@@ -19,6 +19,7 @@ import (
 	"github.com/DataDog/datadog-agent/comp/core/workloadmeta/collectors/util"
 	"github.com/DataDog/datadog-agent/pkg/config"
 	"github.com/DataDog/datadog-agent/pkg/errors"
+	oconfig "github.com/DataDog/datadog-agent/pkg/orchestrator/config"
 	ecsmeta "github.com/DataDog/datadog-agent/pkg/util/ecs/metadata"
 	v2 "github.com/DataDog/datadog-agent/pkg/util/ecs/metadata/v2"
 	"github.com/DataDog/datadog-agent/pkg/util/ecs/metadata/v3or4"
@@ -43,10 +44,7 @@ type collector struct {
 
 // NewCollector returns a new ecsfargate collector provider and an error
 func NewCollector() (workloadmeta.CollectorProvider, error) {
-	v4TaskEnabled := config.Datadog.GetBool("orchestrator_explorer.ecs_collection.enabled")
-	if flavor.GetFlavor() != flavor.DefaultAgent {
-		v4TaskEnabled = false
-	}
+	v4TaskEnabled := oconfig.IsOrchestratorECSExplorerEnabled() && (flavor.GetFlavor() == flavor.DefaultAgent)
 	return workloadmeta.CollectorProvider{
 		Collector: &collector{
 			id:            collectorID,

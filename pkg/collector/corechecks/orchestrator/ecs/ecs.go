@@ -21,7 +21,6 @@ import (
 	core "github.com/DataDog/datadog-agent/pkg/collector/corechecks"
 	"github.com/DataDog/datadog-agent/pkg/collector/corechecks/cluster/orchestrator/collectors"
 	"github.com/DataDog/datadog-agent/pkg/collector/corechecks/cluster/orchestrator/collectors/ecs"
-	"github.com/DataDog/datadog-agent/pkg/config"
 	oconfig "github.com/DataDog/datadog-agent/pkg/orchestrator/config"
 	"github.com/DataDog/datadog-agent/pkg/util/log"
 )
@@ -129,15 +128,7 @@ func (c *Check) isECSCollectionEnabled() bool {
 		return c.isECSCollectionEnabledFunc()
 	}
 
-	if !c.config.OrchestrationECSCollectionEnabled {
-		return false
-	}
-
-	if config.IsECS() || config.IsECSFargate() {
-		return true
-	}
-
-	return false
+	return oconfig.IsOrchestratorECSExplorerEnabled()
 }
 
 func (c *Check) initCollectors() {

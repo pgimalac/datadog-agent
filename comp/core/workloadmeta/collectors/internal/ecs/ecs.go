@@ -23,6 +23,7 @@ import (
 	"github.com/DataDog/datadog-agent/comp/core/workloadmeta/collectors/util"
 	"github.com/DataDog/datadog-agent/pkg/config"
 	"github.com/DataDog/datadog-agent/pkg/errors"
+	oconfig "github.com/DataDog/datadog-agent/pkg/orchestrator/config"
 	ecsutil "github.com/DataDog/datadog-agent/pkg/util/ecs"
 	ecsmeta "github.com/DataDog/datadog-agent/pkg/util/ecs/metadata"
 	v1 "github.com/DataDog/datadog-agent/pkg/util/ecs/metadata/v1"
@@ -65,14 +66,7 @@ type resourceTags struct {
 
 // NewCollector returns a new ecs collector provider and an error
 func NewCollector() (workloadmeta.CollectorProvider, error) {
-	v4TaskEnabled := false
-	// Only enable v4TaskEnabled for core agent
-	if config.Datadog.GetBool("orchestrator_explorer.ecs_collection.enabled") &&
-		flavor.GetFlavor() == flavor.DefaultAgent {
-		v4TaskEnabled = true
-	}
-	log.Infof("run ecs collector with v4TaskEnabled: %t on %s", v4TaskEnabled, flavor.GetFlavor())
-
+	v4TaskEnabled := oconfig.IsOrchestratorECSExplorerEnabled() && (flavor.GetFlavor() == flavor.DefaultAgent)
 	v4TaskRefreshInterval := config.Datadog.GetDuration("ecs_ec2_task_cache_ttl")
 	v4TaskNumberLimitPerRun := config.Datadog.GetInt("ecs_ec2_task_limit_per_run")
 	v4TaskRateRPS := config.Datadog.GetInt("ecs_ec2_task_rate")
