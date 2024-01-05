@@ -14,6 +14,7 @@ import (
 	"github.com/DataDog/test-infra-definitions/scenarios/aws/vm/ec2params"
 
 	"github.com/DataDog/datadog-agent/test/new-e2e/pkg/utils/e2e"
+	"github.com/DataDog/datadog-agent/test/new-e2e/pkg/utils/e2e/client"
 	"github.com/DataDog/datadog-agent/test/new-e2e/pkg/utils/e2e/params"
 	"github.com/DataDog/datadog-agent/test/new-e2e/tests/agent-platform/common"
 	windows "github.com/DataDog/datadog-agent/test/new-e2e/tests/windows"
@@ -72,23 +73,25 @@ func (is *agentMSISuite) TestInstallAgent() {
 	err := windows.DisableDefender(vm)
 	is.Require().NoError(err, "should disable defender")
 
+	client := common.NewWindowsTestClient(is.T(), vm)
+
 	// TODO: Add apikey option
 	apikey := "00000000000000000000000000000000"
 	is.Run("install the agent", func() {
 		args := fmt.Sprintf(`APIKEY="%s"`, apikey)
 		err := windows.InstallMSI(vm, is.agentPackage.URL, args, "install.log")
 		is.Require().NoError(err, "should install the agent")
+
+		common.CheckInstallation(is.T(), client)
+		is.testCodeSignature(client.VMClient)
 	})
 
-	client := common.NewWindowsTestClient(is.T(), vm)
-
 	is.Run("agent runtime behavior", func() {
-		common.CheckInstallation(is.T(), client)
 		common.CheckAgentBehaviour(is.T(), client)
 		common.CheckAgentStops(is.T(), client)
 		common.CheckAgentRestarts(is.T(), client)
 		common.CheckIntegrationInstall(is.T(), client)
-		if is.majorVersion == "6" {
+		if is.IsPython2Installed() {
 			common.CheckAgentPython(is.T(), client, "2")
 		}
 		common.CheckAgentPython(is.T(), client, "3")
@@ -105,4 +108,34 @@ func (is *agentMSISuite) TestInstallAgent() {
 		common.CheckUninstallation(is.T(), client)
 	})
 
+}
+
+func (is *agentMSISuite) IsPython2Installed() bool {
+	return is.majorVersion == "6"
+}
+
+func (is *agentMSISuite) testCodeSignature(client client.VM) {
+	root := `C:\Program Files\Datadog\Datadog Agent\`
+	paths := []string{
+		// user binaries
+		root + `bin\agent.exe`,
+		root + `bin\libdatadog-agent-three.dll`,
+		root + `bin\agent\trace-agent.exe`,
+		root + `bin\agent\process-agent.exe`,
+		root + `bin\agent\system-probe.exe`,
+		// drivers
+		root + `bin\agent\driver\ddnpm.sys`,
+	}
+	// Python3 should be signed by Python, since we don't build our own anymore
+	// We still build our own Python2, so we need to check that
+	if is.IsPython2Installed() {
+		paths = append(paths, []string{
+			root + `bin\libdatadog-agent-three.dll`,
+			root + `embedded2\python.exe`,
+			root + `embedded2\pythonw.exe`,
+			root + `embedded2\python27.dll`,
+		}...)
+	}
+
+	windowsAgent.TestValidDatadogCodeSignatures(is.T(), client, paths)
 }

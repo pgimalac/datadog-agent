@@ -50,8 +50,9 @@ type AWS struct {
 
 // Agent instance contains agent related parameters
 type Agent struct {
-	APIKey string `yaml:"apiKey"`
-	APPKey string `yaml:"appKey"`
+	APIKey              string `yaml:"apiKey"`
+	APPKey              string `yaml:"appKey"`
+	VerifyCodeSignature string `yaml:"verifyCodeSignature"`
 }
 
 var _ valueStore = &configFileValueStore{}
@@ -121,6 +122,8 @@ func (s configFileValueStore) get(key StoreKey) (string, error) {
 		if s.config.ConfigParams.AWS.TeamTag != "" {
 			value = "team:" + s.config.ConfigParams.AWS.TeamTag
 		}
+	case VerifyCodeSignature:
+		value = s.config.ConfigParams.Agent.VerifyCodeSignature
 	}
 
 	if value == "" {
