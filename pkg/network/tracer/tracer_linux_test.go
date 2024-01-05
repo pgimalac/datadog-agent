@@ -28,6 +28,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cilium/ebpf/btf"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -2024,6 +2025,11 @@ func (s *TracerSuite) TestGetHelpersTelemetry() {
 
 func TestEbpfConntrackerFallback(t *testing.T) {
 	ebpftest.LogLevel(t, "trace")
+	coreValues := []bool{false}
+	if _, err := btf.LoadKernelSpec(); err == nil {
+		coreValues = append(coreValues, true)
+	}
+
 	type testCase struct {
 		enableCORE               bool
 		allowRuntimeFallback     bool
@@ -2038,7 +2044,7 @@ func TestEbpfConntrackerFallback(t *testing.T) {
 	}
 
 	var dtests []testCase
-	for _, enableCORE := range []bool{false, true} {
+	for _, enableCORE := range coreValues {
 		for _, allowRuntimeFallback := range []bool{false, true} {
 			for _, enableRuntimeCompiler := range []bool{false, true} {
 				for _, allowPrecompiledFallback := range []bool{false, true} {
