@@ -83,3 +83,29 @@ func ListBoundPorts(client client.VM) ([]*BoundPort, error) {
 
 	return boundPorts, nil
 }
+
+// PutOrDownloadFile creates a file on the VM from a file/http URL
+//
+// If the URL is a local file, it will be uploaded to the VM.
+// If the URL is a remote file, it will be downloaded from the VM
+func PutOrDownloadFile(client client.VM, url string, destination string) error {
+	if strings.HasPrefix(url, "http://") || strings.HasPrefix(url, "https://") {
+		_, err := client.ExecuteWithError(fmt.Sprintf("Invoke-WebRequest -Uri '%s' -OutFile '%s'", url, destination))
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	if strings.HasPrefix(url, "file://") {
+		// URL is a local file
+		localPath := strings.TrimPrefix(url, "file://")
+		client.CopyFile(localPath, destination)
+		return nil
+	}
+
+	// just assume it's a local file
+	client.CopyFile(url, destination)
+	return nil
+}

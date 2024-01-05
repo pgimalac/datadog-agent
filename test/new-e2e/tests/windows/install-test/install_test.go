@@ -75,15 +75,22 @@ func (is *agentMSISuite) TestInstallAgent() {
 
 	client := common.NewWindowsTestClient(is.T(), vm)
 
+	// Put the MSI on the VM
+	remoteMSIPath, err := windows.GetTemporaryFile(vm)
+	is.Require().NoError(err)
+	windows.PutOrDownloadFile(vm, is.agentPackage.URL, remoteMSIPath)
+
 	// TODO: Add apikey option
 	apikey := "00000000000000000000000000000000"
 	is.Run("install the agent", func() {
+		windowsAgent.TestValidDatadogCodeSignatures(is.T(), vm, []string{remoteMSIPath})
+
 		args := fmt.Sprintf(`APIKEY="%s"`, apikey)
-		err := windows.InstallMSI(vm, is.agentPackage.URL, args, "install.log")
+		err := windows.InstallMSI(vm, remoteMSIPath, args, "install.log")
 		is.Require().NoError(err, "should install the agent")
 
 		common.CheckInstallation(is.T(), client)
-		is.testCodeSignature(client.VMClient)
+		is.testCodeSignature(vm)
 	})
 
 	is.Run("agent runtime behavior", func() {
