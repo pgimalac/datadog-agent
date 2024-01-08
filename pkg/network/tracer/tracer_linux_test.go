@@ -29,6 +29,7 @@ import (
 	"time"
 
 	"github.com/cilium/ebpf/btf"
+	"github.com/cilium/ebpf/rlimit"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -2025,6 +2026,9 @@ func (s *TracerSuite) TestGetHelpersTelemetry() {
 
 func TestEbpfConntrackerFallback(t *testing.T) {
 	ebpftest.LogLevel(t, "trace")
+	err := rlimit.RemoveMemlock()
+	require.NoError(t, err)
+
 	coreValues := []bool{false}
 	if _, err := btf.LoadKernelSpec(); err == nil {
 		coreValues = append(coreValues, true)
