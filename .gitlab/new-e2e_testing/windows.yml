@@ -4,6 +4,10 @@
   variables:
     TARGETS: ./tests/windows/install-test
     TEAM: windows-agent
+  artifacts:
+    paths:
+      - ./tests/windows/install-test/install.log
+      - ./tests/windows/install-test/uninstall.log
 
 # Agent 6
 .new-e2e_windows_a6_x86_64:
