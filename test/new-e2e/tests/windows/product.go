@@ -22,5 +22,9 @@ func GetProductCodeByName(client client.VM, name string) (string, error) {
 		fmt.Println(val)
 		return "", err
 	}
-	return strings.TrimSpace(val), nil
+	val = strings.TrimSpace(val)
+	if val == "" {
+		return "", fmt.Errorf("product '%s' not found", name)
+	}
+	return val, nil
 }
