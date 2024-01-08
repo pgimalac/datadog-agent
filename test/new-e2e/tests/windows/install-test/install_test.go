@@ -75,18 +75,23 @@ func (is *agentMSISuite) TestInstallAgent() {
 
 	client := common.NewWindowsTestClient(is.T(), vm)
 
-	// Put the MSI on the VM
-	remoteMSIPath, err := windows.GetTemporaryFile(vm)
-	is.Require().NoError(err)
-	windows.PutOrDownloadFile(vm, is.agentPackage.URL, remoteMSIPath)
+	beforeInstallSystemDirListPath := `C:\system-files-before-install.log`
+	afterUninstallSystemDirListPath := `C:\system-files-after-uninstall.log`
 
 	// TODO: Add apikey option
 	apikey := "00000000000000000000000000000000"
 	is.Run("install the agent", func() {
+		// Put the MSI on the VM
+		remoteMSIPath, err := windows.GetTemporaryFile(vm)
+		is.Require().NoError(err)
+		windows.PutOrDownloadFile(vm, is.agentPackage.URL, remoteMSIPath)
+
 		windowsAgent.TestValidDatadogCodeSignatures(is.T(), vm, []string{remoteMSIPath})
 
+		is.snapshotSystemfiles(vm, beforeInstallSystemDirListPath)
+
 		args := fmt.Sprintf(`APIKEY="%s"`, apikey)
-		err := windows.InstallMSI(vm, remoteMSIPath, args, "install.log")
+		err = windows.InstallMSI(vm, remoteMSIPath, args, "install.log")
 		is.Require().NoError(err, "should install the agent")
 
 		common.CheckInstallation(is.T(), client)
@@ -113,6 +118,10 @@ func (is *agentMSISuite) TestInstallAgent() {
 		is.Require().NoError(err, "should uninstall the agent")
 
 		common.CheckUninstallation(is.T(), client)
+
+		is.snapshotSystemfiles(vm, afterUninstallSystemDirListPath)
+
+		is.testDoesNotChangeSystemFiles(vm, beforeInstallSystemDirListPath, afterUninstallSystemDirListPath)
 	})
 
 }
@@ -145,4 +154,59 @@ func (is *agentMSISuite) testCodeSignature(client client.VM) {
 	}
 
 	windowsAgent.TestValidDatadogCodeSignatures(is.T(), client, paths)
+}
+
+func (is *agentMSISuite) snapshotSystemfiles(client client.VM, remotePath string) error {
+	// Ignore these paths when collecting the list of files, they are known to frequently change
+	// Ignoring paths while creating the snapshot reduces the snapshot size by >90%
+	ignorePaths := []string{
+		`C:\Windows\Assembly\Temp\`,
+		`C:\Windows\Assembly\Tmp\`,
+		`C:\windows\AppReadiness\`,
+		`C:\Windows\Temp\`,
+		`C:\Windows\Prefetch\`,
+		`C:\Windows\Installer\`,
+		`C:\Windows\WinSxS\`,
+		`C:\Windows\Logs\`,
+		`C:\Windows\servicing\`,
+		`c:\Windows\System32\catroot2\`,
+		`c:\windows\System32\config\`,
+		`C:\Windows\ServiceProfiles\NetworkService\AppData\Local\Microsoft\Windows\DeliveryOptimization\Logs\`,
+		`C:\Windows\ServiceProfiles\NetworkService\AppData\Local\Microsoft\Windows\DeliveryOptimization\Cache\`,
+		`C:\Windows\SoftwareDistribution\DataStore\Logs\`,
+		`C:\Windows\System32\wbem\Performance\`,
+		`c:\windows\System32\LogFiles\`,
+		`c:\windows\SoftwareDistribution\`,
+		`c:\windows\ServiceProfiles\NetworkService\AppData\`,
+		`c:\windows\System32\Tasks\Microsoft\Windows\UpdateOrchestrator\`,
+		`c:\windows\System32\Tasks\Microsoft\Windows\Windows Defender\Windows Defender Scheduled Scan`,
+	}
+	// quote each path and join with commas
+	pattern := ""
+	for _, ignorePath := range ignorePaths {
+		pattern += fmt.Sprintf(`'%s',`, ignorePath)
+	}
+	// PowerShell list syntax
+	pattern = fmt.Sprintf(`@(%s)`, strings.Trim(pattern, ","))
+	// Recursively list Windows directory and ignore the paths above
+	// Compare-Object is case insensitive by default
+	cmd := fmt.Sprintf(`cmd /c dir C:\Windows /b /s | Out-String -Stream | Select-String -NotMatch -SimpleMatch -Pattern %s > "%s"`, pattern, remotePath)
+	is.Require().Less(len(cmd), 8192, "should not exceed max command length")
+	_, err := client.ExecuteWithError(cmd)
+	is.Require().NoError(err, "should snapshot system files")
+	// sanity check to ensure file contains a reasonable amount of output
+	stat, err := client.Lstat(remotePath)
+	is.Require().Greater(stat.Size(), int64(1024*1024), "system file snapshot should be at least 1MB")
+	return err
+}
+
+func (is *agentMSISuite) testDoesNotChangeSystemFiles(client client.VM, beforeDirListPath string, afterDirListPath string) {
+	is.Run("does not remove system files", func() {
+		// Diff the two files on the remote VM, selecting missing items
+		cmd := fmt.Sprintf(`Compare-Object -ReferenceObject (Get-Content "%s") -DifferenceObject (Get-Content "%s") | Where-Object -Property SideIndicator -EQ '<=' | Select -ExpandProperty InputObject | Select -ExpandProperty PSPath`, beforeDirListPath, afterDirListPath)
+		output, err := client.ExecuteWithError(cmd)
+		is.Require().NoError(err, "should compare system files")
+		output = strings.TrimSpace(output)
+		is.Require().Empty(output, "should not remove system files")
+	})
 }
