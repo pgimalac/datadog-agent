@@ -63,10 +63,6 @@ static __always_inline u32 get_netns(const struct nf_conn *ct) {
     return net_ns_inum;
 }
 
-static __always_inline u32 ct_status(const struct nf_conn *ct) {
-    return BPF_CORE_READ(ct, status);
-}
-
 static __always_inline int nf_conn_to_conntrack_tuples(struct nf_conn* ct, conntrack_tuple_t* orig, conntrack_tuple_t* reply) {
     struct nf_conntrack_tuple_hash tuplehash[IP_CT_DIR_MAX];
     bpf_memset(tuplehash, 0, sizeof(tuplehash));
