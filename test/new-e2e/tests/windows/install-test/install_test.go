@@ -90,9 +90,11 @@ func (is *agentMSISuite) TestInstallAgent() {
 
 		is.snapshotSystemfiles(vm, beforeInstallSystemDirListPath)
 
-		args := fmt.Sprintf(`APIKEY="%s"`, apikey)
-		err = windows.InstallMSI(vm, remoteMSIPath, args, "install.log")
-		is.Require().NoError(err, "should install the agent")
+		is.Run("install", func() {
+			args := fmt.Sprintf(`APIKEY="%s"`, apikey)
+			err = windows.InstallMSI(vm, remoteMSIPath, args, "install.log")
+			is.Require().NoError(err, "should install the agent")
+		})
 
 		common.CheckInstallation(is.T(), client)
 		is.testCodeSignature(vm)
