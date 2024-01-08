@@ -90,12 +90,7 @@ func ListBoundPorts(client client.VM) ([]*BoundPort, error) {
 // If the URL is a remote file, it will be downloaded from the VM
 func PutOrDownloadFile(client client.VM, url string, destination string) error {
 	if strings.HasPrefix(url, "http://") || strings.HasPrefix(url, "https://") {
-		_, err := client.ExecuteWithError(fmt.Sprintf("Invoke-WebRequest -Uri '%s' -OutFile '%s'", url, destination))
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return DownloadFile(client, url, destination)
 	}
 
 	if strings.HasPrefix(url, "file://") {
@@ -107,5 +102,18 @@ func PutOrDownloadFile(client client.VM, url string, destination string) error {
 
 	// just assume it's a local file
 	client.CopyFile(url, destination)
+	return nil
+}
+
+// DownloadFile downloads a file on the VM from a http/https URL
+func DownloadFile(client client.VM, url string, destination string) error {
+	// Note: Avoid using Invoke-WebRequest to download files non-interactively,
+	// its progress bar behavior significantly increases download time.
+	// https://github.com/PowerShell/PowerShell/issues/2138
+	_, err := client.ExecuteWithError(fmt.Sprintf("(New-Object Net.WebClient).DownloadFile('%s','%s')", url, destination))
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
