@@ -18,80 +18,80 @@ import (
 	"github.com/DataDog/datadog-agent/pkg/util/native"
 )
 
-func registerProcessHandlers(handlers map[int]syscallHandler) {
+func registerProcessHandlers(handlers map[int]syscallHandler) []string {
 	processHandlers := []syscallHandler{
 		{
-			IDs:        []int{ExecveNr},
+			IDs:        []syscallID{{Id: ExecveNr, Name: "execve"}},
 			Func:       handleExecve,
 			ShouldSend: nil,
 			SendIt:     true,
 			RetFunc:    nil,
 		},
 		{
-			IDs:        []int{ExecveatNr},
+			IDs:        []syscallID{{Id: ExecveatNr, Name: "execveat"}},
 			Func:       handleExecveAt,
 			ShouldSend: nil,
 			SendIt:     true,
 			RetFunc:    nil,
 		},
 		{
-			IDs:        []int{ChdirNr},
+			IDs:        []syscallID{{Id: ChdirNr, Name: "chdir"}},
 			Func:       handleChdir,
 			ShouldSend: nil,
 			SendIt:     false,
 			RetFunc:    handleChdirRet,
 		},
 		{
-			IDs:        []int{FchdirNr},
+			IDs:        []syscallID{{Id: FchdirNr, Name: "fchdir"}},
 			Func:       handleFchdir,
 			ShouldSend: nil,
 			SendIt:     false,
 			RetFunc:    handleChdirRet,
 		},
 		{
-			IDs:        []int{SetuidNr},
+			IDs:        []syscallID{{Id: SetuidNr, Name: "setuid"}},
 			Func:       handleSetuid,
 			ShouldSend: func(ret int64) bool { return ret == 0 },
 			SendIt:     true,
 			RetFunc:    nil,
 		},
 		{
-			IDs:        []int{SetgidNr},
+			IDs:        []syscallID{{Id: SetgidNr, Name: "setgid"}},
 			Func:       handleSetgid,
 			ShouldSend: func(ret int64) bool { return ret == 0 },
 			SendIt:     true,
 			RetFunc:    nil,
 		},
 		{
-			IDs:        []int{SetreuidNr, SetresuidNr},
+			IDs:        []syscallID{{Id: SetreuidNr, Name: "setreuid"}, {Id: SetresuidNr, Name: "setresuid"}},
 			Func:       handleSetreuid,
 			ShouldSend: func(ret int64) bool { return ret == 0 },
 			SendIt:     true,
 			RetFunc:    nil,
 		},
 		{
-			IDs:        []int{SetregidNr, SetresgidNr},
+			IDs:        []syscallID{{Id: SetregidNr, Name: "setregid"}, {Id: SetresgidNr, Name: "setresgid"}},
 			Func:       handleSetregid,
 			ShouldSend: func(ret int64) bool { return ret == 0 },
 			SendIt:     true,
 			RetFunc:    nil,
 		},
 		{
-			IDs:        []int{SetfsuidNr},
+			IDs:        []syscallID{{Id: SetfsuidNr, Name: "setfsuid"}},
 			Func:       handleSetfsuid,
 			ShouldSend: nil,
 			SendIt:     true,
 			RetFunc:    nil,
 		},
 		{
-			IDs:        []int{SetfsgidNr},
+			IDs:        []syscallID{{Id: SetfsgidNr, Name: "setfsgid"}},
 			Func:       handleSetfsgid,
 			ShouldSend: nil,
 			SendIt:     true,
 			RetFunc:    nil,
 		},
 		{
-			IDs:        []int{CapsetNr},
+			IDs:        []syscallID{{Id: CapsetNr, Name: "capset"}},
 			Func:       handleCapset,
 			ShouldSend: func(ret int64) bool { return ret == 0 },
 			SendIt:     true,
@@ -99,13 +99,16 @@ func registerProcessHandlers(handlers map[int]syscallHandler) {
 		},
 	}
 
+	syscallList := []string{}
 	for _, h := range processHandlers {
 		for _, id := range h.IDs {
-			if id >= 0 { // insert only available syscalls
-				handlers[id] = h
+			if id.Id >= 0 { // insert only available syscalls
+				handlers[id.Id] = h
+				syscallList = append(syscallList, id.Name)
 			}
 		}
 	}
+	return syscallList
 }
 
 //

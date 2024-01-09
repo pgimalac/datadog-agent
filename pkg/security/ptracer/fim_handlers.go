@@ -24,101 +24,101 @@ func isAcceptedRetval(retval int64) bool {
 	return retval < 0 && retval != -int64(syscall.EACCES) && retval != -int64(syscall.EPERM)
 }
 
-func registerFIMHandlers(handlers map[int]syscallHandler) {
+func registerFIMHandlers(handlers map[int]syscallHandler) []string {
 	fimHandlers := []syscallHandler{
 		{
-			IDs:        []int{OpenNr},
+			IDs:        []syscallID{{Id: OpenNr, Name: "open"}},
 			Func:       handleOpen,
 			ShouldSend: func(ret int64) bool { return !isAcceptedRetval(ret) },
 			SendIt:     true,
 			RetFunc:    handleOpensRet,
 		},
 		{
-			IDs:        []int{OpenatNr, Openat2Nr},
+			IDs:        []syscallID{{Id: OpenatNr, Name: "openat"}, {Id: Openat2Nr, Name: "openat2"}},
 			Func:       handleOpenAt,
 			ShouldSend: func(ret int64) bool { return !isAcceptedRetval(ret) },
 			SendIt:     true,
 			RetFunc:    handleOpensRet,
 		},
 		{
-			IDs:        []int{CreatNr},
+			IDs:        []syscallID{{Id: CreatNr, Name: "creat"}},
 			Func:       handleCreat,
 			ShouldSend: func(ret int64) bool { return !isAcceptedRetval(ret) },
 			SendIt:     true,
 			RetFunc:    handleOpensRet,
 		},
 		{
-			IDs:        []int{NameToHandleAtNr},
+			IDs:        []syscallID{{Id: NameToHandleAtNr, Name: "name_to_handle_at"}},
 			Func:       handleNameToHandleAt,
 			ShouldSend: nil,
 			SendIt:     false,
 			RetFunc:    handleNameToHandleAtRet,
 		},
 		{
-			IDs:        []int{OpenByHandleAtNr},
+			IDs:        []syscallID{{Id: OpenByHandleAtNr, Name: "open_by_handle_at"}},
 			Func:       handleOpenByHandleAt,
 			ShouldSend: func(ret int64) bool { return !isAcceptedRetval(ret) },
 			SendIt:     true,
 			RetFunc:    handleOpensRet,
 		},
 		{
-			IDs:        []int{MemfdCreateNr},
+			IDs:        []syscallID{{Id: MemfdCreateNr, Name: "memfd_create"}},
 			Func:       handleMemfdCreate,
 			ShouldSend: func(ret int64) bool { return !isAcceptedRetval(ret) },
 			SendIt:     true,
 			RetFunc:    handleOpensRet,
 		},
 		{
-			IDs:        []int{FcntlNr},
+			IDs:        []syscallID{{Id: FcntlNr, Name: "fcntl"}},
 			Func:       handleFcntl,
 			ShouldSend: nil,
 			SendIt:     false,
 			RetFunc:    handleFcntlRet,
 		},
 		{
-			IDs:        []int{DupNr, Dup2Nr, Dup3Nr},
+			IDs:        []syscallID{{Id: DupNr, Name: "dup"}, {Id: Dup2Nr, Name: "dup2"}, {Id: Dup3Nr, Name: "dup3"}},
 			Func:       handleDup,
 			ShouldSend: nil,
 			SendIt:     false,
 			RetFunc:    handleDupRet,
 		},
 		{
-			IDs:        []int{CloseNr},
+			IDs:        []syscallID{{Id: CloseNr, Name: "close"}},
 			Func:       handleClose,
 			ShouldSend: nil,
 			SendIt:     false,
 			RetFunc:    nil,
 		},
 		{
-			IDs:        []int{UnlinkNr},
+			IDs:        []syscallID{{Id: UnlinkNr, Name: "unlink"}},
 			Func:       handleUnlink,
 			ShouldSend: func(ret int64) bool { return ret == 0 },
 			SendIt:     true,
 			RetFunc:    nil,
 		},
 		{
-			IDs:        []int{UnlinkatNr},
+			IDs:        []syscallID{{Id: UnlinkatNr, Name: "unlinkat"}},
 			Func:       handleUnlinkat,
 			ShouldSend: func(ret int64) bool { return ret == 0 },
 			SendIt:     true,
 			RetFunc:    nil,
 		},
 		{
-			IDs:        []int{RmdirNr},
+			IDs:        []syscallID{{Id: RmdirNr, Name: "rmdir"}},
 			Func:       handleRmdir,
 			ShouldSend: func(ret int64) bool { return ret == 0 },
 			SendIt:     true,
 			RetFunc:    nil,
 		},
 		{
-			IDs:        []int{RenameNr},
+			IDs:        []syscallID{{Id: RenameNr, Name: "rename"}},
 			Func:       handleRename,
 			ShouldSend: func(ret int64) bool { return ret == 0 },
 			SendIt:     true,
 			RetFunc:    handleRenamesRet,
 		},
 		{
-			IDs:        []int{RenameAtNr, RenameAt2Nr},
+			IDs:        []syscallID{{Id: RenameAtNr, Name: "renameat"}, {Id: RenameAt2Nr, Name: "renameat2"}},
 			Func:       handleRenameAt,
 			ShouldSend: func(ret int64) bool { return ret == 0 },
 			SendIt:     true,
@@ -126,13 +126,16 @@ func registerFIMHandlers(handlers map[int]syscallHandler) {
 		},
 	}
 
+	syscallList := []string{}
 	for _, h := range fimHandlers {
 		for _, id := range h.IDs {
-			if id >= 0 { // insert only available syscalls
-				handlers[id] = h
+			if id.Id >= 0 { // insert only available syscalls
+				handlers[id.Id] = h
+				syscallList = append(syscallList, id.Name)
 			}
 		}
 	}
+	return syscallList
 }
 
 //

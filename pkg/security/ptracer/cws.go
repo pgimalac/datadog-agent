@@ -33,8 +33,13 @@ type syscallHandlerFunc func(tracer *Tracer, process *Process, msg *ebpfless.Sys
 
 type shouldSendFunc func(ret int64) bool
 
+type syscallID struct {
+	Id   int
+	Name string
+}
+
 type syscallHandler struct {
-	IDs        []int              // IDs defines the list of syscall IDs related to this handler
+	IDs        []syscallID        // IDs defines the list of syscall IDs related to this handler
 	Func       syscallHandlerFunc // Func defines the entrance handler for those syscalls, can be nil
 	ShouldSend shouldSendFunc     // ShouldSend checks if we should send the event regarding the syscall return value. If nil, acts as true
 	SendIt     bool               // SendIt defines if we want to send an event for those syscalls
@@ -163,6 +168,10 @@ func StartCWSPtracer(args []string, envs []string, probeAddr string, creds Creds
 		return err
 	}
 
+	syscallHandlers := make(map[int]syscallHandler)
+	PtracedSyscalls := registerFIMHandlers(syscallHandlers)
+	PtracedSyscalls = append(PtracedSyscalls, registerProcessHandlers(syscallHandlers)...)
+
 	opts := Opts{
 		Syscalls: PtracedSyscalls,
 		Creds:    creds,
@@ -239,10 +248,6 @@ func StartCWSPtracer(args []string, envs []string, probeAddr string, creds Creds
 			EntrypointArgs:   args,
 		},
 	})
-
-	syscallHandlers := make(map[int]syscallHandler)
-	registerFIMHandlers(syscallHandlers)
-	registerProcessHandlers(syscallHandlers)
 
 	cb := func(cbType CallbackType, nr int, pid int, ppid int, regs syscall.PtraceRegs, waitStatus *syscall.WaitStatus) {
 		process := pc.Get(pid)
