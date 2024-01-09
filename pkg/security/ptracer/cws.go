@@ -29,6 +29,18 @@ import (
 	"github.com/DataDog/datadog-agent/pkg/util/native"
 )
 
+type syscallHandlerFunc func(tracer *Tracer, process *Process, msg *ebpfless.SyscallMsg, regs syscall.PtraceRegs, disableStats bool) error
+
+type shouldSendFunc func(ret int64) bool
+
+type syscallHandler struct {
+	IDs        []int              // IDs defines the list of syscall IDs related to this handler
+	Func       syscallHandlerFunc // Func defines the entrance handler for those syscalls, can be nil
+	ShouldSend shouldSendFunc     // ShouldSend checks if we should send the event regarding the syscall return value. If nil, acts as true
+	SendIt     bool               // SendIt defines if we want to send an event for those syscalls
+	RetFunc    syscallHandlerFunc // RetFunc defines the return handler for those syscalls, can be nil
+}
+
 func checkEntryPoint(path string) (string, error) {
 	name, err := exec.LookPath(path)
 	if err != nil {
@@ -54,10 +66,6 @@ func checkEntryPoint(path string) (string, error) {
 	}
 
 	return name, nil
-}
-
-func isAcceptedRetval(retval int64) bool {
-	return retval < 0 && retval != -int64(syscall.EACCES) && retval != -int64(syscall.EPERM)
 }
 
 func initConn(probeAddr string, nbAttempts uint) (net.Conn, error) {
@@ -232,6 +240,10 @@ func StartCWSPtracer(args []string, envs []string, probeAddr string, creds Creds
 		},
 	})
 
+	syscallHandlers := make(map[int]syscallHandler)
+	registerFIMHandlers(syscallHandlers)
+	registerProcessHandlers(syscallHandlers)
+
 	cb := func(cbType CallbackType, nr int, pid int, ppid int, regs syscall.PtraceRegs, waitStatus *syscall.WaitStatus) {
 		process := pc.Get(pid)
 		if process == nil {
@@ -262,38 +274,17 @@ func StartCWSPtracer(args []string, envs []string, probeAddr string, creds Creds
 				process.Nr[nr] = syscallMsg
 			}
 
-			switch nr {
-			case OpenNr:
-				if err := handleOpen(tracer, process, syscallMsg, regs, disableStats); err != nil {
-					logErrorf("unable to handle open: %v", err)
+			handler, found := syscallHandlers[nr]
+			if found && handler.Func != nil {
+				err := handler.Func(tracer, process, syscallMsg, regs, disableStats)
+				if err != nil {
 					return
 				}
-			case OpenatNr, Openat2Nr:
-				if err := handleOpenAt(tracer, process, syscallMsg, regs, disableStats); err != nil {
-					logErrorf("unable to handle openat: %v", err)
-					return
-				}
-			case CreatNr:
-				if err = handleCreat(tracer, process, syscallMsg, regs, disableStats); err != nil {
-					logErrorf("unable to handle creat: %v", err)
-					return
-				}
-			case NameToHandleAtNr:
-				if err = handleNameToHandleAt(tracer, process, syscallMsg, regs); err != nil {
-					logErrorf("unable to handle name_to_handle_at: %v", err)
-					return
-				}
-			case OpenByHandleAtNr:
-				if err = handleOpenByHandleAt(tracer, process, syscallMsg, regs, disableStats); err != nil {
-					logErrorf("unable to handle open_by_handle_at: %v", err)
-					return
-				}
-			case ExecveNr:
-				if err = handleExecve(tracer, process, syscallMsg, regs, disableStats); err != nil {
-					logErrorf("unable to handle execve: %v", err)
-					return
-				}
+			}
 
+			/* internal special cases */
+			switch nr {
+			case ExecveNr:
 				// Top level pid, add creds. For the other PIDs the creds will be propagated at the probe side
 				if process.Pid == tracer.PID {
 					var uid, gid uint32
@@ -323,139 +314,40 @@ func StartCWSPtracer(args []string, envs []string, probeAddr string, creds Creds
 					pc.Add(process.Tgid, process)
 				}
 			case ExecveatNr:
-				if err = handleExecveAt(tracer, process, syscallMsg, regs, disableStats); err != nil {
-					logErrorf("unable to handle execveat: %v", err)
-					return
-				}
-
 				// special case for exec since the pre reports the pid while the post reports the tgid
 				if process.Pid != process.Tgid {
 					pc.Add(process.Tgid, process)
 				}
-			case FcntlNr:
-				_ = handleFcntl(tracer, process, syscallMsg, regs)
-			case DupNr, Dup2Nr, Dup3Nr:
-				if err = handleDup(tracer, process, syscallMsg, regs); err != nil {
-					logErrorf("unable to handle dup: %v", err)
-					return
-				}
-			case ChdirNr:
-				if err = handleChdir(tracer, process, syscallMsg, regs); err != nil {
-					logErrorf("unable to handle chdir: %v", err)
-					return
-				}
-			case FchdirNr:
-				if err = handleFchdir(tracer, process, syscallMsg, regs); err != nil {
-					logErrorf("unable to handle fchdir: %v", err)
-					return
-				}
-			case SetuidNr:
-				if err = handleSetuid(tracer, process, syscallMsg, regs); err != nil {
-					logErrorf("unable to handle fchdir: %v", err)
-					return
-				}
-			case SetgidNr:
-				if err = handleSetgid(tracer, process, syscallMsg, regs); err != nil {
-					logErrorf("unable to handle fchdir: %v", err)
-					return
-				}
-			case SetreuidNr, SetresuidNr:
-				if err = handleSetreuid(tracer, process, syscallMsg, regs); err != nil {
-					logErrorf("unable to handle fchdir: %v", err)
-					return
-				}
-			case SetregidNr, SetresgidNr:
-				if err = handleSetregid(tracer, process, syscallMsg, regs); err != nil {
-					logErrorf("unable to handle fchdir: %v", err)
-					return
-				}
-			case SetfsuidNr:
-				if err = handleSetfsuid(tracer, process, syscallMsg, regs); err != nil {
-					logErrorf("unable to handle fchdir: %v", err)
-					return
-				}
-			case SetfsgidNr:
-				if err = handleSetfsgid(tracer, process, syscallMsg, regs); err != nil {
-					logErrorf("unable to handle fchdir: %v", err)
-					return
-				}
-			case CloseNr:
-				if err = handleClose(tracer, process, syscallMsg, regs); err != nil {
-					logErrorf("unable to handle close: %v", err)
-					return
-				}
-			case MemfdCreateNr:
-				if err = handleMemfdCreate(tracer, process, syscallMsg, regs); err != nil {
-					logErrorf("unable to handle memfd_create: %v", err)
-					return
-				}
-			case CapsetNr:
-				if err = handleCapset(tracer, process, syscallMsg, regs); err != nil {
-					logErrorf("unable to handle capset: %v", err)
-					return
-				}
-			case UnlinkNr:
-				if err := handleUnlink(tracer, process, syscallMsg, regs, disableStats); err != nil {
-					logErrorf("unable to handle unlink: %v", err)
-					return
-				}
-			case UnlinkatNr:
-				if err := handleUnlinkat(tracer, process, syscallMsg, regs, disableStats); err != nil {
-					logErrorf("unable to handle unlinkat: %v", err)
-					return
-				}
-			case RmdirNr:
-				if err := handleRmdir(tracer, process, syscallMsg, regs, disableStats); err != nil {
-					logErrorf("unable to handle rmdir: %v", err)
-					return
-				}
-			case RenameNr:
-				if err := handleRename(tracer, process, syscallMsg, regs, disableStats); err != nil {
-					logErrorf("unable to handle rename: %v", err)
-					return
-				}
-			case RenameAtNr, RenameAt2Nr:
-				if err := handleRenameAt(tracer, process, syscallMsg, regs, disableStats); err != nil {
-					logErrorf("unable to handle renameat: %v", err)
-					return
-				}
+
 			}
 		case CallbackPostType:
-			switch nr {
-			case CloseNr:
-				// nothing to do
-			case ExecveNr, ExecveatNr:
-				sendSyscallMsg(process.Nr[ExecveNr]) // special case for execveat: we store the msg in execve bucket (see upper)
+			syscallMsg, msgExists := process.Nr[nr]
+			handler, handlerFound := syscallHandlers[nr]
+			if handlerFound && msgExists && (handler.SendIt || handler.RetFunc != nil) {
+				if handler.RetFunc != nil {
+					err := handler.RetFunc(tracer, process, syscallMsg, regs, disableStats)
+					if err != nil {
+						return
+					}
+				}
+				if handler.SendIt {
+					if handler.ShouldSend != nil {
+						ret := tracer.ReadRet(regs)
+						if handler.ShouldSend(ret) {
+							syscallMsg.Retval = ret // ailleurs?
+							sendSyscallMsg(syscallMsg)
+						}
+					} else {
+						sendSyscallMsg(syscallMsg)
+					}
+				}
+			}
 
+			/* internal special cases */
+			switch nr {
+			case ExecveNr, ExecveatNr:
 				// now the pid is the tgid
 				process.Pid = process.Tgid
-			case NameToHandleAtNr:
-				syscallMsg, exists := process.Nr[nr]
-				if !exists || syscallMsg.Open == nil {
-					return
-				}
-				handleNameToHandleAtRet(tracer, process, syscallMsg, regs)
-			case OpenNr, OpenatNr, CreatNr, OpenByHandleAtNr, MemfdCreateNr:
-				if ret := tracer.ReadRet(regs); !isAcceptedRetval(ret) {
-					syscallMsg, exists := process.Nr[nr]
-					if !exists || syscallMsg.Open == nil {
-						return
-					}
-					syscallMsg.Retval = ret
-
-					sendSyscallMsg(syscallMsg)
-
-					// maintain fd/path mapping
-					process.Res.Fd[int32(ret)] = syscallMsg.Open.Filename
-				}
-			case SetuidNr, SetgidNr, SetreuidNr, SetregidNr, SetresuidNr, SetresgidNr, SetfsuidNr, SetfsgidNr:
-				if ret := tracer.ReadRet(regs); ret == 0 || nr == SetfsuidNr || nr == SetfsgidNr {
-					syscallMsg, exists := process.Nr[nr]
-					if !exists {
-						return
-					}
-					sendSyscallMsg(syscallMsg)
-				}
 			case CloneNr:
 				if flags := tracer.ReadArgUint64(regs, 0); flags&uint64(unix.SIGCHLD) == 0 {
 					pc.SetAsThreadOf(process, ppid)
@@ -469,73 +361,8 @@ func StartCWSPtracer(args []string, envs []string, probeAddr string, creds Creds
 						PPID: uint32(ppid),
 					},
 				})
-			case FcntlNr:
-				if ret := tracer.ReadRet(regs); ret >= 0 {
-					syscallMsg, exists := process.Nr[nr]
-					if !exists {
-						return
-					}
-
-					// maintain fd/path mapping
-					if syscallMsg.Fcntl.Cmd == unix.F_DUPFD || syscallMsg.Fcntl.Cmd == unix.F_DUPFD_CLOEXEC {
-						if path, exists := process.Res.Fd[int32(syscallMsg.Fcntl.Fd)]; exists {
-							process.Res.Fd[int32(ret)] = path
-						}
-					}
-				}
-			case DupNr, Dup2Nr, Dup3Nr:
-				if ret := tracer.ReadRet(regs); ret >= 0 {
-					syscallMsg, exists := process.Nr[nr]
-					if !exists {
-						return
-					}
-					path, ok := process.Res.Fd[syscallMsg.Dup.OldFd]
-					if ok {
-						// maintain fd/path in case of dups
-						process.Res.Fd[int32(ret)] = path
-					}
-				}
-			case ChdirNr, FchdirNr:
-				if ret := tracer.ReadRet(regs); ret >= 0 {
-					syscallMsg, exists := process.Nr[nr]
-					if !exists || syscallMsg.Chdir == nil {
-						return
-					}
-					process.Res.Cwd = syscallMsg.Chdir.Path
-				}
-			case CapsetNr:
-				if ret := tracer.ReadRet(regs); ret == 0 {
-					syscallMsg, exists := process.Nr[nr]
-					if !exists || syscallMsg.Capset == nil {
-						return
-					}
-					syscallMsg.Retval = ret
-					sendSyscallMsg(syscallMsg)
-				}
-
-			case UnlinkNr, UnlinkatNr, RmdirNr:
-				if ret := tracer.ReadRet(regs); ret == 0 {
-					syscallMsg, exists := process.Nr[nr]
-					if !exists {
-						return
-					}
-					syscallMsg.Retval = ret
-					sendSyscallMsg(syscallMsg)
-				}
-
-			case RenameNr, RenameAtNr, RenameAt2Nr:
-				if ret := tracer.ReadRet(regs); ret == 0 {
-					syscallMsg, exists := process.Nr[nr]
-					if !exists {
-						return
-					}
-					syscallMsg.Retval = ret
-					err := fillFileMetadata(syscallMsg.Rename.NewFile.Filename, &syscallMsg.Rename.NewFile, disableStats)
-					if err == nil {
-						sendSyscallMsg(syscallMsg)
-					}
-				}
 			}
+
 		case CallbackExitType:
 			// send exit only for process not threads
 			if process.Pid == process.Tgid && waitStatus != nil {

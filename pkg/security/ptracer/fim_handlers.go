@@ -20,6 +20,125 @@ import (
 	"github.com/DataDog/datadog-agent/pkg/util/native"
 )
 
+func isAcceptedRetval(retval int64) bool {
+	return retval < 0 && retval != -int64(syscall.EACCES) && retval != -int64(syscall.EPERM)
+}
+
+func registerFIMHandlers(handlers map[int]syscallHandler) {
+	fimHandlers := []syscallHandler{
+		{
+			IDs:        []int{OpenNr},
+			Func:       handleOpen,
+			ShouldSend: func(ret int64) bool { return !isAcceptedRetval(ret) },
+			SendIt:     true,
+			RetFunc:    handleOpensRet,
+		},
+		{
+			IDs:        []int{OpenatNr, Openat2Nr},
+			Func:       handleOpenAt,
+			ShouldSend: func(ret int64) bool { return !isAcceptedRetval(ret) },
+			SendIt:     true,
+			RetFunc:    handleOpensRet,
+		},
+		{
+			IDs:        []int{CreatNr},
+			Func:       handleCreat,
+			ShouldSend: func(ret int64) bool { return !isAcceptedRetval(ret) },
+			SendIt:     true,
+			RetFunc:    handleOpensRet,
+		},
+		{
+			IDs:        []int{NameToHandleAtNr},
+			Func:       handleNameToHandleAt,
+			ShouldSend: nil,
+			SendIt:     false,
+			RetFunc:    handleNameToHandleAtRet,
+		},
+		{
+			IDs:        []int{OpenByHandleAtNr},
+			Func:       handleOpenByHandleAt,
+			ShouldSend: func(ret int64) bool { return !isAcceptedRetval(ret) },
+			SendIt:     true,
+			RetFunc:    handleOpensRet,
+		},
+		{
+			IDs:        []int{MemfdCreateNr},
+			Func:       handleMemfdCreate,
+			ShouldSend: func(ret int64) bool { return !isAcceptedRetval(ret) },
+			SendIt:     true,
+			RetFunc:    handleOpensRet,
+		},
+		{
+			IDs:        []int{FcntlNr},
+			Func:       handleFcntl,
+			ShouldSend: nil,
+			SendIt:     false,
+			RetFunc:    handleFcntlRet,
+		},
+		{
+			IDs:        []int{DupNr, Dup2Nr, Dup3Nr},
+			Func:       handleDup,
+			ShouldSend: nil,
+			SendIt:     false,
+			RetFunc:    handleDupRet,
+		},
+		{
+			IDs:        []int{CloseNr},
+			Func:       handleClose,
+			ShouldSend: nil,
+			SendIt:     false,
+			RetFunc:    nil,
+		},
+		{
+			IDs:        []int{UnlinkNr},
+			Func:       handleUnlink,
+			ShouldSend: func(ret int64) bool { return ret == 0 },
+			SendIt:     true,
+			RetFunc:    nil,
+		},
+		{
+			IDs:        []int{UnlinkatNr},
+			Func:       handleUnlinkat,
+			ShouldSend: func(ret int64) bool { return ret == 0 },
+			SendIt:     true,
+			RetFunc:    nil,
+		},
+		{
+			IDs:        []int{RmdirNr},
+			Func:       handleRmdir,
+			ShouldSend: func(ret int64) bool { return ret == 0 },
+			SendIt:     true,
+			RetFunc:    nil,
+		},
+		{
+			IDs:        []int{RenameNr},
+			Func:       handleRename,
+			ShouldSend: func(ret int64) bool { return ret == 0 },
+			SendIt:     true,
+			RetFunc:    handleRenamesRet,
+		},
+		{
+			IDs:        []int{RenameAtNr, RenameAt2Nr},
+			Func:       handleRenameAt,
+			ShouldSend: func(ret int64) bool { return ret == 0 },
+			SendIt:     true,
+			RetFunc:    handleRenamesRet,
+		},
+	}
+
+	for _, h := range fimHandlers {
+		for _, id := range h.IDs {
+			if id >= 0 { // insert only available syscalls
+				handlers[id] = h
+			}
+		}
+	}
+}
+
+//
+// handlers called on syscall entrance
+//
+
 func handleOpenAt(tracer *Tracer, process *Process, msg *ebpfless.SyscallMsg, regs syscall.PtraceRegs, disableStats bool) error {
 	fd := tracer.ReadArgInt32(regs, 0)
 
@@ -85,7 +204,7 @@ func handleCreat(tracer *Tracer, process *Process, msg *ebpfless.SyscallMsg, reg
 	return fillFileMetadata(filename, msg.Open, disableStats)
 }
 
-func handleMemfdCreate(tracer *Tracer, process *Process, msg *ebpfless.SyscallMsg, regs syscall.PtraceRegs) error {
+func handleMemfdCreate(tracer *Tracer, process *Process, msg *ebpfless.SyscallMsg, regs syscall.PtraceRegs, _ bool) error {
 	filename, err := tracer.ReadArgString(process.Pid, regs, 0)
 	if err != nil {
 		return err
@@ -100,7 +219,7 @@ func handleMemfdCreate(tracer *Tracer, process *Process, msg *ebpfless.SyscallMs
 	return nil
 }
 
-func handleNameToHandleAt(tracer *Tracer, process *Process, msg *ebpfless.SyscallMsg, regs syscall.PtraceRegs) error {
+func handleNameToHandleAt(tracer *Tracer, process *Process, msg *ebpfless.SyscallMsg, regs syscall.PtraceRegs, _ bool) error {
 	fd := tracer.ReadArgInt32(regs, 0)
 
 	filename, err := tracer.ReadArgString(process.Pid, regs, 1)
@@ -118,41 +237,6 @@ func handleNameToHandleAt(tracer *Tracer, process *Process, msg *ebpfless.Syscal
 		Filename: filename,
 	}
 	return nil
-}
-
-func handleNameToHandleAtRet(tracer *Tracer, process *Process, msg *ebpfless.SyscallMsg, regs syscall.PtraceRegs) {
-	if msg.Open == nil {
-		return
-	}
-
-	if ret := tracer.ReadRet(regs); ret < 0 {
-		return
-	}
-
-	pFileHandleData, err := tracer.ReadArgData(process.Pid, regs, 2, 8 /*sizeof uint32 + sizeof int32*/)
-	if err != nil {
-		return
-	}
-	var handleBytes uint32
-	var handleType int32
-	buf := bytes.NewReader(pFileHandleData[:4])
-	err = binary.Read(buf, native.Endian, &handleBytes)
-	if err != nil {
-		return
-	}
-	buf = bytes.NewReader(pFileHandleData[4:8])
-	err = binary.Read(buf, native.Endian, &handleType)
-	if err != nil {
-		return
-	}
-
-	key := fileHandleKey{
-		handleBytes: handleBytes,
-		handleType:  handleType,
-	}
-	process.Res.FileHandleCache[key] = &fileHandleVal{
-		pathName: msg.Open.Filename,
-	}
 }
 
 func handleOpenByHandleAt(tracer *Tracer, process *Process, msg *ebpfless.SyscallMsg, regs syscall.PtraceRegs, disableStats bool) error {
@@ -334,7 +418,7 @@ func handleRenameAt(tracer *Tracer, process *Process, msg *ebpfless.SyscallMsg, 
 	return fillFileMetadata(oldFilename, &msg.Rename.OldFile, disableStats)
 }
 
-func handleFcntl(tracer *Tracer, _ *Process, msg *ebpfless.SyscallMsg, regs syscall.PtraceRegs) error {
+func handleFcntl(tracer *Tracer, _ *Process, msg *ebpfless.SyscallMsg, regs syscall.PtraceRegs, _ bool) error {
 	msg.Type = ebpfless.SyscallTypeFcntl
 	msg.Fcntl = &ebpfless.FcntlSyscallMsg{
 		Fd:  tracer.ReadArgUint32(regs, 0),
@@ -343,7 +427,7 @@ func handleFcntl(tracer *Tracer, _ *Process, msg *ebpfless.SyscallMsg, regs sysc
 	return nil
 }
 
-func handleDup(tracer *Tracer, _ *Process, msg *ebpfless.SyscallMsg, regs syscall.PtraceRegs) error {
+func handleDup(tracer *Tracer, _ *Process, msg *ebpfless.SyscallMsg, regs syscall.PtraceRegs, _ bool) error {
 	// using msg to temporary store arg0, as it will be erased by the return value on ARM64
 	msg.Dup = &ebpfless.DupSyscallFakeMsg{
 		OldFd: tracer.ReadArgInt32(regs, 0),
@@ -351,8 +435,84 @@ func handleDup(tracer *Tracer, _ *Process, msg *ebpfless.SyscallMsg, regs syscal
 	return nil
 }
 
-func handleClose(tracer *Tracer, process *Process, _ *ebpfless.SyscallMsg, regs syscall.PtraceRegs) error {
+func handleClose(tracer *Tracer, process *Process, _ *ebpfless.SyscallMsg, regs syscall.PtraceRegs, _ bool) error {
 	fd := tracer.ReadArgInt32(regs, 0)
 	delete(process.Res.Fd, fd)
+	return nil
+}
+
+//
+// handlers called on syscall return
+//
+
+func handleNameToHandleAtRet(tracer *Tracer, process *Process, msg *ebpfless.SyscallMsg, regs syscall.PtraceRegs, _ bool) error {
+	if msg.Open == nil {
+		return errors.New("msg empty")
+	}
+
+	if ret := tracer.ReadRet(regs); ret < 0 {
+		return errors.New("syscall failed")
+	}
+
+	pFileHandleData, err := tracer.ReadArgData(process.Pid, regs, 2, 8 /*sizeof uint32 + sizeof int32*/)
+	if err != nil {
+		return err
+	}
+	var handleBytes uint32
+	var handleType int32
+	buf := bytes.NewReader(pFileHandleData[:4])
+	err = binary.Read(buf, native.Endian, &handleBytes)
+	if err != nil {
+		return err
+	}
+	buf = bytes.NewReader(pFileHandleData[4:8])
+	err = binary.Read(buf, native.Endian, &handleType)
+	if err != nil {
+		return err
+	}
+
+	key := fileHandleKey{
+		handleBytes: handleBytes,
+		handleType:  handleType,
+	}
+	process.Res.FileHandleCache[key] = &fileHandleVal{
+		pathName: msg.Open.Filename,
+	}
+	return nil
+}
+
+func handleOpensRet(tracer *Tracer, process *Process, msg *ebpfless.SyscallMsg, regs syscall.PtraceRegs, _ bool) error {
+	if ret := tracer.ReadRet(regs); ret > 0 {
+		process.Res.Fd[int32(ret)] = msg.Open.Filename
+	}
+	return nil
+}
+
+func handleFcntlRet(tracer *Tracer, process *Process, msg *ebpfless.SyscallMsg, regs syscall.PtraceRegs, _ bool) error {
+	if ret := tracer.ReadRet(regs); ret >= 0 {
+		// maintain fd/path mapping
+		if msg.Fcntl.Cmd == unix.F_DUPFD || msg.Fcntl.Cmd == unix.F_DUPFD_CLOEXEC {
+			if path, exists := process.Res.Fd[int32(msg.Fcntl.Fd)]; exists {
+				process.Res.Fd[int32(ret)] = path
+			}
+		}
+	}
+	return nil
+}
+
+func handleDupRet(tracer *Tracer, process *Process, msg *ebpfless.SyscallMsg, regs syscall.PtraceRegs, _ bool) error {
+	if ret := tracer.ReadRet(regs); ret >= 0 {
+		if path, ok := process.Res.Fd[msg.Dup.OldFd]; ok {
+			// maintain fd/path in case of dups
+			process.Res.Fd[int32(ret)] = path
+		}
+	}
+	return nil
+}
+
+func handleRenamesRet(tracer *Tracer, _ *Process, msg *ebpfless.SyscallMsg, regs syscall.PtraceRegs, disableStats bool) error {
+	if ret := tracer.ReadRet(regs); ret == 0 {
+		return fillFileMetadata(msg.Rename.NewFile.Filename, &msg.Rename.NewFile, disableStats)
+	}
 	return nil
 }
