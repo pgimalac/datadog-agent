@@ -56,6 +56,8 @@ const (
 	SyscallTypeRmdir
 	// SyscallTypeRename rename/renameat/renameat2 type
 	SyscallTypeRename
+	// SyscallTypeMkdir mkdir/mkdirat type
+	SyscallTypeMkdir
 )
 
 // ContainerContext defines a container context
@@ -167,6 +169,12 @@ type RenameSyscallMsg struct {
 	NewFile OpenSyscallMsg
 }
 
+// MkdirSyscallMsg defines a mkdir/mkdirat message
+type MkdirSyscallMsg struct {
+	Dir  OpenSyscallMsg
+	Mode uint32
+}
+
 // SyscallMsg defines a syscall message
 type SyscallMsg struct {
 	Type      SyscallType
@@ -186,6 +194,7 @@ type SyscallMsg struct {
 	Unlink    *UnlinkSyscallMsg   `json:",omitempty"`
 	Rmdir     *RmdirSyscallMsg    `json:",omitempty"`
 	Rename    *RenameSyscallMsg   `json:",omitempty"`
+	Mkdir     *MkdirSyscallMsg    `json:",omitempty"`
 
 	// internals
 	Dup   *DupSyscallFakeMsg   `json:",omitempty"`

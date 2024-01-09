@@ -49,6 +49,8 @@ const (
 	RenameNr         = unix.SYS_RENAME            // RenameNr defines the syscall ID for amd64
 	RenameAtNr       = unix.SYS_RENAMEAT          // RenameAtNr defines the syscall ID for amd64
 	RenameAt2Nr      = unix.SYS_RENAMEAT2         // RenameAt2Nr defines the syscall ID for amd64
+	MkdirNr          = unix.SYS_MKDIR             // MkdirNr defines the syscall ID for amd64
+	MkdirAtNr        = unix.SYS_MKDIRAT           // MkdirAtNr defines the syscall ID for amd64
 
 	ptraceFlags = 0 |
 		syscall.PTRACE_O_TRACEVFORK |

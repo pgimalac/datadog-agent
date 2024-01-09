@@ -41,6 +41,7 @@ const (
 	UnlinkatNr       = unix.SYS_UNLINKAT          // UnlinkatNr defines the syscall ID for arm64
 	RenameAtNr       = unix.SYS_RENAMEAT          // RenameAtNr defines the syscall ID for arm64
 	RenameAt2Nr      = unix.SYS_RENAMEAT2         // RenameAt2Nr defines the syscall ID for arm64
+	MkdirAtNr        = unix.SYS_MKDIRAT           // MkdirAtNr defines the syscall ID for arm64
 
 	OpenNr   = -1 // OpenNr not available on arm64
 	ForkNr   = -2 // ForkNr not available on arm64
@@ -50,6 +51,7 @@ const (
 	UnlinkNr = -6 // UnlinkNr not available on arm64
 	RmdirNr  = -7 // RmdirNr not available on arm64
 	RenameNr = -8 // RenameNr not available on arm64
+	MkdirNr  = -9 // MkdirNr not available on arm64
 
 	ptraceFlags = 0 |
 		syscall.PTRACE_O_TRACECLONE |

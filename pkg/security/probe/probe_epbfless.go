@@ -183,6 +183,12 @@ func (p *EBPFLessProbe) handleSyscallMsg(cl *client, syscallMsg *ebpfless.Syscal
 		event.Rename.Retval = syscallMsg.Retval
 		copyFileAttributes(&syscallMsg.Rename.OldFile, &event.Rename.Old)
 		copyFileAttributes(&syscallMsg.Rename.NewFile, &event.Rename.New)
+
+	case ebpfless.SyscallTypeMkdir:
+		event.Type = uint32(model.FileMkdirEventType)
+		event.Mkdir.Retval = syscallMsg.Retval
+		event.Mkdir.Mode = syscallMsg.Mkdir.Mode
+		copyFileAttributes(&syscallMsg.Mkdir.Dir, &event.Mkdir.File)
 	}
 
 	// container context

@@ -124,6 +124,20 @@ func registerFIMHandlers(handlers map[int]syscallHandler) []string {
 			SendIt:     true,
 			RetFunc:    handleRenamesRet,
 		},
+		{
+			IDs:        []syscallID{{Id: MkdirNr, Name: "mkdir"}},
+			Func:       handleMkdir,
+			ShouldSend: func(ret int64) bool { return !isAcceptedRetval(ret) },
+			SendIt:     true,
+			RetFunc:    handleMkdirRet,
+		},
+		{
+			IDs:        []syscallID{{Id: MkdirAtNr, Name: "mkdirat"}},
+			Func:       handleMkdirAt,
+			ShouldSend: func(ret int64) bool { return !isAcceptedRetval(ret) },
+			SendIt:     true,
+			RetFunc:    handleMkdirRet,
+		},
 	}
 
 	syscallList := []string{}
@@ -444,6 +458,51 @@ func handleClose(tracer *Tracer, process *Process, _ *ebpfless.SyscallMsg, regs 
 	return nil
 }
 
+func handleMkdirAt(tracer *Tracer, process *Process, msg *ebpfless.SyscallMsg, regs syscall.PtraceRegs, disableStats bool) error {
+	fd := tracer.ReadArgInt32(regs, 0)
+
+	filename, err := tracer.ReadArgString(process.Pid, regs, 1)
+	if err != nil {
+		return err
+	}
+
+	filename, err = getFullPathFromFd(process, filename, fd)
+	if err != nil {
+		return err
+	}
+
+	msg.Type = ebpfless.SyscallTypeMkdir
+	msg.Mkdir = &ebpfless.MkdirSyscallMsg{
+		Dir: ebpfless.OpenSyscallMsg{
+			Filename: filename,
+		},
+		Mode: uint32(tracer.ReadArgUint64(regs, 2)),
+	}
+	return nil
+}
+
+func handleMkdir(tracer *Tracer, process *Process, msg *ebpfless.SyscallMsg, regs syscall.PtraceRegs, disableStats bool) error {
+	filename, err := tracer.ReadArgString(process.Pid, regs, 0)
+	if err != nil {
+		return err
+	}
+
+	filename, err = getFullPathFromFilename(process, filename)
+	if err != nil {
+		return err
+	}
+
+	msg.Type = ebpfless.SyscallTypeMkdir
+	msg.Mkdir = &ebpfless.MkdirSyscallMsg{
+		Dir: ebpfless.OpenSyscallMsg{
+			Filename: filename,
+		},
+		Mode: uint32(tracer.ReadArgUint64(regs, 1)),
+	}
+
+	return nil
+}
+
 //
 // handlers called on syscall return
 //
@@ -516,6 +575,13 @@ func handleDupRet(tracer *Tracer, process *Process, msg *ebpfless.SyscallMsg, re
 func handleRenamesRet(tracer *Tracer, _ *Process, msg *ebpfless.SyscallMsg, regs syscall.PtraceRegs, disableStats bool) error {
 	if ret := tracer.ReadRet(regs); ret == 0 {
 		return fillFileMetadata(msg.Rename.NewFile.Filename, &msg.Rename.NewFile, disableStats)
+	}
+	return nil
+}
+
+func handleMkdirRet(tracer *Tracer, _ *Process, msg *ebpfless.SyscallMsg, regs syscall.PtraceRegs, disableStats bool) error {
+	if ret := tracer.ReadRet(regs); ret == 0 {
+		return fillFileMetadata(msg.Mkdir.Dir.Filename, &msg.Mkdir.Dir, disableStats)
 	}
 	return nil
 }
