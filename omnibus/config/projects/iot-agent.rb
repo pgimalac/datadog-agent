@@ -64,8 +64,8 @@ else
   COMPRESSION_LEVEL = 5
 end
 
-log.warn('Using compression threads #{COMPRESSION_THREADS}')
-log.warn('Using compression level #{COMPRESSION_LEVEL}')
+puts("Using compression threads #{COMPRESSION_THREADS}")
+puts("Using compression level #{COMPRESSION_LEVEL}")
 
 # build_version is computed by an invoke command/function.
 # We can't call it directly from there, we pass it through the environment instead.
