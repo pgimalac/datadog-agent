@@ -98,7 +98,7 @@ require (
 	github.com/DataDog/datadog-operator v1.1.0
 	github.com/DataDog/ebpf-manager v0.4.0
 	github.com/DataDog/gopsutil v1.2.2
-	github.com/DataDog/nikos v1.12.1
+	github.com/DataDog/nikos v1.12.2-0.20240109151716-70bf5eff4525
 	github.com/DataDog/opentelemetry-mapping-go/pkg/otlp/attributes v0.11.0
 	github.com/DataDog/opentelemetry-mapping-go/pkg/otlp/metrics v0.11.0
 	github.com/DataDog/opentelemetry-mapping-go/pkg/quantile v0.11.0
@@ -249,13 +249,13 @@ require (
 	golang.org/x/exp v0.0.0-20231214170342-aacd6d4b4611
 	golang.org/x/net v0.19.0
 	golang.org/x/sync v0.5.0
-	golang.org/x/sys v0.15.0
+	golang.org/x/sys v0.16.0
 	golang.org/x/text v0.14.0
-	golang.org/x/time v0.3.0
+	golang.org/x/time v0.5.0
 	golang.org/x/tools v0.16.1
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2
-	google.golang.org/genproto v0.0.0-20231120223509-83a465c0220f // indirect
-	google.golang.org/grpc v1.59.0
+	google.golang.org/genproto v0.0.0-20231211222908-989df2bf70f3 // indirect
+	google.golang.org/grpc v1.60.1
 	google.golang.org/grpc/examples v0.0.0-20221020162917-9127159caf5a
 	google.golang.org/protobuf v1.31.0
 	gopkg.in/DataDog/dd-trace-go.v1 v1.58.0
@@ -286,7 +286,7 @@ require (
 	cloud.google.com/go/compute v1.23.3 // indirect
 	cloud.google.com/go/compute/metadata v0.2.4-0.20230617002413-005d2dfb6b68 // indirect
 	cloud.google.com/go/iam v1.1.5 // indirect
-	cloud.google.com/go/storage v1.31.0 // indirect
+	cloud.google.com/go/storage v1.36.0 // indirect
 	code.cloudfoundry.org/cfhttp/v2 v2.0.0 // indirect
 	code.cloudfoundry.org/clock v1.0.0 // indirect
 	code.cloudfoundry.org/consuladapter v0.0.0-20200131002136-ac1daf48ba97 // indirect
@@ -310,7 +310,6 @@ require (
 	github.com/Azure/go-autorest/logger v0.2.1 // indirect
 	github.com/Azure/go-autorest/tracing v0.6.0 // indirect
 	github.com/BurntSushi/toml v1.3.2 // indirect
-	github.com/DataDog/aptly v1.5.3 // indirect
 	github.com/DataDog/extendeddaemonset v0.9.0-rc.2 // indirect
 	github.com/DataDog/go-tuf v1.0.2-0.5.2 // indirect
 	github.com/DataDog/gostackparse v0.7.0 // indirect
@@ -321,7 +320,7 @@ require (
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/NYTimes/gziphandler v1.1.1 // indirect
 	github.com/OneOfOne/xxhash v1.2.8 // indirect
-	github.com/ProtonMail/go-crypto v0.0.0-20230828082145-3c4c8a2d2371 // indirect
+	github.com/ProtonMail/go-crypto v0.0.0-20230923063757-afb1ddc0824c // indirect
 	github.com/StackExchange/wmi v1.2.1 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/agnivade/levenshtein v1.1.1 // indirect
@@ -402,7 +401,7 @@ require (
 	github.com/golang/glog v1.1.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/licenseclassifier/v2 v2.0.0 // indirect
-	github.com/google/uuid v1.4.0
+	github.com/google/uuid v1.5.0
 	github.com/google/wire v0.5.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.2 // indirect
 	github.com/googleapis/gax-go/v2 v2.12.0 // indirect
@@ -426,7 +425,7 @@ require (
 	github.com/itchyny/timefmt-go v0.1.5 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
-	github.com/jlaffaye/ftp v0.1.0 // indirect
+	github.com/jlaffaye/ftp v0.2.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jonboulle/clockwork v0.3.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
@@ -437,7 +436,7 @@ require (
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/kjk/lzma v0.0.0-20161016003348-3fd93898850d // indirect
 	github.com/klauspost/compress v1.17.4 // indirect
-	github.com/klauspost/pgzip v1.2.5 // indirect
+	github.com/klauspost/pgzip v1.2.6 // indirect
 	github.com/knadh/koanf v1.5.0 // indirect
 	github.com/knqyf263/go-apk-version v0.0.0-20200609155635-041fdbb8563f // indirect
 	github.com/knqyf263/go-deb-version v0.0.0-20190517075300-09fca494f03d // indirect
@@ -558,11 +557,11 @@ require (
 	go.opentelemetry.io/proto/otlp v1.0.0 // indirect
 	golang.org/x/crypto v0.17.0 // indirect
 	golang.org/x/mod v0.14.0
-	golang.org/x/oauth2 v0.13.0 // indirect
+	golang.org/x/oauth2 v0.15.0 // indirect
 	golang.org/x/term v0.15.0 // indirect
 	gonum.org/v1/gonum v0.14.0 // indirect
-	google.golang.org/api v0.149.0 // indirect
-	google.golang.org/appengine v1.6.7 // indirect
+	google.golang.org/api v0.155.0 // indirect
+	google.golang.org/appengine v1.6.8 // indirect
 	gopkg.in/Knetic/govaluate.v3 v3.0.0 // indirect
 	gopkg.in/cheggaaa/pb.v1 v1.0.28 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
@@ -668,6 +667,7 @@ require (
 	github.com/DataDog/datadog-api-client-go/v2 v2.13.0 // indirect
 	github.com/DataDog/go-sqllexer v0.0.9 // indirect
 	github.com/antlr/antlr4/runtime/Go/antlr v1.4.10 // indirect
+	github.com/aptly-dev/aptly v1.5.1-0.20231123104058-aeef41bf70de // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.10.3 // indirect
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
@@ -688,7 +688,7 @@ require (
 	github.com/moby/sys/sequential v0.5.0 // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
-	github.com/rs/zerolog v1.29.1 // indirect
+	github.com/rs/zerolog v1.30.0 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/sigstore/rekor v1.2.2 // indirect
 	github.com/skeema/knownhosts v1.2.1 // indirect
@@ -719,8 +719,8 @@ require (
 	golang.org/x/exp/typeparams v0.0.0-20220613132600-b0d781184e0d // indirect
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
 	gomodules.xyz/jsonpatch/v2 v2.3.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20231106174013-bbf56f31fb17 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20231127180814-3a041ad873d4 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20231211222908-989df2bf70f3 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20231212172506-995d672761c0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	honnef.co/go/tools v0.3.2 // indirect
 	inet.af/netaddr v0.0.0-20230525184311-b8eac61e914a // indirect
