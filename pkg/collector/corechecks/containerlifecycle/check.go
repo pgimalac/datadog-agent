@@ -115,6 +115,17 @@ func (c *Check) Run() error {
 		workloadmeta.NewFilter(&podFilterParams),
 	)
 
+	taskFilterParams := workloadmeta.FilterParams{
+		Kinds:     []workloadmeta.Kind{workloadmeta.KindECSTask},
+		Source:    workloadmeta.SourceNodeOrchestrator,
+		EventType: workloadmeta.EventTypeUnset,
+	}
+	taskEventsCh := c.workloadmetaStore.Subscribe(
+		checkName+"-task",
+		workloadmeta.NormalPriority,
+		workloadmeta.NewFilter(&taskFilterParams),
+	)
+
 	pollInterval := time.Duration(c.instance.PollInterval) * time.Second
 
 	processorCtx, stopProcessor := context.WithCancel(context.Background())
@@ -126,7 +137,10 @@ func (c *Check) Run() error {
 			c.processor.processEvents(eventBundle)
 		case eventBundle := <-podEventsCh:
 			c.processor.processEvents(eventBundle)
+		case eventBundle := <-taskEventsCh:
+			c.processor.processEvents(eventBundle)
 		case <-c.stopCh:
+			c.sendFargateTaskEvent()
 			stopProcessor()
 			return nil
 		}
@@ -138,6 +152,37 @@ func (c *Check) Stop() { close(c.stopCh) }
 
 // Interval returns 0, it makes container_lifecycle a long-running check
 func (c *Check) Interval() time.Duration { return 0 }
+
+// sendFargateTaskEvent sends Fargate task lifecycle event at the end of the check
+func (c *Check) sendFargateTaskEvent() {
+	shouldSend := ddConfig.Datadog.GetBool("orchestrator_explorer.enabled") &&
+		ddConfig.Datadog.GetBool("orchestrator_explorer.ecs_collection.enabled") &&
+		ddConfig.IsECSFargate()
+
+	if !shouldSend {
+		return
+	}
+
+	tasks := c.workloadmetaStore.ListECSTasks()
+	if len(tasks) != 1 {
+		log.Infof("Unable to send Fargate task lifecycle event, expected 1 task, got %d", len(tasks))
+		return
+	}
+
+	c.processor.processEvents(workloadmeta.EventBundle{
+		Events: []workloadmeta.Event{
+			{
+				Type: workloadmeta.EventTypeUnset,
+				Entity: &workloadmeta.ECSTask{
+					EntityID: workloadmeta.EntityID{
+						Kind: workloadmeta.KindECSTask,
+						ID:   tasks[0].EntityID.ID,
+					},
+				},
+			},
+		},
+	})
+}
 
 // CheckFactory registers the container_lifecycle check
 func CheckFactory() check.Check {
