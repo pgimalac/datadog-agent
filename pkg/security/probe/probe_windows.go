@@ -45,11 +45,12 @@ type WindowsProbe struct {
 	pm            *procmon.WinProcmon
 	onStart       chan *procmon.ProcessStartNotification
 	onStop        chan *procmon.ProcessStopNotification
+	onError       chan bool
 }
 
 // Init initializes the probe
 func (p *WindowsProbe) Init() error {
-	pm, err := procmon.NewWinProcMon(p.onStart, p.onStop)
+	pm, err := procmon.NewWinProcMon(p.onStart, p.onStop, p.onError)
 	if err != nil {
 		return err
 	}
@@ -84,6 +85,11 @@ func (p *WindowsProbe) Start() error {
 			select {
 			case <-p.ctx.Done():
 				return
+
+			case <-p.onError:
+				// in this case, we got some sort of error that the underlying
+				// subsystem can't recover from.  Need to initiate some sort of cleanup
+
 			case start := <-p.onStart:
 				pid := process.Pid(start.Pid)
 				if pid == 0 {
@@ -97,6 +103,15 @@ func (p *WindowsProbe) Start() error {
 				if err != nil {
 					log.Errorf("unable to resolve parent pid %v", err)
 					continue
+				}
+				if start.RequiredSize != 0 {
+					// in this case, the command line and/or the image file might not be filled in
+					// depending upon how much space was needed.
+
+					// potential actions
+					// - just log/count the error and keep going
+					// - restart underlying procmon with larger buffer size, at least if error keeps occurring
+
 				}
 
 				pce, err = p.Resolvers.ProcessResolver.AddNewEntry(pid, ppid, start.ImageFile, start.CmdLine)
@@ -191,6 +206,7 @@ func NewWindowsProbe(probe *Probe, config *config.Config, opts Opts) (*WindowsPr
 		cancelFnc:    cancelFnc,
 		onStart:      make(chan *procmon.ProcessStartNotification),
 		onStop:       make(chan *procmon.ProcessStopNotification),
+		onError:      make(chan bool),
 	}
 
 	var err error
