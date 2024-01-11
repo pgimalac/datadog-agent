@@ -138,7 +138,7 @@
   extends:
     - .kitchen_agent_a7
     - .kitchen_os_windows
-  needs: ["deploy_windows_testing-a7"]
+  needs: ["deploy_windows_testing-a7", "deploy_deb_testing-u7_arm64"]
 
 # Kitchen: final test matrix (test types * scenarios)
 # ----------------------------------------------
