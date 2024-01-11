@@ -160,8 +160,11 @@ func (c *Check) sendFargateTaskEvent() {
 		ddConfig.IsECSFargate()
 
 	if !shouldSend {
+		log.Info("Fargate task lifecycle event is not detected")
+
 		return
 	}
+	log.Info("Fargate task lifecycle event is detected")
 
 	tasks := c.workloadmetaStore.ListECSTasks()
 	if len(tasks) != 1 {
