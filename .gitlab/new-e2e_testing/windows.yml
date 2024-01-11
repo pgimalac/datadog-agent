@@ -4,9 +4,11 @@
   variables:
     TARGETS: ./tests/windows/install-test
     TEAM: windows-agent
+    EXTRA_PARAMS: --run TestUpgrade
   artifacts:
     paths:
       - ./tests/windows/install-test/install.log
+      - ./tests/windows/install-test/upgrade.log
       - ./tests/windows/install-test/uninstall.log
 
 # Agent 6

@@ -142,8 +142,7 @@ func (c *TestClient) SetConfig(confPath string, key string, value string) error 
 	return err
 }
 
-// GetPythonVersion returns python version from the Agent status
-func (c *TestClient) GetPythonVersion() (string, error) {
+func (c *TestClient) getJSONStatus() (map[string]any, error) {
 	statusJSON := map[string]any{}
 	ok := false
 	var statusString string
@@ -169,11 +168,31 @@ func (c *TestClient) GetPythonVersion() (string, error) {
 			fmt.Println("Logs from journalctl: ", output)
 		}
 
+		return nil, err
+	}
+	return statusJSON, nil
+}
+
+// GetPythonVersion returns python version from the Agent status
+func (c *TestClient) GetPythonVersion() (string, error) {
+	statusJSON, err := c.getJSONStatus()
+	if err != nil {
 		return "", err
 	}
 	pythonVersion := statusJSON["python_version"].(string)
 
 	return pythonVersion, nil
+}
+
+// GetAgentVersion returns agent version from the Agent status
+func (c *TestClient) GetAgentVersion() (string, error) {
+	statusJSON, err := c.getJSONStatus()
+	if err != nil {
+		return "", err
+	}
+	agentVersion := statusJSON["version"].(string)
+
+	return agentVersion, nil
 }
 
 // ExecuteWithRetry execute the command with retry

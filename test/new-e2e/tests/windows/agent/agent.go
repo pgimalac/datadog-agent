@@ -57,8 +57,8 @@ func HasValidDatadogCodeSignature(client client.VM, path string) error {
 
 // TestValidDatadogCodeSignatures verifies that the files at the given paths are validly signed by the Datadog Code Signing certificate
 // This test is skipped if the verify_code_signature parameter is set to false.
-func TestValidDatadogCodeSignatures(t *testing.T, client client.VM, paths []string) {
-	t.Run("code signatures", func(t *testing.T) {
+func TestValidDatadogCodeSignatures(t *testing.T, client client.VM, paths []string) bool {
+	return t.Run("code signatures", func(t *testing.T) {
 		verify, _ := runner.GetProfile().ParamStore().GetBoolWithDefault(parameters.VerifyCodeSignature, true)
 
 		if !verify {

@@ -44,6 +44,11 @@ type Package struct {
 	URL string
 }
 
+// AgentVersion returns the Package version without the -1 suffix, which should match the Agent version.
+func (p *Package) AgentVersion() string {
+	return strings.TrimSuffix(p.Version, "-1")
+}
+
 // GetBetaMSIURL returns the URL for the beta agent MSI
 // majorVersion: 6, 7
 // arch: x86_64
@@ -309,6 +314,44 @@ func GetPackageFromEnv() (*Package, error) {
 	return &Package{
 		Channel: stableChannel,
 		Version: version,
+		Arch:    arch,
+		URL:     url,
+	}, nil
+}
+
+// GetLastStablePackageFromEnv returns the latest stable agent MSI URL.
+//
+// These environment variables are mutually exclusive, only one should be set, listed here in the order they are considered:
+//
+// LAST_STABLE_WINDOWS_AGENT_MSI_URL: manually provided URL (all other parameters are informational only)
+//
+// LAST_STABLE_VERSION: The complete version, e.g. 7.49.0-1, 7.49.0-rc.3-1, or a major version, e.g. 7, arch and channel are used
+//
+// The value of LAST_STABLE_VERSION is set in release.json, and can be acquired by running:
+// invoke release.get-release-json-value "last_stable::$AGENT_MAJOR_VERSION"
+func GetLastStablePackageFromEnv() (*Package, error) {
+	arch, _ := LookupArchFromEnv()
+	ver := os.Getenv("LAST_STABLE_VERSION")
+	if ver == "" {
+		return nil, fmt.Errorf("LAST_STABLE_VERSION is not set")
+	}
+	// TODO: Append -1, should we update release.json to include it?
+	ver = fmt.Sprintf("%s-1", ver)
+
+	var err error
+
+	url := os.Getenv("LAST_STABLE_WINDOWS_AGENT_MSI_URL")
+	if url == "" {
+		// Manual URL not provided, lookup the URL using the version
+		url, err = GetStableMSIURL(ver, arch)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &Package{
+		Channel: stableChannel,
+		Version: ver,
 		Arch:    arch,
 		URL:     url,
 	}, nil
