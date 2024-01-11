@@ -1149,7 +1149,7 @@ func StartCWSPtracer(args []string, envs []string, probeAddr string, creds Creds
 					}
 					sendSyscallMsg(syscallMsg)
 				}
-			case CloneNr:
+			case CloneNr, Clone3Nr:
 				if flags := tracer.ReadArgUint64(regs, 0); flags&uint64(unix.SIGCHLD) == 0 {
 					pc.SetAsThreadOf(process, ppid)
 					return
