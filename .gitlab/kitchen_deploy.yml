@@ -60,7 +60,7 @@
 .deploy_deb_testing-u7:
   stage: kitchen_deploy
   image: 486234852809.dkr.ecr.us-east-1.amazonaws.com/ci/datadog-agent-builders/gitlab_agent_deploy:$DATADOG_AGENT_BUILDERS
-  tags: ["arch:arm64"]
+  tags: ["arch:amd64"]
   <<: *deploy_deb_resource_group-u7
   variables:
     DD_PIPELINE_ID: $CI_PIPELINE_ID-u7
